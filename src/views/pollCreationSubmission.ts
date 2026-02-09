@@ -2,6 +2,7 @@ import type { App, ViewSubmitAction, AllMiddlewareArgs, SlackViewMiddlewareArgs 
 import { MODAL_CALLBACK_ID } from './pollCreationModal';
 import { createPoll } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
+import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 
 type ViewSubmissionArgs = SlackViewMiddlewareArgs<ViewSubmitAction> & AllMiddlewareArgs;
 
@@ -155,15 +156,26 @@ export function registerPollCreationSubmission(app: App): void {
     } else {
       // Post poll message to channel immediately
       const message = buildPollMessage(poll, settings);
-      const result = await client.chat.postMessage({
-        channel: channelId!,
-        ...message,
-      });
+      try {
+        const result = await client.chat.postMessage({
+          channel: channelId!,
+          ...message,
+        });
 
-      // Store message_ts for future updates
-      if (result.ts) {
-        const { updatePollMessageTs } = await import('../services/pollService');
-        await updatePollMessageTs(poll.id, result.ts);
+        // Store message_ts for future updates
+        if (result.ts) {
+          const { updatePollMessageTs } = await import('../services/pollService');
+          await updatePollMessageTs(poll.id, result.ts);
+        }
+      } catch (err) {
+        if (isNotInChannelError(err)) {
+          await client.chat.postMessage({
+            channel: creatorId,
+            text: notInChannelText(channelId!),
+          });
+          return;
+        }
+        throw err;
       }
     }
 

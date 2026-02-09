@@ -4,6 +4,7 @@ import { buildPollCreationModal } from '../views/pollCreationModal';
 import { createPoll, updatePollMessageTs, getUserPolls } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
+import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 
 interface InlinePollArgs {
   question: string;
@@ -381,10 +382,12 @@ export function registerAskifyCommand(app: App): void {
           await updatePollMessageTs(poll.id, result.ts);
         }
       } catch (err) {
-        await client.chat.postEphemeral({
-          channel: command.channel_id,
-          user: command.user_id,
-          text: `:warning: Failed to create poll: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        const errorText = isNotInChannelError(err)
+          ? notInChannelText(command.channel_id)
+          : `:warning: Failed to create poll: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        await client.chat.postMessage({
+          channel: command.user_id,
+          text: errorText,
         });
       }
       return;

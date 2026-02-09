@@ -2,6 +2,7 @@ import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
 import { getVotersByOption } from '../services/voteService';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
+import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 
 const SHARE_RESULTS_MODAL_ID = 'share_results_modal';
 
@@ -83,11 +84,22 @@ export function registerShareResultsSubmission(app: App): void {
       return true;
     });
 
-    await client.chat.postMessage({
-      channel: channelId,
-      text: dm.text,
-      blocks: shareBlocks,
-    });
+    try {
+      await client.chat.postMessage({
+        channel: channelId,
+        text: dm.text,
+        blocks: shareBlocks,
+      });
+    } catch (err) {
+      if (isNotInChannelError(err)) {
+        await client.chat.postMessage({
+          channel: body.user.id,
+          text: notInChannelText(channelId),
+        });
+        return;
+      }
+      throw err;
+    }
 
     await client.chat.postMessage({
       channel: body.user.id,

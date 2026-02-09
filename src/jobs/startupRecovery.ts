@@ -4,6 +4,7 @@ import type { PollWithOptions } from '../services/pollService';
 import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
+import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 
 /**
  * Run once on startup to handle anything missed while the bot was down.
@@ -23,21 +24,33 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
       };
 
       const message = buildPollMessage(poll, settings);
-      const result = await client.chat.postMessage({
-        channel: poll.channelId,
-        ...message,
-      });
+      try {
+        const result = await client.chat.postMessage({
+          channel: poll.channelId,
+          ...message,
+        });
 
-      if (result.ts) {
-        await updatePollMessageTs(poll.id, result.ts);
+        if (result.ts) {
+          await updatePollMessageTs(poll.id, result.ts);
+        }
+
+        await client.chat.postMessage({
+          channel: poll.creatorId,
+          text: `:white_check_mark: Your scheduled poll *"${poll.question}"* is now live in <#${poll.channelId}>! (posted on startup recovery)`,
+        });
+
+        console.log(`[Recovery] Posted overdue scheduled poll ${poll.id}: "${poll.question}"`);
+      } catch (err) {
+        if (isNotInChannelError(err)) {
+          await client.chat.postMessage({
+            channel: poll.creatorId,
+            text: notInChannelText(poll.channelId),
+          });
+          console.warn(`[Recovery] Scheduled poll ${poll.id}: bot not in channel ${poll.channelId}`);
+        } else {
+          throw err;
+        }
       }
-
-      await client.chat.postMessage({
-        channel: poll.creatorId,
-        text: `:white_check_mark: Your scheduled poll *"${poll.question}"* is now live in <#${poll.channelId}>! (posted on startup recovery)`,
-      });
-
-      console.log(`[Recovery] Posted overdue scheduled poll ${poll.id}: "${poll.question}"`);
     }
 
     // 2. Close any overdue active polls

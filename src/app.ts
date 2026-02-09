@@ -4,6 +4,7 @@ import { registerRequestLogger } from './middleware/requestLogger';
 import { registerCommands } from './commands';
 import { registerActions } from './actions';
 import { registerViews } from './views';
+import { registerEvents } from './events';
 import { startJobs } from './jobs';
 import { runStartupRecovery } from './jobs/startupRecovery';
 
@@ -20,6 +21,7 @@ registerRequestLogger(app);
 registerCommands(app);
 registerActions(app);
 registerViews(app);
+registerEvents(app);
 
 (async () => {
   await app.start();

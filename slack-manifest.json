@@ -5,6 +5,10 @@
     "background_color": "#4A154B"
   },
   "features": {
+    "app_home": {
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
     "bot_user": {
       "display_name": "Askify",
       "always_online": true
@@ -25,15 +29,22 @@
         "commands",
         "channels:read",
         "users:read",
-        "im:write"
+        "im:write",
+        "im:read",
+        "im:history"
       ]
     }
   },
   "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "message.im"
+      ]
+    },
     "interactivity": {
       "is_enabled": true
     },
-    "org_deploy_enabled": false,
+    "org_deploy_enabled": true,
     "socket_mode_enabled": true,
     "token_rotation_enabled": false
   }

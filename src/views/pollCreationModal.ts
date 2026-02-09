@@ -4,6 +4,8 @@ export const MODAL_CALLBACK_ID = 'poll_creation_modal';
 export const POLL_TYPE_ACTION_ID = 'poll_type_select';
 export const CLOSE_METHOD_ACTION_ID = 'close_method_select';
 export const SCHEDULE_METHOD_ACTION_ID = 'schedule_method_select';
+export const ADD_MODAL_OPTION_ACTION_ID = 'add_modal_option';
+export const REMOVE_MODAL_OPTION_ACTION_ID = 'remove_modal_option';
 
 export interface ModalOptions {
   initialOptions?: number;
@@ -104,6 +106,30 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
           max_length: 200,
           ...(prefillOpts[i] ? { initial_value: prefillOpts[i] } : {}),
         },
+      });
+    }
+
+    // Add/Remove option buttons
+    const optionActions: any[] = [];
+    if (optionCount < 10) {
+      optionActions.push({
+        type: 'button',
+        text: { type: 'plain_text', text: '➕ Add Option', emoji: true },
+        action_id: ADD_MODAL_OPTION_ACTION_ID,
+      });
+    }
+    if (optionCount > 2) {
+      optionActions.push({
+        type: 'button',
+        text: { type: 'plain_text', text: '➖ Remove Last', emoji: true },
+        action_id: REMOVE_MODAL_OPTION_ACTION_ID,
+      });
+    }
+    if (optionActions.length > 0) {
+      blocks.push({
+        type: 'actions',
+        block_id: 'option_actions_block',
+        elements: optionActions,
       });
     }
   }

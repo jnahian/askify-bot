@@ -11,6 +11,7 @@ interface PollSettings {
   liveResults: boolean;
   ratingScale?: number;
   allowAddingOptions?: boolean;
+  reminders?: boolean;
 }
 
 export function registerPollCreationSubmission(app: App): void {
@@ -47,12 +48,14 @@ export function registerPollCreationSubmission(app: App): void {
     const liveResultsChecked = values.live_results_block?.live_results_toggle?.selected_options || [];
 
     const addOptionsChecked = values.add_options_block?.add_options_toggle?.selected_options || [];
+    const remindersChecked = values.reminders_block?.reminders_toggle?.selected_options || [];
 
     const settings: PollSettings = {
       anonymous: anonymousChecked.some((o: { value: string }) => o.value === 'anonymous'),
       allowVoteChange: voteChangeChecked.some((o: { value: string }) => o.value === 'vote_change'),
       liveResults: liveResultsChecked.some((o: { value: string }) => o.value === 'live_results'),
       allowAddingOptions: addOptionsChecked.some((o: { value: string }) => o.value === 'allow_adding_options'),
+      reminders: remindersChecked.some((o: { value: string }) => o.value === 'reminders'),
     };
 
     // Rating scale

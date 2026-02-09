@@ -20,6 +20,7 @@ export interface ModalOptions {
     allowVoteChange?: boolean;
     liveResults?: boolean;
     allowAddingOptions?: boolean;
+    reminders?: boolean;
   };
 }
 
@@ -207,6 +208,24 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       action_id: 'live_results_toggle',
       options: [liveResultsOption],
       ...(liveResultsDefault !== false ? { initial_options: [liveResultsOption] } : {}),
+    },
+  });
+
+  // Send Reminders (only useful when poll has a close time)
+  const remindersOption = {
+    text: { type: 'plain_text' as const, text: 'DM non-voters before the poll closes' },
+    value: 'reminders',
+  };
+  blocks.push({
+    type: 'input',
+    block_id: 'reminders_block',
+    optional: true,
+    label: { type: 'plain_text', text: 'Send Reminders' },
+    element: {
+      type: 'checkboxes',
+      action_id: 'reminders_toggle',
+      options: [remindersOption],
+      ...(prefill?.reminders ? { initial_options: [remindersOption] } : {}),
     },
   });
 

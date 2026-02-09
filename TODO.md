@@ -174,15 +174,15 @@
 
 ### Step 16: Reminder DMs
 
-- [ ] **16.1** Create `src/jobs/reminderJob.ts`:
+- [x] **16.1** Create `src/jobs/reminderJob.ts`:
   - Run via `node-cron` periodically (e.g., every 15 minutes)
   - Find polls with `reminders = true` nearing their close time
   - Determine non-voters by comparing channel members vs voters
   - Send DM to each non-voter with poll question and a deep link to the message
-- [ ] **16.2** Calculate smart reminder timing:
+- [x] **16.2** Calculate smart reminder timing:
   - Polls closing within 2 hours → remind 1 hour before
   - Polls closing within 1–3 days → remind 24 hours before
-- [ ] **16.3** Track reminder sent status to avoid duplicate DMs
+- [x] **16.3** Track reminder sent status to avoid duplicate DMs
 
 ### Step 17: `/askify help` Command
 

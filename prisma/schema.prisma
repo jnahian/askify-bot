@@ -30,9 +30,10 @@ model Poll {
   pollType    PollType   @map("poll_type")
   settings    Json       @default("{}")
   status      PollStatus @default(active)
-  scheduledAt DateTime?  @map("scheduled_at") @db.Timestamptz()
-  closesAt    DateTime?  @map("closes_at") @db.Timestamptz()
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  scheduledAt    DateTime?  @map("scheduled_at") @db.Timestamptz()
+  closesAt       DateTime?  @map("closes_at") @db.Timestamptz()
+  reminderSentAt DateTime?  @map("reminder_sent_at") @db.Timestamptz()
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz()
 
   options PollOption[]
   votes   Vote[]

@@ -24,6 +24,7 @@ export interface PollWithOptions {
   status: PollStatus;
   scheduledAt: Date | null;
   closesAt: Date | null;
+  reminderSentAt: Date | null;
   createdAt: Date;
   options: {
     id: string;
@@ -156,5 +157,47 @@ export async function cancelScheduledPoll(pollId: string) {
   return prisma.poll.update({
     where: { id: pollId },
     data: { status: 'closed' },
+  });
+}
+
+export async function getPollsNeedingReminders() {
+  const now = new Date();
+  // Find active polls with closesAt set, reminders not yet sent
+  const polls = await prisma.poll.findMany({
+    where: {
+      status: 'active',
+      closesAt: { not: null },
+      reminderSentAt: null,
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
+  });
+
+  // Filter by smart timing:
+  // - Closes within 2 hours → remind now (1 hour before)
+  // - Closes within 1-3 days → remind 24 hours before
+  return (polls as unknown as PollWithOptions[]).filter((poll) => {
+    if (!poll.closesAt) return false;
+    const msUntilClose = poll.closesAt.getTime() - now.getTime();
+    const hoursUntilClose = msUntilClose / (1000 * 60 * 60);
+
+    // Closing within 1-2 hours → send reminder
+    if (hoursUntilClose > 0 && hoursUntilClose <= 1) return true;
+    // Closing within 23-25 hours → send 24h reminder
+    if (hoursUntilClose >= 23 && hoursUntilClose <= 25) return true;
+
+    return false;
+  });
+}
+
+export async function markReminderSent(pollId: string) {
+  return prisma.poll.update({
+    where: { id: pollId },
+    data: { reminderSentAt: new Date() },
   });
 }

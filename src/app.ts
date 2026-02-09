@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { App } from '@slack/bolt';
+import { registerRequestLogger } from './middleware/requestLogger';
 import { registerCommands } from './commands';
 import { registerActions } from './actions';
 import { registerViews } from './views';
@@ -12,6 +13,9 @@ const app = new App({
   socketMode: true,
   appToken: process.env.SLACK_APP_TOKEN,
 });
+
+// Global middleware — must be registered before handlers
+registerRequestLogger(app);
 
 registerCommands(app);
 registerActions(app);

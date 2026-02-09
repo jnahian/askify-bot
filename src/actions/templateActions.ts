@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
-import { saveTemplate, type TemplateConfig } from '../services/templateService';
+import { saveTemplate, getTemplate, deleteTemplate, type TemplateConfig } from '../services/templateService';
+import { buildPollCreationModal } from '../views/pollCreationModal';
 
 export const SAVE_TEMPLATE_MODAL_ID = 'save_template_modal';
 
@@ -37,6 +38,51 @@ export function registerTemplateActions(app: App): void {
       },
     });
   });
+
+  // "Use Template" button from /askify templates
+  app.action(/^use_template_.+$/, async ({ ack, action, body, client }) => {
+    await ack();
+    if (action.type !== 'button' || body.type !== 'block_actions') return;
+
+    const templateId = action.value!;
+    const template = await getTemplate(templateId);
+    if (!template) return;
+
+    const config = template.config;
+
+    await client.views.open({
+      trigger_id: body.trigger_id!,
+      view: buildPollCreationModal({
+        pollType: config.pollType,
+        closeMethod: config.closeMethod,
+        initialOptions: config.options.length || 2,
+        prefill: {
+          options: config.options,
+          anonymous: config.settings.anonymous,
+          allowVoteChange: config.settings.allowVoteChange,
+          liveResults: config.settings.liveResults,
+          ratingScale: config.settings.ratingScale,
+        },
+      }),
+    });
+  });
+
+  // "Delete Template" button from /askify templates
+  app.action(/^delete_template_.+$/, async ({ ack, action, body, client }) => {
+    await ack();
+    if (action.type !== 'button' || body.type !== 'block_actions') return;
+
+    const templateId = action.value!;
+    const deleted = await deleteTemplate(templateId, body.user.id);
+
+    await client.chat.postEphemeral({
+      channel: body.channel?.id || '',
+      user: body.user.id,
+      text: deleted
+        ? ':white_check_mark: Template deleted.'
+        : ':x: Could not delete template.',
+    });
+  });
 }
 
 export function registerSaveTemplateSubmission(app: App): void {
@@ -65,7 +111,7 @@ export function registerSaveTemplateSubmission(app: App): void {
       pollType: poll.pollType,
       options: poll.options.map((o) => o.label),
       settings,
-      closeMethod: 'manual', // Default; original close method not stored on poll
+      closeMethod: 'manual',
     };
 
     await saveTemplate(body.user.id, templateName, config);

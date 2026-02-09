@@ -156,10 +156,10 @@
 
 ### Step 14: `/askify templates` Command
 
-- [ ] **14.1** Implement `templates` handler — list user's saved templates
-- [ ] **14.2** Render as ephemeral message with template names and action buttons:
+- [x] **14.1** Implement `templates` handler — list user's saved templates
+- [x] **14.2** Render as ephemeral message with template names and action buttons:
   - "Use" (opens creation modal pre-filled), "Delete"
-- [ ] **14.3** Handle delete confirmation and template removal
+- [x] **14.3** Handle delete confirmation and template removal
 
 ### Step 15: Post Results to Channel
 

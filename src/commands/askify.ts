@@ -2,6 +2,7 @@ import { App } from '@slack/bolt';
 import type { KnownBlock, Button } from '@slack/types';
 import { buildPollCreationModal } from '../views/pollCreationModal';
 import { getUserPolls } from '../services/pollService';
+import { getTemplates } from '../services/templateService';
 
 export function registerAskifyCommand(app: App): void {
   app.command('/askify', async ({ command, ack, client }) => {
@@ -111,9 +112,75 @@ export function registerAskifyCommand(app: App): void {
     }
 
     if (subcommand === 'templates') {
-      await ack({
-        response_type: 'ephemeral',
-        text: '🚧 `/askify templates` is coming soon.',
+      await ack();
+      const templates = await getTemplates(command.user_id);
+
+      if (templates.length === 0) {
+        await client.chat.postEphemeral({
+          channel: command.channel_id,
+          user: command.user_id,
+          text: "You don't have any saved templates. Create a poll and save it as a template!",
+        });
+        return;
+      }
+
+      const blocks: KnownBlock[] = [
+        {
+          type: 'header',
+          text: { type: 'plain_text', text: 'Your Templates' },
+        },
+      ];
+
+      for (const template of templates) {
+        const config = template.config;
+        const pollTypeLabel: Record<string, string> = {
+          single_choice: 'Single Choice',
+          multi_select: 'Multi-Select',
+          yes_no: 'Yes / No / Maybe',
+          rating: 'Rating Scale',
+        };
+
+        blocks.push({ type: 'divider' });
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*${template.name}*\nType: ${pollTypeLabel[config.pollType] || config.pollType}` +
+              (config.options.length > 0 ? `\nOptions: ${config.options.join(', ')}` : ''),
+          },
+        });
+
+        blocks.push({
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: ':pencil2: Use Template', emoji: true },
+              action_id: `use_template_${template.id}`,
+              value: template.id,
+              style: 'primary',
+            } as Button,
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: ':wastebasket: Delete', emoji: true },
+              action_id: `delete_template_${template.id}`,
+              value: template.id,
+              confirm: {
+                title: { type: 'plain_text', text: 'Delete template?' },
+                text: { type: 'plain_text', text: `Delete "${template.name}"? This cannot be undone.` },
+                confirm: { type: 'plain_text', text: 'Delete' },
+                deny: { type: 'plain_text', text: 'Keep' },
+              },
+            } as Button,
+          ],
+        });
+      }
+
+      await client.chat.postEphemeral({
+        channel: command.channel_id,
+        user: command.user_id,
+        text: `You have ${templates.length} template(s).`,
+        blocks,
       });
       return;
     }

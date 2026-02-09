@@ -135,7 +135,7 @@ For self-hosted deployments on any server running Docker.
 ### 1. Clone and configure
 
 ```bash
-git clone <repo-url>
+git clone git@github.com:jnahian/askify-bot.git
 cd askify-bot
 cp .env.example .env
 ```

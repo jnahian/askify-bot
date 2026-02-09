@@ -72,7 +72,8 @@ export function registerAskifyCommand(app: App): void {
                 + '1. Type `/askify` to open the creation modal\n'
                 + '2. Enter your question, pick a poll type, and add options\n'
                 + '3. Choose a channel, adjust settings, and create!\n'
-                + '4. After closing, share results to any channel',
+                + '4. After closing, share results to any channel\n\n'
+                + ':bulb: *Tip:* Use emoji codes like `:fire:` `:rocket:` `:tada:` in questions and options!',
             },
           },
         ],

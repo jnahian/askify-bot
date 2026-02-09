@@ -22,7 +22,7 @@ export function buildResultsDMBlocks(
 
   blocks.push({
     type: 'header',
-    text: { type: 'plain_text', text: `Poll Results: ${poll.question}` },
+    text: { type: 'plain_text', text: `Poll Results: ${poll.question}`, emoji: true },
   });
 
   blocks.push({

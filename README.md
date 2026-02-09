@@ -6,6 +6,7 @@ An internal Slack poll bot for team decisions, engagement, and feedback.
 
 - **4 Poll Types** — Single choice, multi-select, yes/no/maybe, rating scale (1-5 or 1-10)
 - **Rich Voting UX** — Interactive buttons, real-time bar charts with color-coded emoji, vote change/retraction
+- **Emoji Support** — Use `:emoji_codes:` like `:fire:` `:rocket:` in questions and options
 - **Anonymous Voting** — Voter identity hidden from messages; stored only for deduplication
 - **Scheduled Polls** — Schedule polls for future posting with a datetime picker
 - **Auto-Close** — Close after a duration or at a specific date/time

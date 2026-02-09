@@ -40,6 +40,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     type: 'input',
     block_id: 'question_block',
     label: { type: 'plain_text', text: 'Poll Question' },
+    hint: { type: 'plain_text', text: 'Tip: Use :emoji_codes: like :fire: :rocket: :tada:' },
     element: {
       type: 'plain_text_input',
       action_id: 'question_input',
@@ -100,6 +101,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
         block_id: `option_block_${i}`,
         label: { type: 'plain_text', text: `Option ${i + 1}` },
         optional: i >= 2,
+        hint: i === 0 ? { type: 'plain_text', text: 'Emoji codes like :fire: work here too!' } : undefined,
         element: {
           type: 'plain_text_input',
           action_id: `option_input_${i}`,

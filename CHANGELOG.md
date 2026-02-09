@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- Emoji code support with hints in poll creation modal (question and option fields)
+- Emoji rendering in poll results DM headers
+- Emoji usage tip in `/askify help` command
+
 ## [1.0.0] - 2026-02-09
 
 ### Added

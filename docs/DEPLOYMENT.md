@@ -1,14 +1,136 @@
 # Deployment Guide
 
-This guide covers deploying Askify to a Docker host (any VPS or server running Docker).
+This guide covers deploying Askify to Fly.io (free tier) or any Docker host.
 
 ## Prerequisites
 
-- Docker and Docker Compose installed on your server
 - A Supabase PostgreSQL database (or any PostgreSQL instance)
 - A configured Slack app with Socket Mode enabled
 
-## Quick Deploy
+---
+
+## Deploy to Fly.io (Free Tier)
+
+Fly.io's free tier includes 3 shared VMs with 256MB RAM — enough to run Askify. Since the bot uses Socket Mode (outbound WebSocket), no inbound ports or custom domains are needed.
+
+### 1. Install the Fly CLI
+
+```bash
+# macOS
+brew install flyctl
+
+# Linux
+curl -L https://fly.io/install.sh | sh
+
+# Then sign up / log in
+fly auth signup
+# or
+fly auth login
+```
+
+### 2. Launch the app
+
+From the project root:
+
+```bash
+fly launch
+```
+
+When prompted:
+- **App name**: `askify-bot` (or your choice)
+- **Region**: Pick the closest to your team
+- **Database**: Select **No** (you're using Supabase)
+- **Deploy now**: Select **No** (we need to set secrets first)
+
+This creates a `fly.toml` config file. Edit it to ensure the app runs as a long-lived process (not a web service):
+
+```toml
+app = 'askify-bot'
+primary_region = 'sea'  # your chosen region
+
+[build]
+
+# No HTTP services needed — Socket Mode connects outbound
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1
+```
+
+Remove any `[http_service]` or `[[services]]` sections if present — Askify doesn't serve HTTP traffic.
+
+### 3. Set secrets
+
+```bash
+fly secrets set \
+  SLACK_BOT_TOKEN=xoxb-your-bot-token \
+  SLACK_SIGNING_SECRET=your-signing-secret \
+  SLACK_APP_TOKEN=xapp-your-app-token \
+  DATABASE_URL=postgresql://user:password@host:5432/dbname
+```
+
+### 4. Run database migrations
+
+```bash
+# Run migrations via a one-off machine
+fly machine run . --rm -e DATABASE_URL="postgresql://user:password@host:5432/dbname" -- npx prisma migrate deploy
+```
+
+Or run locally if you have Node.js installed:
+
+```bash
+npm install
+DATABASE_URL="postgresql://..." npx prisma migrate deploy
+```
+
+### 5. Deploy
+
+```bash
+fly deploy
+```
+
+### Monitoring
+
+```bash
+fly status            # Check app status
+fly logs              # Stream live logs
+fly ssh console       # SSH into the running machine
+```
+
+### Updating
+
+```bash
+git pull
+fly deploy            # Rebuilds and deploys
+```
+
+If there are new database migrations:
+
+```bash
+fly machine run . --rm -e DATABASE_URL="..." -- npx prisma migrate deploy
+fly deploy
+```
+
+### Cost
+
+Fly.io free tier includes:
+- 3 shared-cpu-1x VMs (256MB RAM each)
+- 3GB persistent storage
+- 160GB outbound bandwidth/month
+
+Askify uses 1 VM and minimal bandwidth — well within free limits.
+
+---
+
+## Deploy to Docker Host (VPS)
+
+For self-hosted deployments on any server running Docker.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your server
+
+### Quick Deploy
 
 ### 1. Clone and configure
 

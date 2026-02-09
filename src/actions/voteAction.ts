@@ -3,6 +3,7 @@ import { getPoll } from '../services/pollService';
 import { handleSingleVote, handleMultiVote, getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { withRetry } from '../utils/slackRetry';
+import { debouncedUpdate } from '../utils/debounce';
 
 export function registerVoteAction(app: App): void {
   // Match any action_id starting with "vote_"
@@ -61,14 +62,26 @@ export function registerVoteAction(app: App): void {
         voterNames = await getVotersByOption(pollId);
       }
 
-      const message = buildPollMessage(updatedPoll, settings, voterNames);
-      await withRetry(() =>
-        client.chat.update({
-          channel: updatedPoll.channelId,
-          ts: updatedPoll.messageTs!,
-          ...message,
-        }),
-      );
+      // Debounce the message update to batch rapid votes
+      debouncedUpdate(pollId, async () => {
+        // Re-fetch fresh data at execution time
+        const freshPoll = await getPoll(pollId);
+        if (!freshPoll || !freshPoll.messageTs) return;
+
+        let freshVoterNames: Map<string, string[]> | undefined;
+        if (!settings.anonymous) {
+          freshVoterNames = await getVotersByOption(pollId);
+        }
+
+        const freshMessage = buildPollMessage(freshPoll, settings, freshVoterNames);
+        await withRetry(() =>
+          client.chat.update({
+            channel: freshPoll.channelId,
+            ts: freshPoll.messageTs!,
+            ...freshMessage,
+          }),
+        );
+      });
     } catch (error: any) {
       // Handle deleted message (message_not_found)
       if (error?.data?.error === 'message_not_found') {

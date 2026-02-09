@@ -38,6 +38,10 @@ model Poll {
   options PollOption[]
   votes   Vote[]
 
+  @@index([status])
+  @@index([creatorId])
+  @@index([status, closesAt])
+  @@index([status, scheduledAt])
   @@map("polls")
 }
 

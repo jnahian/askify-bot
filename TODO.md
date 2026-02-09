@@ -208,9 +208,9 @@
 
 ### Step 20: Performance Optimization
 
-- [ ] **20.1** Batch `chat.update` calls for high-traffic polls (debounce rapid vote updates)
-- [ ] **20.2** Add database indexes for frequent queries (poll_id on votes, status on polls)
-- [ ] **20.3** Optimize vote counting queries (use DB aggregation instead of fetching all rows)
+- [x] **20.1** Batch `chat.update` calls for high-traffic polls (debounce rapid vote updates)
+- [x] **20.2** Add database indexes for frequent queries (poll_id on votes, status on polls)
+- [x] **20.3** Optimize vote counting queries (use DB aggregation instead of fetching all rows)
 
 ---
 

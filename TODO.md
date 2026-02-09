@@ -186,7 +186,7 @@
 
 ### Step 17: `/askify help` Command
 
-- [ ] **17.1** Implement `help` handler — return ephemeral message with:
+- [x] **17.1** Implement `help` handler — return ephemeral message with:
   - Available commands and descriptions
   - Quick-start guide for creating a poll
   - Links or tips for poll types and settings

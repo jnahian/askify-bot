@@ -9,13 +9,73 @@ export function registerAskifyCommand(app: App): void {
     const subcommand = command.text.trim().toLowerCase();
 
     if (subcommand === 'help') {
-      await ack({
-        response_type: 'ephemeral',
-        text: '*Askify — Slack Poll Bot*\n\n'
-          + '`/askify` — Create a new poll\n'
-          + '`/askify list` — View your active & scheduled polls\n'
-          + '`/askify templates` — Manage your saved templates\n'
-          + '`/askify help` — Show this help message',
+      await ack();
+      await client.chat.postEphemeral({
+        channel: command.channel_id,
+        user: command.user_id,
+        text: 'Askify Help',
+        blocks: [
+          {
+            type: 'header',
+            text: { type: 'plain_text', text: 'Askify — Slack Poll Bot' },
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'Create interactive polls right in Slack with multiple poll types, anonymous voting, scheduling, and more.',
+            },
+          },
+          { type: 'divider' },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*Commands*\n'
+                + '`/askify` — Open the poll creation modal\n'
+                + '`/askify list` — View your active & scheduled polls\n'
+                + '`/askify templates` — Manage saved poll templates\n'
+                + '`/askify help` — Show this help message',
+            },
+          },
+          { type: 'divider' },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*Poll Types*\n'
+                + ':one: *Single Choice* — Voters pick one option\n'
+                + ':hash: *Multi-Select* — Voters can pick multiple options\n'
+                + ':white_check_mark: *Yes / No / Maybe* — Quick consensus check\n'
+                + ':star: *Rating Scale* — Rate on a 1–5 or 1–10 scale',
+            },
+          },
+          { type: 'divider' },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*Settings*\n'
+                + ':lock: *Anonymous* — Hide voter identities\n'
+                + ':arrows_counterclockwise: *Vote Change* — Allow voters to update their vote\n'
+                + ':bar_chart: *Live Results* — Show results as votes come in\n'
+                + ':heavy_plus_sign: *Voter-Added Options* — Let voters add new choices (single/multi only)\n'
+                + ':bell: *Reminders* — DM non-voters before the poll closes',
+            },
+          },
+          { type: 'divider' },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*Quick Start*\n'
+                + '1. Type `/askify` to open the creation modal\n'
+                + '2. Enter your question, pick a poll type, and add options\n'
+                + '3. Choose a channel, adjust settings, and create!\n'
+                + '4. After closing, share results to any channel',
+            },
+          },
+        ],
       });
       return;
     }

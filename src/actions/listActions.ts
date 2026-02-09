@@ -1,7 +1,8 @@
 import { App } from '@slack/bolt';
 import { closePoll, cancelScheduledPoll, getPoll } from '../services/pollService';
 import { getVotersByOption } from '../services/voteService';
-import { buildPollMessage, buildResultsDM } from '../blocks/pollMessage';
+import { buildPollMessage } from '../blocks/pollMessage';
+import { buildResultsDMBlocks } from '../blocks/resultsDM';
 
 export function registerListActions(app: App): void {
   // Close poll from /askify list
@@ -35,11 +36,11 @@ export function registerListActions(app: App): void {
         ...message,
       });
 
-      // DM results to creator
-      const dmText = buildResultsDM(closedPoll, settings, voterNames);
+      // DM results to creator with "Share Results" button
+      const dm = buildResultsDMBlocks(closedPoll, settings, voterNames);
       await client.chat.postMessage({
         channel: closedPoll.creatorId,
-        text: dmText,
+        ...dm,
       });
     }
 

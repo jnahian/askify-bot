@@ -163,9 +163,9 @@
 
 ### Step 15: Post Results to Channel
 
-- [ ] **15.1** After a poll closes, show a "Share Results" button to the creator (via DM or on the poll message)
-- [ ] **15.2** On click, open a modal with a channel select for where to post results
-- [ ] **15.3** Post formatted results summary to the selected channel
+- [x] **15.1** After a poll closes, show a "Share Results" button to the creator (via DM or on the poll message)
+- [x] **15.2** On click, open a modal with a channel select for where to post results
+- [x] **15.3** Post formatted results summary to the selected channel
 
 ---
 

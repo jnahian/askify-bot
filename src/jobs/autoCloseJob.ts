@@ -2,7 +2,8 @@ import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getExpiredPolls, closePoll, getPoll } from '../services/pollService';
 import { getVotersByOption } from '../services/voteService';
-import { buildPollMessage, buildResultsDM } from '../blocks/pollMessage';
+import { buildPollMessage } from '../blocks/pollMessage';
+import { buildResultsDMBlocks } from '../blocks/resultsDM';
 
 export function startAutoCloseJob(client: WebClient): void {
   // Run every minute
@@ -35,11 +36,11 @@ export function startAutoCloseJob(client: WebClient): void {
           ...message,
         });
 
-        // DM results to creator
-        const dmText = buildResultsDM(closedPoll, settings, voterNames);
+        // DM results to creator with "Share Results" button
+        const dm = buildResultsDMBlocks(closedPoll, settings, voterNames);
         await client.chat.postMessage({
           channel: closedPoll.creatorId,
-          text: dmText,
+          ...dm,
         });
 
         console.log(`Auto-closed poll ${poll.id}: "${poll.question}"`);

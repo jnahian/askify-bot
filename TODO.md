@@ -199,12 +199,12 @@
 
 ### Step 19: Error Handling & Edge Cases
 
-- [ ] **19.1** Add Slack API rate limit handling with exponential backoff
-- [ ] **19.2** Handle channel permission errors (bot not in channel)
-- [ ] **19.3** Handle deleted messages (poll message removed by someone)
-- [ ] **19.4** Handle user who left the workspace voting/creating polls
-- [ ] **19.5** Add input sanitization for all user-provided text
-- [ ] **19.6** Add startup recovery job: check for missed scheduled polls or auto-closes on app restart
+- [x] **19.1** Add Slack API rate limit handling with exponential backoff
+- [x] **19.2** Handle channel permission errors (bot not in channel)
+- [x] **19.3** Handle deleted messages (poll message removed by someone)
+- [x] **19.4** Handle user who left the workspace voting/creating polls
+- [x] **19.5** Add input sanitization for all user-provided text
+- [x] **19.6** Add startup recovery job: check for missed scheduled polls or auto-closes on app restart
 
 ### Step 20: Performance Optimization
 

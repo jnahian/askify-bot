@@ -5,12 +5,30 @@ export const POLL_TYPE_ACTION_ID = 'poll_type_select';
 export const CLOSE_METHOD_ACTION_ID = 'close_method_select';
 export const SCHEDULE_METHOD_ACTION_ID = 'schedule_method_select';
 
-export function buildPollCreationModal(
-  initialOptions: number = 2,
-  pollType?: string,
-  closeMethod?: string,
-  scheduleMethod?: string,
-): View {
+export interface ModalOptions {
+  initialOptions?: number;
+  pollType?: string;
+  closeMethod?: string;
+  scheduleMethod?: string;
+  prefill?: {
+    question?: string;
+    options?: string[];
+    ratingScale?: number;
+    anonymous?: boolean;
+    allowVoteChange?: boolean;
+    liveResults?: boolean;
+  };
+}
+
+export function buildPollCreationModal(opts: ModalOptions = {}): View {
+  const {
+    initialOptions = 2,
+    pollType,
+    closeMethod,
+    scheduleMethod,
+    prefill,
+  } = opts;
+
   const blocks: KnownBlock[] = [];
 
   // Poll Question
@@ -23,6 +41,7 @@ export function buildPollCreationModal(
       action_id: 'question_input',
       placeholder: { type: 'plain_text', text: 'What would you like to ask?' },
       max_length: 300,
+      ...(prefill?.question ? { initial_value: prefill.question } : {}),
     },
   });
 
@@ -48,6 +67,7 @@ export function buildPollCreationModal(
 
   // Rating Scale Range (only for rating type)
   if (pollType === 'rating') {
+    const ratingVal = prefill?.ratingScale ? String(prefill.ratingScale) : undefined;
     blocks.push({
       type: 'input',
       block_id: 'rating_scale_block',
@@ -60,6 +80,7 @@ export function buildPollCreationModal(
           { text: { type: 'plain_text', text: '1–5' }, value: '5' },
           { text: { type: 'plain_text', text: '1–10' }, value: '10' },
         ],
+        ...(ratingVal ? { initial_option: { text: { type: 'plain_text' as const, text: ratingVal === '10' ? '1–10' : '1–5' }, value: ratingVal } } : {}),
       },
     });
   }
@@ -67,7 +88,8 @@ export function buildPollCreationModal(
   // Options (hidden for yes_no and rating)
   const showOptions = !pollType || (pollType !== 'yes_no' && pollType !== 'rating');
   if (showOptions) {
-    const optionCount = Math.max(2, Math.min(10, initialOptions));
+    const prefillOpts = prefill?.options || [];
+    const optionCount = Math.max(2, Math.min(10, Math.max(initialOptions, prefillOpts.length)));
     for (let i = 0; i < optionCount; i++) {
       blocks.push({
         type: 'input',
@@ -79,6 +101,7 @@ export function buildPollCreationModal(
           action_id: `option_input_${i}`,
           placeholder: { type: 'plain_text', text: `Option ${i + 1}` },
           max_length: 200,
+          ...(prefillOpts[i] ? { initial_value: prefillOpts[i] } : {}),
         },
       });
     }
@@ -105,6 +128,10 @@ export function buildPollCreationModal(
   });
 
   // Anonymous Voting
+  const anonymousOption = {
+    text: { type: 'plain_text' as const, text: 'Hide voter identities' },
+    value: 'anonymous',
+  };
   blocks.push({
     type: 'input',
     block_id: 'anonymous_block',
@@ -113,16 +140,17 @@ export function buildPollCreationModal(
     element: {
       type: 'checkboxes',
       action_id: 'anonymous_toggle',
-      options: [
-        {
-          text: { type: 'plain_text', text: 'Hide voter identities' },
-          value: 'anonymous',
-        },
-      ],
+      options: [anonymousOption],
+      ...(prefill?.anonymous ? { initial_options: [anonymousOption] } : {}),
     },
   });
 
   // Allow Vote Change
+  const voteChangeOption = {
+    text: { type: 'plain_text' as const, text: 'Let voters update their selection' },
+    value: 'vote_change',
+  };
+  const voteChangeDefault = prefill ? prefill.allowVoteChange : true;
   blocks.push({
     type: 'input',
     block_id: 'vote_change_block',
@@ -131,22 +159,17 @@ export function buildPollCreationModal(
     element: {
       type: 'checkboxes',
       action_id: 'vote_change_toggle',
-      options: [
-        {
-          text: { type: 'plain_text', text: 'Let voters update their selection' },
-          value: 'vote_change',
-        },
-      ],
-      initial_options: [
-        {
-          text: { type: 'plain_text', text: 'Let voters update their selection' },
-          value: 'vote_change',
-        },
-      ],
+      options: [voteChangeOption],
+      ...(voteChangeDefault !== false ? { initial_options: [voteChangeOption] } : {}),
     },
   });
 
   // Show Live Results
+  const liveResultsOption = {
+    text: { type: 'plain_text' as const, text: 'Show results as votes come in' },
+    value: 'live_results',
+  };
+  const liveResultsDefault = prefill ? prefill.liveResults : true;
   blocks.push({
     type: 'input',
     block_id: 'live_results_block',
@@ -155,18 +178,8 @@ export function buildPollCreationModal(
     element: {
       type: 'checkboxes',
       action_id: 'live_results_toggle',
-      options: [
-        {
-          text: { type: 'plain_text', text: 'Show results as votes come in' },
-          value: 'live_results',
-        },
-      ],
-      initial_options: [
-        {
-          text: { type: 'plain_text', text: 'Show results as votes come in' },
-          value: 'live_results',
-        },
-      ],
+      options: [liveResultsOption],
+      ...(liveResultsDefault !== false ? { initial_options: [liveResultsOption] } : {}),
     },
   });
 

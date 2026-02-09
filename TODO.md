@@ -127,14 +127,14 @@
 
 ### Step 11: Poll Templates
 
-- [ ] **11.1** Create `src/services/templateService.ts`:
+- [x] **11.1** Create `src/services/templateService.ts`:
   - `saveTemplate(userId, name, config)` — save poll config as template
   - `getTemplates(userId)` — list user's templates
   - `deleteTemplate(templateId, userId)` — delete a template
   - `loadTemplate(templateId)` — return config for pre-filling modal
-- [ ] **11.2** Add "Save as Template" option in the poll creation modal or as a post-creation action
-- [ ] **11.3** Add "Load Template" select menu at the top of the creation modal
-- [ ] **11.4** On template load, pre-fill all modal fields with saved config
+- [x] **11.2** Add "Save as Template" option in the poll creation modal or as a post-creation action
+- [x] **11.3** Add "Load Template" select menu at the top of the creation modal
+- [x] **11.4** On template load, pre-fill all modal fields with saved config
 
 ### Step 12: Voter-Added Options
 

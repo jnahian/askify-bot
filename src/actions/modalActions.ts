@@ -30,7 +30,7 @@ export function registerModalActions(app: App): void {
     await client.views.update({
       view_id: body.view.id,
       hash: body.view.hash,
-      view: buildPollCreationModal(optionCount, pollType, closeMethod, scheduleMethod),
+      view: buildPollCreationModal({ initialOptions: optionCount, pollType, closeMethod, scheduleMethod }),
     });
   });
 
@@ -44,7 +44,7 @@ export function registerModalActions(app: App): void {
     await client.views.update({
       view_id: body.view.id,
       hash: body.view.hash,
-      view: buildPollCreationModal(optionCount, pollType, closeMethod, scheduleMethod),
+      view: buildPollCreationModal({ initialOptions: optionCount, pollType, closeMethod, scheduleMethod }),
     });
   });
 
@@ -58,7 +58,7 @@ export function registerModalActions(app: App): void {
     await client.views.update({
       view_id: body.view.id,
       hash: body.view.hash,
-      view: buildPollCreationModal(optionCount, pollType, closeMethod, scheduleMethod),
+      view: buildPollCreationModal({ initialOptions: optionCount, pollType, closeMethod, scheduleMethod }),
     });
   });
 }

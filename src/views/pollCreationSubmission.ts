@@ -159,5 +159,32 @@ export function registerPollCreationSubmission(app: App): void {
         await updatePollMessageTs(poll.id, result.ts);
       }
     }
+
+    // DM creator with "Save as Template" option
+    await client.chat.postMessage({
+      channel: creatorId,
+      text: `Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}! Want to save this configuration as a template for future use?`,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `:white_check_mark: Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}!\nWant to save this configuration as a template?`,
+          },
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: ':floppy_disk: Save as Template', emoji: true },
+              action_id: 'save_as_template',
+              value: poll.id,
+              style: 'primary',
+            },
+          ],
+        },
+      ],
+    });
   });
 }

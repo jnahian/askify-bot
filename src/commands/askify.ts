@@ -20,7 +20,7 @@ export function registerAskifyCommand(app: App): void {
     if (subcommand === 'list') {
       await ack({
         response_type: 'ephemeral',
-        text: '🚧 `/askify list` is coming in Phase 2.',
+        text: '🚧 `/askify list` is coming soon.',
       });
       return;
     }
@@ -28,7 +28,7 @@ export function registerAskifyCommand(app: App): void {
     if (subcommand === 'templates') {
       await ack({
         response_type: 'ephemeral',
-        text: '🚧 `/askify templates` is coming in Phase 2.',
+        text: '🚧 `/askify templates` is coming soon.',
       });
       return;
     }

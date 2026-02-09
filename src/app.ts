@@ -20,5 +20,5 @@ registerViews(app);
   await app.start();
   console.log('⚡ Askify bot is running!');
 
-  startJobs();
+  startJobs(app.client);
 })();

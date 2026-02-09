@@ -1,4 +1,9 @@
-export function startJobs(): void {
-  // Cron jobs (auto-close, scheduled polls, reminders) will be started here
-  console.log('📅 Background jobs initialized');
+import { WebClient } from '@slack/web-api';
+import { startAutoCloseJob } from './autoCloseJob';
+
+export function startJobs(client?: WebClient): void {
+  if (client) {
+    startAutoCloseJob(client);
+  }
+  console.log('Background jobs initialized');
 }

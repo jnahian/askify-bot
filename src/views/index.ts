@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
+import { registerPollCreationSubmission } from './pollCreationSubmission';
 
 export function registerViews(app: App): void {
-  // Modal view_submission handlers will be registered here
+  registerPollCreationSubmission(app);
 }

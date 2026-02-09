@@ -27,8 +27,8 @@
   ```
 - [x] **0.6** Create `.env` file with placeholders: `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_APP_TOKEN`, `DATABASE_URL`
 - [x] **0.7** Add `.env` to `.gitignore`
-- [ ] **0.8** Set up Supabase PostgreSQL project and obtain `DATABASE_URL` *(manual — user action)*
-- [ ] **0.9** Create Slack App on api.slack.com *(manual — user action)*:
+- [x] **0.8** Set up Supabase PostgreSQL project and obtain `DATABASE_URL`
+- [x] **0.9** Create Slack App on api.slack.com:
   - Enable slash command `/askify`
   - Enable interactivity & set request URL
   - Add bot token scopes: `chat:write`, `commands`, `channels:read`, `users:read`, `im:write`
@@ -41,112 +41,63 @@
 
 ### Step 1: Database Schema & Prisma Models
 
-- [ ] **1.1** Define Prisma schema with all four tables:
-  - `polls` — id (UUID), creator_id, channel_id, message_ts, question, poll_type (enum: `single_choice`, `multi_select`, `yes_no`, `rating`), settings (JSON), status (enum: `draft`, `scheduled`, `active`, `closed`), scheduled_at, closes_at, created_at
-  - `poll_options` — id (UUID), poll_id (FK), label, position, added_by
-  - `votes` — id (UUID), poll_id (FK), option_id (FK), voter_id, voted_at
-  - `poll_templates` — id (UUID), user_id, name, config (JSON), created_at
-- [ ] **1.2** Add unique constraint on votes: `(poll_id, voter_id, option_id)` for single-choice; `(poll_id, voter_id)` logic handled in service layer for multi-select
-- [ ] **1.3** Run `npx prisma migrate dev` to generate and apply the initial migration
-- [ ] **1.4** Generate Prisma Client (`npx prisma generate`)
-- [ ] **1.5** Create a reusable `prisma.ts` client singleton in `src/`
+- [x] **1.1** Define Prisma schema with all four tables (done in Phase 0)
+- [x] **1.2** Add unique constraint on votes: `(poll_id, voter_id, option_id)`
+- [x] **1.3** Run `npx prisma migrate dev` to apply migration
+- [x] **1.4** Generate Prisma Client (`npx prisma generate`)
+- [x] **1.5** Create a reusable `prisma.ts` client singleton in `src/lib/`
 
 ### Step 2: Bolt App Bootstrap
 
-- [ ] **2.1** Create `src/app.ts` — initialize Bolt app with bot token and signing secret from env
-- [ ] **2.2** Register the `/askify` slash command listener
-- [ ] **2.3** Verify the app starts and responds to `/askify` with a basic acknowledgment
-- [ ] **2.4** Set up `nodemon` for dev hot-reload
+- [x] **2.1** Create `src/app.ts` — initialize Bolt app with socket mode
+- [x] **2.2** Register `/askify` slash command with subcommand parsing (help, list, templates)
+- [x] **2.3** `/askify` opens poll creation modal
+- [x] **2.4** Set up `nodemon` for dev hot-reload (`npm run dev`)
 
 ### Step 3: Poll Creation Modal
 
-- [ ] **3.1** Build the poll creation modal using Block Kit (`src/views/pollCreationModal.ts`):
-  - Text input: Poll Question (max 300 chars)
-  - Static select: Poll Type (single_choice, multi_select, yes_no, rating)
-  - Dynamic text inputs: Options (2–10 fields, initially show 2 with an "Add Option" button)
-  - Conversation select: Target Channel
-  - Toggle/checkbox: Anonymous Voting (default off)
-  - Toggle/checkbox: Allow Vote Change (default on)
-  - Toggle/checkbox: Show Live Results (default on)
-  - Static select: Close Method (manual, after duration, at date/time)
-  - Conditional: Duration input or date/time picker based on close method
-- [ ] **3.2** Handle modal dynamic updates — when poll type changes:
-  - Hide options field for `yes_no` and `rating` types
-  - Show options field for `single_choice` and `multi_select` types
-- [ ] **3.3** Handle `view_submission` callback:
-  - Validate inputs (question not empty, at least 2 options for applicable types, channel selected)
-  - Return validation errors to the modal if invalid
-- [ ] **3.4** Wire up: `/askify` → `views.open` with the modal
+- [x] **3.1** Build poll creation modal (`src/views/pollCreationModal.ts`):
+  - Question, Poll Type, Dynamic Options (2–10), Channel Select
+  - Anonymous, Vote Change, Live Results toggles
+  - Close Method (manual/duration/datetime) with conditional inputs
+  - Rating Scale selector (1–5 or 1–10) for rating type
+- [x] **3.2** Dynamic modal updates on poll type and close method change (`src/actions/modalActions.ts`)
+- [x] **3.3** `view_submission` handler with validation (`src/views/pollCreationSubmission.ts`)
+- [x] **3.4** Wired: `/askify` → `views.open` → modal
 
 ### Step 4: Poll Service & Storage
 
-- [ ] **4.1** Create `src/services/pollService.ts`:
-  - `createPoll(data)` — insert poll + options into DB, return poll record
-  - `getPoll(pollId)` — fetch poll with options and vote counts
-  - `closePoll(pollId)` — update status to `closed`
-- [ ] **4.2** On `view_submission`, call `createPoll` to persist the poll
-- [ ] **4.3** Set poll status to `active` for immediate polls, `scheduled` for future polls
-- [ ] **4.4** Generate default options for special types:
-  - `yes_no` → ["Yes", "No", "Maybe"]
-  - `rating` → ["1", "2", "3", "4", "5"] (or 1–10 based on config)
+- [x] **4.1** `src/services/pollService.ts`: createPoll, getPoll, closePoll, updatePollMessageTs, getExpiredPolls
+- [x] **4.2** `view_submission` calls `createPoll` and posts to channel
+- [x] **4.3** Poll status set to `active` on creation
+- [x] **4.4** Default options: yes_no → [Yes, No, Maybe], rating → [1..N] based on scale
 
 ### Step 5: Poll Message Rendering (Block Kit)
 
-- [ ] **5.1** Create `src/blocks/pollMessage.ts` — build Block Kit message for a poll:
-  - Header section with poll question
-  - Context block with creator name, poll type, voter count
-  - Action buttons for each option (one button per option)
-  - Results section with emoji-based bar charts (if live results enabled)
-  - "Close Poll" button (visible context: creator only via action handler logic)
-- [ ] **5.2** Create `src/utils/barChart.ts` — render emoji progress bars:
-  - Calculate percentage per option
-  - Render filled/empty block emojis proportionally
-  - Format: `Option Label  ████░░░░░░  45% (9 votes)`
-- [ ] **5.3** Post the poll message to the target channel via `chat.postMessage`
-- [ ] **5.4** Store the returned `message_ts` in the poll record (needed for `chat.update`)
+- [x] **5.1** `src/blocks/pollMessage.ts`: header, context, vote buttons, bar charts, close button
+- [x] **5.2** `src/utils/barChart.ts`: emoji progress bars with percentages
+- [x] **5.3** Post poll to channel via `chat.postMessage`
+- [x] **5.4** Store `message_ts` for future `chat.update`
 
 ### Step 6: Voting Mechanism
 
-- [ ] **6.1** Create `src/services/voteService.ts`:
-  - `castVote(pollId, optionId, voterId)` — handle vote logic
-  - `retractVote(pollId, optionId, voterId)` — remove a vote
-  - `getVotes(pollId)` — get all votes for a poll grouped by option
-- [ ] **6.2** Register `block_actions` handler for vote buttons (`src/actions/voteAction.ts`):
-  - Identify poll and selected option from action payload
-  - Check poll status (reject if closed)
-  - **Single choice:** If user already voted for this option → retract; if voted for another → switch; if no vote → cast
-  - **Multi-select:** Toggle the selected option (add if not present, remove if present)
-  - **Yes/No/Maybe:** Same as single choice
-  - **Rating:** Same as single choice
-  - Respect `allow_vote_change` setting — if off, reject changes after first vote
-- [ ] **6.3** After each vote action, rebuild the poll message blocks with updated results
-- [ ] **6.4** Call `chat.update` to refresh the poll message in-channel (if live results enabled)
-- [ ] **6.5** If live results disabled, still update vote count internally but don't show bar charts until closed
-- [ ] **6.6** Handle anonymous mode: show counts only, never include voter names in the message
+- [x] **6.1** `src/services/voteService.ts`: handleSingleVote, handleMultiVote, getVotersByOption, countUniqueVoters
+- [x] **6.2** `src/actions/voteAction.ts`: vote button handler with single/multi/toggle logic
+- [x] **6.3** Rebuild poll message after each vote
+- [x] **6.4** `chat.update` for live results
+- [x] **6.5** Hidden results when live results disabled
+- [x] **6.6** Anonymous mode: counts only, no voter names
 
 ### Step 7: Poll Closing
 
-- [ ] **7.1** Register `block_actions` handler for "Close Poll" button (`src/actions/closePollAction.ts`):
-  - Verify the user is the poll creator
-  - Call `closePoll(pollId)`
-  - Update the poll message to show final results and mark as closed
-  - Disable all vote buttons
-- [ ] **7.2** Create `src/jobs/autoCloseJob.ts`:
-  - Run via `node-cron` every minute
-  - Query polls where `status = 'active'` AND `closes_at <= NOW()`
-  - For each expired poll: close it, update message, post final results
-- [ ] **7.3** On poll close, send DM to creator with detailed results:
-  - Question, total votes, per-option breakdown
-  - Voter names per option (if not anonymous)
-  - Formatted bar chart
+- [x] **7.1** `src/actions/closePollAction.ts`: creator-only close with confirmation dialog
+- [x] **7.2** `src/jobs/autoCloseJob.ts`: cron every minute, closes expired polls
+- [x] **7.3** DM results to creator on close (with `buildResultsDM`)
 
 ### Step 8: Anonymous Voting
 
-- [ ] **8.1** When `anonymous = true` in poll settings:
-  - Store `voter_id` in DB (for deduplication/vote change)
-  - Never include voter names in any message, DM, or API response
-  - Poll message shows only aggregated counts
-- [ ] **8.2** Creator DM results for anonymous polls show counts only, no voter names
+- [x] **8.1** voter_id stored for dedup, never exposed in messages
+- [x] **8.2** Creator DM shows counts only for anonymous polls
 
 ### Step 9: Integration Testing & Polish
 

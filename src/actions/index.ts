@@ -1,5 +1,10 @@
 import { App } from '@slack/bolt';
+import { registerModalActions } from './modalActions';
+import { registerVoteAction } from './voteAction';
+import { registerClosePollAction } from './closePollAction';
 
 export function registerActions(app: App): void {
-  // Block action handlers (votes, close poll, etc.) will be registered here
+  registerModalActions(app);
+  registerVoteAction(app);
+  registerClosePollAction(app);
 }

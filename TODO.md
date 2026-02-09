@@ -216,8 +216,8 @@
 
 ## Deployment
 
-- [ ] **D.1** Create `Dockerfile` for containerized deployment
-- [ ] **D.2** Create `docker-compose.yml` (app + optional local Postgres for dev)
+- [x] **D.1** Create `Dockerfile` for containerized deployment
+- [x] **D.2** Create `docker-compose.yml` (app + optional local Postgres for dev)
 - [ ] **D.3** Set up environment variables in deployment environment
 - [ ] **D.4** Configure Slack app request URL to point to deployed server
 - [ ] **D.5** Run initial database migration on production Supabase instance

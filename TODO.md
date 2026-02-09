@@ -148,9 +148,9 @@
 
 ### Step 13: `/askify list` Command
 
-- [ ] **13.1** Parse subcommand from `/askify` slash command text
-- [ ] **13.2** Implement `list` handler — query user's polls with `status IN ('active', 'scheduled')`
-- [ ] **13.3** Render results as an ephemeral message with poll details:
+- [x] **13.1** Parse subcommand from `/askify` slash command text
+- [x] **13.2** Implement `list` handler — query user's polls with `status IN ('active', 'scheduled')`
+- [x] **13.3** Render results as an ephemeral message with poll details:
   - Question, status, channel, vote count, close time
   - Action buttons: "View", "Close", "Cancel" (for scheduled)
 

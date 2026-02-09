@@ -4,6 +4,7 @@ import { registerVoteAction } from './voteAction';
 import { registerClosePollAction } from './closePollAction';
 import { registerTemplateActions } from './templateActions';
 import { registerAddOptionAction } from './addOptionAction';
+import { registerListActions } from './listActions';
 
 export function registerActions(app: App): void {
   registerModalActions(app);
@@ -11,4 +12,5 @@ export function registerActions(app: App): void {
   registerClosePollAction(app);
   registerTemplateActions(app);
   registerAddOptionAction(app);
+  registerListActions(app);
 }

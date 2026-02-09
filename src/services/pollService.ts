@@ -132,3 +132,29 @@ export async function activatePoll(pollId: string) {
     data: { status: 'active' },
   });
 }
+
+export async function getUserPolls(userId: string) {
+  const polls = await prisma.poll.findMany({
+    where: {
+      creatorId: userId,
+      status: { in: ['active', 'scheduled'] },
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+  return polls as unknown as PollWithOptions[];
+}
+
+export async function cancelScheduledPoll(pollId: string) {
+  return prisma.poll.update({
+    where: { id: pollId },
+    data: { status: 'closed' },
+  });
+}

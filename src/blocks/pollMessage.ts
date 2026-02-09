@@ -51,12 +51,13 @@ export function buildPollMessage(
   blocks.push({ type: 'divider' });
 
   // Options with results and/or vote buttons
-  for (const option of poll.options) {
+  for (let idx = 0; idx < poll.options.length; idx++) {
+    const option = poll.options[idx];
     const voteCount = option._count.votes;
 
     if (showResults) {
-      // Show bar chart
-      let text = `*${option.label}*\n${renderBar(voteCount, totalVoters)}`;
+      // Show bar chart with color coding by position
+      let text = `*${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
       // Show voter names (non-anonymous, non-closed or always for closed)
       if (!settings.anonymous && voterNames?.has(option.id)) {

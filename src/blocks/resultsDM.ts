@@ -32,9 +32,10 @@ export function buildResultsDMBlocks(
 
   blocks.push({ type: 'divider' });
 
-  for (const option of poll.options) {
+  for (let idx = 0; idx < poll.options.length; idx++) {
+    const option = poll.options[idx];
     const voteCount = option._count.votes;
-    let text = `*${option.label}*\n${renderBar(voteCount, totalVoters)}`;
+    let text = `*${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;

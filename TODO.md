@@ -193,9 +193,9 @@
 
 ### Step 18: Improved Visuals & Formatting
 
-- [ ] **18.1** Refine emoji-based bar charts with better proportional rendering
-- [ ] **18.2** Add color-coded emojis for different options or ranking tiers
-- [ ] **18.3** Improve results DM formatting with sections and dividers
+- [x] **18.1** Refine emoji-based bar charts with better proportional rendering
+- [x] **18.2** Add color-coded emojis for different options or ranking tiers
+- [x] **18.3** Improve results DM formatting with sections and dividers
 
 ### Step 19: Error Handling & Edge Cases
 

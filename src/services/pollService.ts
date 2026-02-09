@@ -9,6 +9,8 @@ interface CreatePollInput {
   options: string[];
   settings: Prisma.InputJsonValue;
   closesAt: Date | null;
+  scheduledAt?: Date | null;
+  status?: 'active' | 'scheduled';
 }
 
 export interface PollWithOptions {
@@ -20,6 +22,7 @@ export interface PollWithOptions {
   pollType: PollType;
   settings: Record<string, unknown>;
   status: PollStatus;
+  scheduledAt: Date | null;
   closesAt: Date | null;
   createdAt: Date;
   options: {
@@ -40,8 +43,9 @@ export async function createPoll(input: CreatePollInput) {
       question: input.question,
       pollType: input.pollType as PollType,
       settings: input.settings,
-      status: 'active',
+      status: (input.status || 'active') as PollStatus,
       closesAt: input.closesAt,
+      scheduledAt: input.scheduledAt || null,
       options: {
         create: input.options.map((label, index) => ({
           label,
@@ -103,5 +107,28 @@ export async function getExpiredPolls() {
       },
       _count: { select: { votes: true } },
     },
+  });
+}
+
+export async function getScheduledPolls() {
+  return prisma.poll.findMany({
+    where: {
+      status: 'scheduled',
+      scheduledAt: { lte: new Date() },
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
+  });
+}
+
+export async function activatePoll(pollId: string) {
+  return prisma.poll.update({
+    where: { id: pollId },
+    data: { status: 'active' },
   });
 }

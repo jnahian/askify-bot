@@ -117,13 +117,13 @@
 
 ### Step 10: Scheduled Polls
 
-- [ ] **10.1** Add date/time picker to the poll creation modal for scheduling
-- [ ] **10.2** On submission with a future schedule time, save poll with `status = 'scheduled'`
-- [ ] **10.3** Create `src/jobs/scheduledPollJob.ts`:
+- [x] **10.1** Add date/time picker to the poll creation modal for scheduling
+- [x] **10.2** On submission with a future schedule time, save poll with `status = 'scheduled'`
+- [x] **10.3** Create `src/jobs/scheduledPollJob.ts`:
   - Run via `node-cron` every minute
   - Query polls where `status = 'scheduled'` AND `scheduled_at <= NOW()`
   - Post each poll to its target channel, update status to `active`
-- [ ] **10.4** Store `message_ts` after posting
+- [x] **10.4** Store `message_ts` after posting
 
 ### Step 11: Poll Templates
 

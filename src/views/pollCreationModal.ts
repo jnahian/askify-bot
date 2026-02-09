@@ -3,11 +3,13 @@ import type { View, KnownBlock } from '@slack/types';
 export const MODAL_CALLBACK_ID = 'poll_creation_modal';
 export const POLL_TYPE_ACTION_ID = 'poll_type_select';
 export const CLOSE_METHOD_ACTION_ID = 'close_method_select';
+export const SCHEDULE_METHOD_ACTION_ID = 'schedule_method_select';
 
 export function buildPollCreationModal(
   initialOptions: number = 2,
   pollType?: string,
   closeMethod?: string,
+  scheduleMethod?: string,
 ): View {
   const blocks: KnownBlock[] = [];
 
@@ -215,11 +217,52 @@ export function buildPollCreationModal(
     });
   }
 
+  // Scheduling divider
+  blocks.push({ type: 'divider' });
+  blocks.push({
+    type: 'section',
+    text: { type: 'mrkdwn', text: '*Scheduling*' },
+  });
+
+  // Post Timing
+  blocks.push({
+    type: 'input',
+    block_id: 'schedule_method_block',
+    dispatch_action: true,
+    optional: true,
+    label: { type: 'plain_text', text: 'Post Timing' },
+    element: {
+      type: 'static_select',
+      action_id: SCHEDULE_METHOD_ACTION_ID,
+      placeholder: { type: 'plain_text', text: 'Post Immediately (default)' },
+      options: [
+        { text: { type: 'plain_text', text: 'Post Immediately' }, value: 'now' },
+        { text: { type: 'plain_text', text: 'Schedule for Later' }, value: 'scheduled' },
+      ],
+      ...(scheduleMethod ? { initial_option: getScheduleMethodOption(scheduleMethod) } : {}),
+    },
+  });
+
+  // Schedule datetime picker (conditional)
+  if (scheduleMethod === 'scheduled') {
+    blocks.push({
+      type: 'input',
+      block_id: 'schedule_datetime_block',
+      label: { type: 'plain_text', text: 'Schedule For' },
+      element: {
+        type: 'datetimepicker',
+        action_id: 'schedule_datetime_input',
+      },
+    });
+  }
+
+  const isScheduled = scheduleMethod === 'scheduled';
+
   return {
     type: 'modal',
     callback_id: MODAL_CALLBACK_ID,
     title: { type: 'plain_text', text: 'Create a Poll' },
-    submit: { type: 'plain_text', text: 'Create Poll' },
+    submit: { type: 'plain_text', text: isScheduled ? 'Schedule Poll' : 'Create Poll' },
     close: { type: 'plain_text', text: 'Cancel' },
     blocks,
   };
@@ -240,6 +283,14 @@ function getCloseMethodOption(value: string) {
     manual: 'Manual',
     duration: 'After Duration',
     datetime: 'At Date/Time',
+  };
+  return { text: { type: 'plain_text' as const, text: map[value] || value }, value };
+}
+
+function getScheduleMethodOption(value: string) {
+  const map: Record<string, string> = {
+    now: 'Post Immediately',
+    scheduled: 'Schedule for Later',
   };
   return { text: { type: 'plain_text' as const, text: map[value] || value }, value };
 }

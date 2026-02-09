@@ -80,6 +80,22 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
+    // Schedule method
+    const scheduleMethod = values.schedule_method_block?.schedule_method_select?.selected_option?.value || 'now';
+    let scheduledAt: Date | null = null;
+
+    if (scheduleMethod === 'scheduled') {
+      const timestamp = values.schedule_datetime_block?.schedule_datetime_input?.selected_date_time;
+      if (!timestamp) {
+        errors.schedule_datetime_block = 'Please select a schedule date and time.';
+      } else {
+        scheduledAt = new Date(timestamp * 1000);
+        if (scheduledAt <= new Date()) {
+          errors.schedule_datetime_block = 'Schedule time must be in the future.';
+        }
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       await ack({ response_action: 'errors', errors });
       return;
@@ -96,6 +112,16 @@ export function registerPollCreationSubmission(app: App): void {
       pollOptions = Array.from({ length: max }, (_, i) => `${i + 1}`);
     }
 
+    const isScheduled = scheduleMethod === 'scheduled' && scheduledAt;
+
+    // If scheduled, adjust closesAt relative to scheduledAt for duration-based close
+    if (isScheduled && closeMethod === 'duration') {
+      const hours = parseFloat(values.duration_block?.duration_input?.value || '');
+      if (!isNaN(hours) && hours > 0) {
+        closesAt = new Date(scheduledAt!.getTime() + hours * 60 * 60 * 1000);
+      }
+    }
+
     // Create poll in database
     const poll = await createPoll({
       creatorId,
@@ -105,19 +131,33 @@ export function registerPollCreationSubmission(app: App): void {
       options: pollOptions,
       settings: JSON.parse(JSON.stringify(settings)),
       closesAt,
+      scheduledAt: isScheduled ? scheduledAt : null,
+      status: isScheduled ? 'scheduled' : 'active',
     });
 
-    // Post poll message to channel
-    const message = buildPollMessage(poll, settings);
-    const result = await client.chat.postMessage({
-      channel: channelId!,
-      ...message,
-    });
+    if (isScheduled) {
+      // DM creator confirming scheduled time
+      const scheduleStr = scheduledAt!.toLocaleString('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+      await client.chat.postMessage({
+        channel: creatorId,
+        text: `:clock3: Your poll *"${question}"* has been scheduled for *${scheduleStr}*.\nIt will be posted to <#${channelId}>.`,
+      });
+    } else {
+      // Post poll message to channel immediately
+      const message = buildPollMessage(poll, settings);
+      const result = await client.chat.postMessage({
+        channel: channelId!,
+        ...message,
+      });
 
-    // Store message_ts for future updates
-    if (result.ts) {
-      const { updatePollMessageTs } = await import('../services/pollService');
-      await updatePollMessageTs(poll.id, result.ts);
+      // Store message_ts for future updates
+      if (result.ts) {
+        const { updatePollMessageTs } = await import('../services/pollService');
+        await updatePollMessageTs(poll.id, result.ts);
+      }
     }
   });
 }

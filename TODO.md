@@ -62,6 +62,7 @@
   - Close Method (manual/duration/datetime) with conditional inputs
   - Rating Scale selector (1–5 or 1–10) for rating type
 - [x] **3.2** Dynamic modal updates on poll type and close method change (`src/actions/modalActions.ts`)
+- [x] **3.5** Add ➕/➖ buttons to dynamically add/remove option fields (2–10) in creation modal
 - [x] **3.3** `view_submission` handler with validation (`src/views/pollCreationSubmission.ts`)
 - [x] **3.4** Wired: `/askify` → `views.open` → modal
 

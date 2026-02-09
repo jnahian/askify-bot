@@ -1,8 +1,10 @@
 import { App } from '@slack/bolt';
 import { registerPollCreationSubmission } from './pollCreationSubmission';
 import { registerSaveTemplateSubmission } from '../actions/templateActions';
+import { registerAddOptionSubmission } from '../actions/addOptionAction';
 
 export function registerViews(app: App): void {
   registerPollCreationSubmission(app);
   registerSaveTemplateSubmission(app);
+  registerAddOptionSubmission(app);
 }

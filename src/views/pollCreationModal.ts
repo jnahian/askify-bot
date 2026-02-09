@@ -17,6 +17,7 @@ export interface ModalOptions {
     anonymous?: boolean;
     allowVoteChange?: boolean;
     liveResults?: boolean;
+    allowAddingOptions?: boolean;
   };
 }
 
@@ -182,6 +183,26 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       ...(liveResultsDefault !== false ? { initial_options: [liveResultsOption] } : {}),
     },
   });
+
+  // Allow Adding Options (only for single_choice and multi_select)
+  if (pollType === 'single_choice' || pollType === 'multi_select') {
+    const addOptionsOption = {
+      text: { type: 'plain_text' as const, text: 'Let voters add new options' },
+      value: 'allow_adding_options',
+    };
+    blocks.push({
+      type: 'input',
+      block_id: 'add_options_block',
+      optional: true,
+      label: { type: 'plain_text', text: 'Voter-Added Options' },
+      element: {
+        type: 'checkboxes',
+        action_id: 'add_options_toggle',
+        options: [addOptionsOption],
+        ...(prefill?.allowAddingOptions ? { initial_options: [addOptionsOption] } : {}),
+      },
+    });
+  }
 
   // Close Method
   blocks.push({

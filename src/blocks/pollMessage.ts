@@ -7,6 +7,7 @@ interface PollSettings {
   allowVoteChange?: boolean;
   liveResults?: boolean;
   ratingScale?: number;
+  allowAddingOptions?: boolean;
 }
 
 const POLL_TYPE_LABELS: Record<string, string> = {
@@ -108,27 +109,40 @@ export function buildPollMessage(
     });
   }
 
-  // Close Poll button (only for active polls — creator-only check done in action handler)
+  // Action buttons (only for active polls)
   if (!isClosed) {
     blocks.push({ type: 'divider' });
+    const actionElements: Button[] = [];
+
+    // Add Option button (when allowed)
+    if (settings.allowAddingOptions) {
+      actionElements.push({
+        type: 'button',
+        text: { type: 'plain_text', text: ':heavy_plus_sign: Add Option', emoji: true },
+        action_id: 'add_option',
+        value: poll.id,
+      } as Button);
+    }
+
+    // Close Poll button
+    actionElements.push({
+      type: 'button',
+      text: { type: 'plain_text', text: ':no_entry_sign: Close Poll', emoji: true },
+      action_id: 'close_poll',
+      value: poll.id,
+      style: 'danger',
+      confirm: {
+        title: { type: 'plain_text', text: 'Close this poll?' },
+        text: { type: 'plain_text', text: 'This will end voting and display final results.' },
+        confirm: { type: 'plain_text', text: 'Close' },
+        deny: { type: 'plain_text', text: 'Cancel' },
+      },
+    } as Button);
+
     blocks.push({
       type: 'actions',
       block_id: 'poll_actions',
-      elements: [
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: ':no_entry_sign: Close Poll', emoji: true },
-          action_id: 'close_poll',
-          value: poll.id,
-          style: 'danger',
-          confirm: {
-            title: { type: 'plain_text', text: 'Close this poll?' },
-            text: { type: 'plain_text', text: 'This will end voting and display final results.' },
-            confirm: { type: 'plain_text', text: 'Close' },
-            deny: { type: 'plain_text', text: 'Cancel' },
-          },
-        },
-      ],
+      elements: actionElements,
     });
   }
 

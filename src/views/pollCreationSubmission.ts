@@ -10,6 +10,7 @@ interface PollSettings {
   allowVoteChange: boolean;
   liveResults: boolean;
   ratingScale?: number;
+  allowAddingOptions?: boolean;
 }
 
 export function registerPollCreationSubmission(app: App): void {
@@ -45,10 +46,13 @@ export function registerPollCreationSubmission(app: App): void {
     const voteChangeChecked = values.vote_change_block?.vote_change_toggle?.selected_options || [];
     const liveResultsChecked = values.live_results_block?.live_results_toggle?.selected_options || [];
 
+    const addOptionsChecked = values.add_options_block?.add_options_toggle?.selected_options || [];
+
     const settings: PollSettings = {
       anonymous: anonymousChecked.some((o: { value: string }) => o.value === 'anonymous'),
       allowVoteChange: voteChangeChecked.some((o: { value: string }) => o.value === 'vote_change'),
       liveResults: liveResultsChecked.some((o: { value: string }) => o.value === 'live_results'),
+      allowAddingOptions: addOptionsChecked.some((o: { value: string }) => o.value === 'allow_adding_options'),
     };
 
     // Rating scale

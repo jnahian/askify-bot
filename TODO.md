@@ -138,10 +138,10 @@
 
 ### Step 12: Voter-Added Options
 
-- [ ] **12.1** Add "Add Option" button to poll messages (when `allow_adding_options` is enabled)
-- [ ] **12.2** Register `block_actions` handler for "Add Option" button:
+- [x] **12.1** Add "Add Option" button to poll messages (when `allow_adding_options` is enabled)
+- [x] **12.2** Register `block_actions` handler for "Add Option" button:
   - Open a small modal with a text input for the new option
-- [ ] **12.3** Handle `view_submission` for the add-option modal:
+- [x] **12.3** Handle `view_submission` for the add-option modal:
   - Validate option text (not empty, not duplicate)
   - Insert new option into `poll_options` with `added_by` set to voter's ID
   - Rebuild and update the poll message with the new option

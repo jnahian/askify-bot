@@ -3,10 +3,12 @@ import { registerModalActions } from './modalActions';
 import { registerVoteAction } from './voteAction';
 import { registerClosePollAction } from './closePollAction';
 import { registerTemplateActions } from './templateActions';
+import { registerAddOptionAction } from './addOptionAction';
 
 export function registerActions(app: App): void {
   registerModalActions(app);
   registerVoteAction(app);
   registerClosePollAction(app);
   registerTemplateActions(app);
+  registerAddOptionAction(app);
 }

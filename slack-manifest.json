@@ -13,7 +13,7 @@
       {
         "command": "/askify",
         "description": "Create and manage polls",
-        "usage_hint": "[list | templates | help]",
+        "usage_hint": "[poll \"Q?\" \"Opt1\" \"Opt2\" | list | templates | help]",
         "should_escape": false
       }
     ]

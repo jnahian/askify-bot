@@ -1,12 +1,76 @@
 import { App } from '@slack/bolt';
 import type { KnownBlock, Button } from '@slack/types';
 import { buildPollCreationModal } from '../views/pollCreationModal';
-import { getUserPolls } from '../services/pollService';
+import { createPoll, updatePollMessageTs, getUserPolls } from '../services/pollService';
+import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
+
+interface InlinePollArgs {
+  question: string;
+  options: string[];
+  pollType: 'single_choice' | 'multi_select' | 'yes_no' | 'rating';
+  anonymous: boolean;
+  closeDuration: number | null;
+  ratingScale: number;
+}
+
+function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
+  const quoted: string[] = [];
+  const withoutQuoted = text.replace(/"([^"]+)"/g, (_, match) => {
+    quoted.push(match);
+    return '';
+  });
+
+  if (quoted.length === 0) {
+    return { error: 'Please provide a question in quotes.\nUsage: `/askify poll "Your question?" "Option 1" "Option 2"`' };
+  }
+
+  const question = quoted[0];
+  const options = quoted.slice(1);
+
+  const flags = withoutQuoted.toLowerCase().trim();
+  let pollType: InlinePollArgs['pollType'] = 'single_choice';
+  let anonymous = false;
+  let closeDuration: number | null = null;
+  let ratingScale = 5;
+
+  if (flags.includes('--multi')) pollType = 'multi_select';
+  if (flags.includes('--yesno')) pollType = 'yes_no';
+  if (flags.includes('--anon')) anonymous = true;
+
+  const ratingMatch = flags.match(/--rating(?:\s+(\d+))?/);
+  if (ratingMatch) {
+    pollType = 'rating';
+    if (ratingMatch[1]) {
+      const scale = parseInt(ratingMatch[1], 10);
+      ratingScale = scale === 10 ? 10 : 5;
+    }
+  }
+
+  const closeMatch = flags.match(/--close\s+(\d+)(h|m)/);
+  if (closeMatch) {
+    const value = parseInt(closeMatch[1], 10);
+    closeDuration = closeMatch[2] === 'h' ? value : value / 60;
+  }
+
+  if (pollType === 'single_choice' || pollType === 'multi_select') {
+    if (options.length < 2) {
+      return { error: 'Please provide at least 2 options.\nUsage: `/askify poll "Question?" "Option 1" "Option 2"`' };
+    }
+    if (options.length > 10) {
+      return { error: 'Maximum 10 options allowed.' };
+    }
+  }
+
+  return { question, options, pollType, anonymous, closeDuration, ratingScale };
+}
 
 export function registerAskifyCommand(app: App): void {
   app.command('/askify', async ({ command, ack, client }) => {
-    const subcommand = command.text.trim().toLowerCase();
+    const rawText = command.text.trim();
+    const spaceIdx = rawText.indexOf(' ');
+    const subcommand = (spaceIdx === -1 ? rawText : rawText.slice(0, spaceIdx)).toLowerCase();
+    const subArgs = spaceIdx === -1 ? '' : rawText.slice(spaceIdx + 1).trim();
 
     if (subcommand === 'help') {
       await ack();
@@ -33,6 +97,7 @@ export function registerAskifyCommand(app: App): void {
               type: 'mrkdwn',
               text: '*Commands*\n'
                 + '`/askify` — Open the poll creation modal\n'
+                + '`/askify poll "Q?" "Opt1" "Opt2"` — Quick inline poll\n'
                 + '`/askify list` — View your active & scheduled polls\n'
                 + '`/askify templates` — Manage saved poll templates\n'
                 + '`/askify help` — Show this help message',
@@ -73,6 +138,7 @@ export function registerAskifyCommand(app: App): void {
                 + '2. Enter your question, pick a poll type, and add options\n'
                 + '3. Choose a channel, adjust settings, and create!\n'
                 + '4. After closing, share results to any channel\n\n'
+                + ':zap: *Quick Poll:* `/askify poll "Lunch?" "Pizza" "Sushi" --close 2h`\n'
                 + ':bulb: *Tip:* Use emoji codes like `:fire:` `:rocket:` `:tada:` in questions and options!',
             },
           },
@@ -243,6 +309,84 @@ export function registerAskifyCommand(app: App): void {
         text: `You have ${templates.length} template(s).`,
         blocks,
       });
+      return;
+    }
+
+    // Inline poll creation
+    if (subcommand === 'poll') {
+      await ack();
+
+      if (!subArgs) {
+        await client.chat.postEphemeral({
+          channel: command.channel_id,
+          user: command.user_id,
+          text: '*Inline Poll Usage:*\n'
+            + '`/askify poll "Question?" "Option 1" "Option 2" [flags]`\n\n'
+            + '*Flags:*\n'
+            + '`--multi` — Multi-select poll\n'
+            + '`--yesno` — Yes/No/Maybe poll (no options needed)\n'
+            + '`--rating` — Rating scale 1–5 (or `--rating 10` for 1–10)\n'
+            + '`--anon` — Anonymous voting\n'
+            + '`--close 2h` — Auto-close after duration (e.g. `30m`, `4h`)',
+        });
+        return;
+      }
+
+      const parsed = parseInlinePoll(subArgs);
+      if ('error' in parsed) {
+        await client.chat.postEphemeral({
+          channel: command.channel_id,
+          user: command.user_id,
+          text: parsed.error,
+        });
+        return;
+      }
+
+      let pollOptions = parsed.options;
+      if (parsed.pollType === 'yes_no') {
+        pollOptions = ['Yes', 'No', 'Maybe'];
+      } else if (parsed.pollType === 'rating') {
+        pollOptions = Array.from({ length: parsed.ratingScale }, (_, i) => `${i + 1}`);
+      }
+
+      const settings = {
+        anonymous: parsed.anonymous,
+        allowVoteChange: true,
+        liveResults: true,
+        ...(parsed.pollType === 'rating' ? { ratingScale: parsed.ratingScale } : {}),
+      };
+
+      const closesAt = parsed.closeDuration
+        ? new Date(Date.now() + parsed.closeDuration * 60 * 60 * 1000)
+        : null;
+
+      try {
+        const poll = await createPoll({
+          creatorId: command.user_id,
+          channelId: command.channel_id,
+          question: parsed.question,
+          pollType: parsed.pollType,
+          options: pollOptions,
+          settings: JSON.parse(JSON.stringify(settings)),
+          closesAt,
+        });
+
+        const message = buildPollMessage(poll, settings);
+        const result = await client.chat.postMessage({
+          channel: command.channel_id,
+          ...message,
+        });
+
+        if (result.ts) {
+          await updatePollMessageTs(poll.id, result.ts);
+        }
+      } catch (err) {
+        await client.chat.postEphemeral({
+          channel: command.channel_id,
+          user: command.user_id,
+          text: `:warning: Failed to create poll: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        });
+      }
       return;
     }
 

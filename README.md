@@ -14,6 +14,7 @@ An internal Slack poll bot for team decisions, engagement, and feedback.
 - **Templates** — Save and reuse poll configurations
 - **Voter-Added Options** — Let voters suggest new choices on single/multi-select polls
 - **Share Results** — Post formatted results to any channel after closing
+- **Inline Quick Polls** — Create polls from the command line: `/askify poll "Q?" "A" "B" --flags`
 - **Dynamic Modals** — Poll creation modal adapts based on poll type, close method, and scheduling
 
 ## Quick Start
@@ -76,9 +77,29 @@ npm start      # Production
 | Command | Description |
 |---|---|
 | `/askify` | Open poll creation modal |
+| `/askify poll "Q?" "A" "B"` | Quick inline poll in current channel |
 | `/askify list` | View your active & scheduled polls |
 | `/askify templates` | Manage saved poll templates |
 | `/askify help` | Show usage guide |
+
+### Inline Poll
+
+Create polls directly from the command line without opening a modal:
+
+```
+/askify poll "What's for lunch?" "Pizza" "Sushi" "Tacos"
+/askify poll "Best framework?" "React" "Vue" "Svelte" --multi --anon --close 4h
+/askify poll "Move standup to 10am?" --yesno --close 30m
+/askify poll "Rate the sprint" --rating
+```
+
+| Flag | Description |
+|---|---|
+| `--multi` | Multi-select poll |
+| `--yesno` | Yes/No/Maybe (no options needed) |
+| `--rating` | Rating scale 1-5 (use `--rating 10` for 1-10) |
+| `--anon` | Anonymous voting |
+| `--close <N>h\|m` | Auto-close after duration (e.g. `2h`, `30m`) |
 
 ## Architecture
 

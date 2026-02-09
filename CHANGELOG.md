@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Inline quick poll creation via `/askify poll "Q?" "Opt1" "Opt2" [--flags]`
+  - Supports `--multi`, `--yesno`, `--rating [10]`, `--anon`, `--close <N>h|m`
+  - Posts poll directly to the current channel with sensible defaults
+  - Shows inline usage help when run without arguments
+- Per-option delete buttons in poll creation modal (replaces "Remove Last" button)
+  - Each removable option (3rd+) shows a "✕ Remove" button next to its label
+  - Preserves typed question and option text across all modal rebuilds
 - Emoji code support with hints in poll creation modal (question and option fields)
 - Emoji rendering in poll results DM headers
 - Emoji usage tip in `/askify help` command

@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PollType {
+  single_choice
+  multi_select
+  yes_no
+  rating
+}
+
+enum PollStatus {
+  draft
+  scheduled
+  active
+  closed
+}
+
+model Poll {
+  id          String     @id @default(uuid()) @db.Uuid
+  creatorId   String     @map("creator_id") @db.VarChar
+  channelId   String     @map("channel_id") @db.VarChar
+  messageTs   String?    @map("message_ts") @db.VarChar
+  question    String     @db.Text
+  pollType    PollType   @map("poll_type")
+  settings    Json       @default("{}")
+  status      PollStatus @default(active)
+  scheduledAt DateTime?  @map("scheduled_at") @db.Timestamptz()
+  closesAt    DateTime?  @map("closes_at") @db.Timestamptz()
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+
+  options PollOption[]
+  votes   Vote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id       String  @id @default(uuid()) @db.Uuid
+  pollId   String  @map("poll_id") @db.Uuid
+  label    String  @db.VarChar(200)
+  position Int
+  addedBy  String? @map("added_by") @db.VarChar
+
+  poll  Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes Vote[]
+
+  @@map("poll_options")
+}
+
+model Vote {
+  id       String   @id @default(uuid()) @db.Uuid
+  pollId   String   @map("poll_id") @db.Uuid
+  optionId String   @map("option_id") @db.Uuid
+  voterId  String   @map("voter_id") @db.VarChar
+  votedAt  DateTime @default(now()) @map("voted_at") @db.Timestamptz()
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, optionId, voterId])
+  @@index([pollId])
+  @@index([voterId])
+  @@map("votes")
+}
+
+model PollTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.VarChar
+  name      String   @db.VarChar(100)
+  config    Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([userId])
+  @@map("poll_templates")
+}

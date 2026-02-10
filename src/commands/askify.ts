@@ -303,7 +303,29 @@ export function registerAskifyCommand(app: App): void {
           } as Button);
         }
 
+        // Repost buttons for closed polls
+        if (poll.status === 'closed') {
+          actionElements.push({
+            type: 'button',
+            text: { type: 'plain_text', text: ':recycle: Repost', emoji: true },
+            action_id: `repost_poll_${poll.id}`,
+            value: poll.id,
+          } as Button);
+          actionElements.push({
+            type: 'button',
+            text: { type: 'plain_text', text: ':clock3: Schedule Repost', emoji: true },
+            action_id: `schedule_repost_${poll.id}`,
+            value: poll.id,
+          } as Button);
+        }
+
         if (poll.status === 'scheduled') {
+          actionElements.push({
+            type: 'button',
+            text: { type: 'plain_text', text: ':pencil2: Edit', emoji: true },
+            action_id: `edit_scheduled_${poll.id}`,
+            value: poll.id,
+          } as Button);
           actionElements.push({
             type: 'button',
             text: { type: 'plain_text', text: 'Cancel' },

@@ -72,17 +72,29 @@ export function buildResultsDMBlocks(
     });
   }
 
-  // Share Results button
+  // Action buttons: Share Results + Repost
   blocks.push({ type: 'divider' });
   blocks.push({
     type: 'actions',
     elements: [
       {
         type: 'button',
-        text: { type: 'plain_text', text: ':loudspeaker: Share Results to Channel', emoji: true },
+        text: { type: 'plain_text', text: ':loudspeaker: Share Results', emoji: true },
         action_id: 'share_results',
         value: poll.id,
         style: 'primary',
+      } as Button,
+      {
+        type: 'button',
+        text: { type: 'plain_text', text: ':recycle: Repost', emoji: true },
+        action_id: `repost_poll_${poll.id}`,
+        value: poll.id,
+      } as Button,
+      {
+        type: 'button',
+        text: { type: 'plain_text', text: ':clock3: Schedule Repost', emoji: true },
+        action_id: `schedule_repost_${poll.id}`,
+        value: poll.id,
       } as Button,
     ],
   });

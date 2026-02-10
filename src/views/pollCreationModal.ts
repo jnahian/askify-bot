@@ -45,7 +45,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       type: 'plain_text_input',
       action_id: 'question_input',
       placeholder: { type: 'plain_text', text: 'What would you like to ask?' },
-      max_length: 300,
+      max_length: 150,
       ...(prefill?.question ? { initial_value: prefill.question } : {}),
     },
   });

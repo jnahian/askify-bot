@@ -145,13 +145,10 @@ export function registerPollCreationSubmission(app: App): void {
 
     if (isScheduled) {
       // DM creator confirming scheduled time
-      const scheduleStr = scheduledAt!.toLocaleString('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
+      const scheduleTs = Math.floor(scheduledAt!.getTime() / 1000);
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:clock3: Your poll *"${question}"* has been scheduled for *${scheduleStr}*.\nIt will be posted to <#${channelId}>.`,
+        text: `:clock3: Your poll *"${question}"* has been scheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt!.toISOString()}>*.\nIt will be posted to <#${channelId}>.`,
       });
     } else {
       // Post poll message to channel immediately
@@ -201,6 +198,19 @@ export function registerPollCreationSubmission(app: App): void {
               value: poll.id,
               style: 'primary',
             },
+            ...(!isScheduled ? [{
+              type: 'button' as const,
+              text: { type: 'plain_text' as const, text: ':no_entry_sign: Close Poll', emoji: true },
+              action_id: 'close_poll',
+              value: poll.id,
+              style: 'danger' as const,
+              confirm: {
+                title: { type: 'plain_text' as const, text: 'Close this poll?' },
+                text: { type: 'plain_text' as const, text: 'This will end voting and display final results.' },
+                confirm: { type: 'plain_text' as const, text: 'Close' },
+                deny: { type: 'plain_text' as const, text: 'Cancel' },
+              },
+            }] : []),
           ],
         },
       ],

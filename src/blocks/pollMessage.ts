@@ -125,26 +125,13 @@ export function buildPollMessage(
       } as Button);
     }
 
-    // Close Poll button
-    actionElements.push({
-      type: 'button',
-      text: { type: 'plain_text', text: ':no_entry_sign: Close Poll', emoji: true },
-      action_id: 'close_poll',
-      value: poll.id,
-      style: 'danger',
-      confirm: {
-        title: { type: 'plain_text', text: 'Close this poll?' },
-        text: { type: 'plain_text', text: 'This will end voting and display final results.' },
-        confirm: { type: 'plain_text', text: 'Close' },
-        deny: { type: 'plain_text', text: 'Cancel' },
-      },
-    } as Button);
-
-    blocks.push({
-      type: 'actions',
-      block_id: 'poll_actions',
-      elements: actionElements,
-    });
+    if (actionElements.length > 0) {
+      blocks.push({
+        type: 'actions',
+        block_id: 'poll_actions',
+        elements: actionElements,
+      });
+    }
   }
 
   return { blocks, text: poll.question };

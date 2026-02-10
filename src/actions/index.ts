@@ -6,6 +6,7 @@ import { registerTemplateActions } from './templateActions';
 import { registerAddOptionAction } from './addOptionAction';
 import { registerListActions } from './listActions';
 import { registerShareResultsAction } from './shareResultsAction';
+import { registerEditPollAction } from './editPollAction';
 
 export function registerActions(app: App): void {
   registerModalActions(app);
@@ -15,4 +16,5 @@ export function registerActions(app: App): void {
   registerAddOptionAction(app);
   registerListActions(app);
   registerShareResultsAction(app);
+  registerEditPollAction(app);
 }

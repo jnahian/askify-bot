@@ -1,10 +1,6 @@
-import type { App, ViewSubmitAction, AllMiddlewareArgs, SlackViewMiddlewareArgs } from '@slack/bolt';
-import { MODAL_CALLBACK_ID } from './pollCreationModal';
-import { createPoll } from '../services/pollService';
-import { buildPollMessage } from '../blocks/pollMessage';
-import { isNotInChannelError, notInChannelText } from '../utils/channelError';
-
-type ViewSubmissionArgs = SlackViewMiddlewareArgs<ViewSubmitAction> & AllMiddlewareArgs;
+import type { App } from '@slack/bolt';
+import { EDIT_MODAL_CALLBACK_ID } from './pollCreationModal';
+import { getPoll, updatePoll } from '../services/pollService';
 
 interface PollSettings {
   anonymous: boolean;
@@ -17,24 +13,34 @@ interface PollSettings {
   includeMaybe?: boolean;
 }
 
-export function registerPollCreationSubmission(app: App): void {
-  app.view(MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {
+export function registerPollEditSubmission(app: App): void {
+  app.view(EDIT_MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {
+    const pollId = view.private_metadata;
     const values = view.state.values;
     const creatorId = body.user.id;
 
-    // Extract values
+    // Validate poll still exists and is scheduled
+    const existingPoll = await getPoll(pollId);
+    if (!existingPoll || existingPoll.status !== 'scheduled') {
+      await ack({
+        response_action: 'errors',
+        errors: { question_block: 'This poll has already been posted and can no longer be edited.' },
+      });
+      return;
+    }
+
+    // Extract values (same as creation)
     const question = values.question_block?.question_input?.value?.trim();
     const description = values.description_block?.description_input?.value?.trim() || undefined;
     const pollType = values.poll_type_block?.poll_type_select?.selected_option?.value;
     const channelId = values.channel_block?.channel_select?.selected_conversation;
 
-    // Validate required fields
     const errors: Record<string, string> = {};
     if (!question) errors.question_block = 'Please enter a poll question.';
     if (!pollType) errors.poll_type_block = 'Please select a poll type.';
     if (!channelId) errors.channel_block = 'Please select a channel.';
 
-    // Extract options for applicable types
+    // Extract options
     const options: string[] = [];
     if (pollType === 'single_choice' || pollType === 'multi_select') {
       for (let i = 0; i < 10; i++) {
@@ -46,7 +52,7 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // Extract settings from consolidated checkboxes
+    // Extract settings
     const settingsChecked = values.settings_block?.settings_checkboxes?.selected_options || [];
     const selectedValues = new Set(settingsChecked.map((o: { value: string }) => o.value));
 
@@ -58,12 +64,8 @@ export function registerPollCreationSubmission(app: App): void {
       reminders: selectedValues.has('reminders'),
     };
 
-    // Description
-    if (description) {
-      settings.description = description;
-    }
+    if (description) settings.description = description;
 
-    // Rating scale
     if (pollType === 'rating') {
       const scale = values.rating_scale_block?.rating_scale_select?.selected_option?.value;
       settings.ratingScale = scale ? parseInt(scale, 10) : 5;
@@ -92,7 +94,7 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // Schedule method
+    // Schedule time
     const scheduleMethod = values.schedule_method_block?.schedule_method_select?.selected_option?.value || 'now';
     let scheduledAt: Date | null = null;
 
@@ -133,7 +135,7 @@ export function registerPollCreationSubmission(app: App): void {
 
     const isScheduled = scheduleMethod === 'scheduled' && scheduledAt;
 
-    // If scheduled, adjust closesAt relative to scheduledAt for duration-based close
+    // Adjust closesAt relative to scheduledAt for duration-based close
     if (isScheduled && closeMethod === 'duration') {
       const hours = parseFloat(values.duration_block?.duration_input?.value || '');
       if (!isNaN(hours) && hours > 0) {
@@ -141,31 +143,29 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // Create poll in database
-    const poll = await createPoll({
-      creatorId,
-      channelId: channelId!,
+    // Update poll
+    await updatePoll(pollId, {
       question: question!,
       pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
+      channelId: channelId!,
       options: pollOptions,
       settings: JSON.parse(JSON.stringify(settings)),
       closesAt,
       scheduledAt: isScheduled ? scheduledAt : null,
-      status: isScheduled ? 'scheduled' : 'active',
     });
 
-    if (isScheduled) {
-      // DM creator confirming scheduled time with Edit button
-      const scheduleTs = Math.floor(scheduledAt!.getTime() / 1000);
+    // DM creator confirmation
+    if (isScheduled && scheduledAt) {
+      const scheduleTs = Math.floor(scheduledAt.getTime() / 1000);
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:clock3: Your poll *"${question}"* has been scheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt!.toISOString()}>*.\nIt will be posted to <#${channelId}>.`,
+        text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `:clock3: Your poll *"${question}"* has been scheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt!.toISOString()}>*.\nIt will be posted to <#${channelId}>.`,
+              text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
             },
           },
           {
@@ -173,28 +173,21 @@ export function registerPollCreationSubmission(app: App): void {
             elements: [
               {
                 type: 'button',
-                text: { type: 'plain_text', text: ':floppy_disk: Save as Template', emoji: true },
-                action_id: 'save_as_template',
-                value: poll.id,
-                style: 'primary' as const,
-              },
-              {
-                type: 'button',
                 text: { type: 'plain_text', text: ':pencil2: Edit', emoji: true },
-                action_id: `edit_scheduled_${poll.id}`,
-                value: poll.id,
+                action_id: `edit_scheduled_${pollId}`,
+                value: pollId,
               },
               {
                 type: 'button',
                 text: { type: 'plain_text', text: ':no_entry_sign: Cancel', emoji: true },
-                action_id: `list_cancel_${poll.id}`,
-                value: poll.id,
+                action_id: `list_cancel_${pollId}`,
+                value: pollId,
                 style: 'danger' as const,
                 confirm: {
-                  title: { type: 'plain_text' as const, text: 'Cancel this scheduled poll?' },
-                  text: { type: 'plain_text' as const, text: 'This poll will not be posted.' },
-                  confirm: { type: 'plain_text' as const, text: 'Cancel Poll' },
-                  deny: { type: 'plain_text' as const, text: 'Keep' },
+                  title: { type: 'plain_text', text: 'Cancel this scheduled poll?' },
+                  text: { type: 'plain_text', text: 'This poll will not be posted.' },
+                  confirm: { type: 'plain_text', text: 'Cancel Poll' },
+                  deny: { type: 'plain_text', text: 'Keep' },
                 },
               },
             ],
@@ -202,69 +195,10 @@ export function registerPollCreationSubmission(app: App): void {
         ],
       });
     } else {
-      // Post poll message to channel immediately
-      const message = buildPollMessage(poll, settings);
-      try {
-        const result = await client.chat.postMessage({
-          channel: channelId!,
-          ...message,
-        });
-
-        // Store message_ts for future updates
-        if (result.ts) {
-          const { updatePollMessageTs } = await import('../services/pollService');
-          await updatePollMessageTs(poll.id, result.ts);
-        }
-      } catch (err) {
-        if (isNotInChannelError(err)) {
-          await client.chat.postMessage({
-            channel: creatorId,
-            text: notInChannelText(channelId!),
-          });
-          return;
-        }
-        throw err;
-      }
+      await client.chat.postMessage({
+        channel: creatorId,
+        text: `:pencil2: Your poll *"${question}"* has been updated.`,
+      });
     }
-
-    // DM creator with "Save as Template" option
-    await client.chat.postMessage({
-      channel: creatorId,
-      text: `Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}! Want to save this configuration as a template for future use?`,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `:white_check_mark: Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}!\nWant to save this configuration as a template?`,
-          },
-        },
-        {
-          type: 'actions',
-          elements: [
-            {
-              type: 'button',
-              text: { type: 'plain_text', text: ':floppy_disk: Save as Template', emoji: true },
-              action_id: 'save_as_template',
-              value: poll.id,
-              style: 'primary',
-            },
-            ...(!isScheduled ? [{
-              type: 'button' as const,
-              text: { type: 'plain_text' as const, text: ':no_entry_sign: Close Poll', emoji: true },
-              action_id: 'close_poll',
-              value: poll.id,
-              style: 'danger' as const,
-              confirm: {
-                title: { type: 'plain_text' as const, text: 'Close this poll?' },
-                text: { type: 'plain_text' as const, text: 'This will end voting and display final results.' },
-                confirm: { type: 'plain_text' as const, text: 'Close' },
-                deny: { type: 'plain_text' as const, text: 'Cancel' },
-              },
-            }] : []),
-          ],
-        },
-      ],
-    });
   });
 }

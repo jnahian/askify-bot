@@ -165,6 +165,48 @@ export async function getUserPolls(userId: string, opts: GetUserPollsOptions = {
   return polls as unknown as PollWithOptions[];
 }
 
+interface UpdatePollInput {
+  question: string;
+  pollType: 'single_choice' | 'multi_select' | 'yes_no' | 'rating';
+  channelId: string;
+  options: string[];
+  settings: Prisma.InputJsonValue;
+  closesAt: Date | null;
+  scheduledAt: Date | null;
+}
+
+export async function updatePoll(pollId: string, input: UpdatePollInput) {
+  // Delete existing options (cascade deletes votes too)
+  await prisma.pollOption.deleteMany({ where: { pollId } });
+
+  const poll = await prisma.poll.update({
+    where: { id: pollId },
+    data: {
+      question: input.question,
+      pollType: input.pollType as PollType,
+      channelId: input.channelId,
+      settings: input.settings,
+      closesAt: input.closesAt,
+      scheduledAt: input.scheduledAt,
+      options: {
+        create: input.options.map((label, index) => ({
+          label,
+          position: index,
+        })),
+      },
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
+  });
+
+  return poll as unknown as PollWithOptions;
+}
+
 export async function cancelScheduledPoll(pollId: string) {
   return prisma.poll.update({
     where: { id: pollId },

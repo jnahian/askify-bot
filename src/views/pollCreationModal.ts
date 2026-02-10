@@ -1,6 +1,7 @@
 import type { View, KnownBlock } from '@slack/types';
 
 export const MODAL_CALLBACK_ID = 'poll_creation_modal';
+export const EDIT_MODAL_CALLBACK_ID = 'poll_edit_modal';
 export const POLL_TYPE_ACTION_ID = 'poll_type_select';
 export const CLOSE_METHOD_ACTION_ID = 'close_method_select';
 export const SCHEDULE_METHOD_ACTION_ID = 'schedule_method_select';
@@ -8,6 +9,8 @@ export const ADD_MODAL_OPTION_ACTION_ID = 'add_modal_option';
 export const REMOVE_MODAL_OPTION_ACTION_ID = 'remove_modal_option';
 
 export interface ModalOptions {
+  callbackId?: string;
+  privateMetadata?: string;
   initialOptions?: number;
   pollType?: string;
   closeMethod?: string;
@@ -28,6 +31,8 @@ export interface ModalOptions {
 
 export function buildPollCreationModal(opts: ModalOptions = {}): View {
   const {
+    callbackId,
+    privateMetadata,
     initialOptions = 2,
     pollType,
     closeMethod,
@@ -337,12 +342,18 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
   }
 
   const isScheduled = scheduleMethod === 'scheduled';
+  const isEdit = callbackId === EDIT_MODAL_CALLBACK_ID;
+  const titleText = isEdit ? 'Edit Poll' : 'Create a Poll';
+  const submitText = isEdit
+    ? 'Save Changes'
+    : isScheduled ? 'Schedule Poll' : 'Create Poll';
 
   return {
     type: 'modal',
-    callback_id: MODAL_CALLBACK_ID,
-    title: { type: 'plain_text', text: 'Create a Poll' },
-    submit: { type: 'plain_text', text: isScheduled ? 'Schedule Poll' : 'Create Poll' },
+    callback_id: callbackId || MODAL_CALLBACK_ID,
+    ...(privateMetadata ? { private_metadata: privateMetadata } : {}),
+    title: { type: 'plain_text', text: titleText },
+    submit: { type: 'plain_text', text: submitText },
     close: { type: 'plain_text', text: 'Cancel' },
     blocks,
   };

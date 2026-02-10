@@ -22,6 +22,7 @@ export interface ModalOptions {
     liveResults?: boolean;
     allowAddingOptions?: boolean;
     reminders?: boolean;
+    includeMaybe?: boolean;
   };
 }
 
@@ -103,6 +104,27 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
           { text: { type: 'plain_text', text: '1–10' }, value: '10' },
         ],
         ...(ratingVal ? { initial_option: { text: { type: 'plain_text' as const, text: ratingVal === '10' ? '1–10' : '1–5' }, value: ratingVal } } : {}),
+      },
+    });
+  }
+
+  // Include Maybe option (only for yes_no type)
+  if (pollType === 'yes_no') {
+    const includeMaybeOption = {
+      text: { type: 'plain_text' as const, text: 'Include "Maybe" option' },
+      value: 'include_maybe',
+    };
+    const includeMaybeDefault = prefill ? prefill.includeMaybe !== false : true;
+    blocks.push({
+      type: 'input',
+      block_id: 'include_maybe_block',
+      optional: true,
+      label: { type: 'plain_text', text: 'Maybe Option' },
+      element: {
+        type: 'checkboxes',
+        action_id: 'include_maybe_toggle',
+        options: [includeMaybeOption],
+        ...(includeMaybeDefault ? { initial_options: [includeMaybeOption] } : {}),
       },
     });
   }

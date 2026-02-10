@@ -14,6 +14,7 @@ interface PollSettings {
   allowAddingOptions?: boolean;
   reminders?: boolean;
   description?: string;
+  includeMaybe?: boolean;
 }
 
 export function registerPollCreationSubmission(app: App): void {
@@ -118,10 +119,17 @@ export function registerPollCreationSubmission(app: App): void {
 
     await ack();
 
+    // Include Maybe preference
+    const includeMaybeChecked = values.include_maybe_block?.include_maybe_toggle?.selected_options || [];
+    const includeMaybe = includeMaybeChecked.some((o: { value: string }) => o.value === 'include_maybe');
+    if (pollType === 'yes_no') {
+      settings.includeMaybe = includeMaybe;
+    }
+
     // Generate default options for special types
     let pollOptions = options;
     if (pollType === 'yes_no') {
-      pollOptions = ['Yes', 'No', 'Maybe'];
+      pollOptions = includeMaybe ? ['Yes', 'No', 'Maybe'] : ['Yes', 'No'];
     } else if (pollType === 'rating') {
       const max = settings.ratingScale || 5;
       pollOptions = Array.from({ length: max }, (_, i) => `${i + 1}`);

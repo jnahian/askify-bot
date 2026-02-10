@@ -5,6 +5,12 @@ const NUMBER_EMOJIS = [
 
 const STAR = '⭐';
 
+const YES_NO_EMOJIS: Record<string, string> = {
+  'Yes': '✅',
+  'No': '❌',
+  'Maybe': '🤷',
+};
+
 /**
  * Get a number emoji for the given 0-based index (e.g., 0 → 1️⃣).
  * Falls back to the number in parentheses for indices >= 10.
@@ -22,10 +28,14 @@ export function getStarEmoji(rating: number): string {
 
 /**
  * Get the appropriate emoji prefix for a poll option.
+ * - Yes/No/Maybe polls: dedicated emojis (✅, ❌, 🤷)
  * - Rating polls: star emojis based on option label (numeric)
  * - All other polls: number emoji based on position
  */
 export function getOptionEmoji(pollType: string, index: number, label: string): string {
+  if (pollType === 'yes_no') {
+    return YES_NO_EMOJIS[label] ?? getNumberEmoji(index);
+  }
   if (pollType === 'rating') {
     const rating = parseInt(label, 10);
     return isNaN(rating) ? getNumberEmoji(index) : getStarEmoji(rating);
@@ -35,6 +45,7 @@ export function getOptionEmoji(pollType: string, index: number, label: string): 
 
 /**
  * Get the button text for a poll option.
+ * - Yes/No/Maybe polls: emoji only (✅, ❌, 🤷)
  * - Rating polls: star emojis
  * - All other polls: number emoji only
  */

@@ -68,16 +68,15 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     },
   });
 
-  // Poll Type
+  // Poll Type (radio buttons)
   blocks.push({
     type: 'input',
     block_id: 'poll_type_block',
     dispatch_action: true,
     label: { type: 'plain_text', text: 'Poll Type' },
     element: {
-      type: 'static_select',
+      type: 'radio_buttons',
       action_id: POLL_TYPE_ACTION_ID,
-      placeholder: { type: 'plain_text', text: 'Select poll type' },
       options: [
         { text: { type: 'plain_text', text: 'Single Choice' }, value: 'single_choice' },
         { text: { type: 'plain_text', text: 'Multi-Select' }, value: 'multi_select' },
@@ -307,22 +306,20 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     text: { type: 'mrkdwn', text: '*Scheduling*' },
   });
 
-  // Post Timing
+  // Post Timing (radio buttons)
   blocks.push({
     type: 'input',
     block_id: 'schedule_method_block',
     dispatch_action: true,
-    optional: true,
     label: { type: 'plain_text', text: 'Post Timing' },
     element: {
-      type: 'static_select',
+      type: 'radio_buttons',
       action_id: SCHEDULE_METHOD_ACTION_ID,
-      placeholder: { type: 'plain_text', text: 'Post Immediately (default)' },
       options: [
         { text: { type: 'plain_text', text: 'Post Immediately' }, value: 'now' },
         { text: { type: 'plain_text', text: 'Schedule for Later' }, value: 'scheduled' },
       ],
-      ...(scheduleMethod ? { initial_option: getScheduleMethodOption(scheduleMethod) } : {}),
+      initial_option: getScheduleMethodOption(scheduleMethod || 'now'),
     },
   });
 

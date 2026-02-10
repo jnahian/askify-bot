@@ -134,11 +134,23 @@ export async function activatePoll(pollId: string) {
   });
 }
 
-export async function getUserPolls(userId: string) {
+export interface GetUserPollsOptions {
+  from?: Date;
+  to?: Date;
+  limit?: number;
+}
+
+export async function getUserPolls(userId: string, opts: GetUserPollsOptions = {}) {
+  const { from, to, limit = 10 } = opts;
+
+  const createdAtFilter: Record<string, Date> = {};
+  if (from) createdAtFilter.gte = from;
+  if (to) createdAtFilter.lte = to;
+
   const polls = await prisma.poll.findMany({
     where: {
       creatorId: userId,
-      status: { in: ['active', 'scheduled'] },
+      ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {}),
     },
     include: {
       options: {
@@ -148,7 +160,7 @@ export async function getUserPolls(userId: string) {
       _count: { select: { votes: true } },
     },
     orderBy: { createdAt: 'desc' },
-    take: 20,
+    take: limit,
   });
   return polls as unknown as PollWithOptions[];
 }

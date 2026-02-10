@@ -14,6 +14,7 @@ export interface ModalOptions {
   scheduleMethod?: string;
   prefill?: {
     question?: string;
+    description?: string;
     options?: string[];
     ratingScale?: number;
     anonymous?: boolean;
@@ -47,6 +48,22 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       placeholder: { type: 'plain_text', text: 'What would you like to ask?' },
       max_length: 150,
       ...(prefill?.question ? { initial_value: prefill.question } : {}),
+    },
+  });
+
+  // Poll Description (optional)
+  blocks.push({
+    type: 'input',
+    block_id: 'description_block',
+    optional: true,
+    label: { type: 'plain_text', text: 'Description' },
+    element: {
+      type: 'plain_text_input',
+      action_id: 'description_input',
+      placeholder: { type: 'plain_text', text: 'Add context or instructions for your poll (optional)' },
+      multiline: true,
+      max_length: 500,
+      ...(prefill?.description ? { initial_value: prefill.description } : {}),
     },
   });
 

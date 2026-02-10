@@ -57,6 +57,7 @@ export function registerTemplateActions(app: App): void {
         closeMethod: config.closeMethod,
         initialOptions: config.options.length || 2,
         prefill: {
+          description: config.description,
           options: config.options,
           anonymous: config.settings.anonymous,
           allowVoteChange: config.settings.allowVoteChange,
@@ -106,10 +107,12 @@ export function registerSaveTemplateSubmission(app: App): void {
       return;
     }
 
-    const settings = poll.settings as TemplateConfig['settings'];
+    const pollSettings = poll.settings as TemplateConfig['settings'] & { description?: string };
+    const { description, ...settings } = { description: undefined, ...pollSettings };
     const config: TemplateConfig = {
       pollType: poll.pollType,
       options: poll.options.map((o) => o.label),
+      ...(description ? { description } : {}),
       settings,
       closeMethod: 'manual',
     };

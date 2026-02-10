@@ -8,6 +8,7 @@ interface PollSettings {
   allowVoteChange?: boolean;
   liveResults?: boolean;
   ratingScale?: number;
+  description?: string;
 }
 
 /**
@@ -25,6 +26,13 @@ export function buildResultsDMBlocks(
     type: 'header',
     text: { type: 'plain_text', text: `Poll Results: ${poll.question}`, emoji: true },
   });
+
+  if (settings.description) {
+    blocks.push({
+      type: 'section',
+      text: { type: 'mrkdwn', text: settings.description },
+    });
+  }
 
   blocks.push({
     type: 'context',

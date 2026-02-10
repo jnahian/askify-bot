@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 export interface TemplateConfig {
   pollType: string;
   options: string[];
+  description?: string;
   settings: {
     anonymous: boolean;
     allowVoteChange: boolean;

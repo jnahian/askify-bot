@@ -9,6 +9,7 @@ interface PollSettings {
   liveResults?: boolean;
   ratingScale?: number;
   allowAddingOptions?: boolean;
+  description?: string;
 }
 
 const POLL_TYPE_LABELS: Record<string, string> = {
@@ -34,6 +35,14 @@ export function buildPollMessage(
     type: 'header',
     text: { type: 'plain_text', text: poll.question, emoji: true },
   });
+
+  // Description (optional)
+  if (settings.description) {
+    blocks.push({
+      type: 'section',
+      text: { type: 'mrkdwn', text: settings.description },
+    });
+  }
 
   // Context: poll type, creator, status
   const contextParts = [
@@ -154,7 +163,11 @@ export function buildResultsDM(
   voterNames?: Map<string, string[]>,
 ): string {
   const totalVoters = poll._count.votes;
-  let text = `:bar_chart: *Poll Results: ${poll.question}*\n\n`;
+  let text = `:bar_chart: *Poll Results: ${poll.question}*\n`;
+  if (settings.description) {
+    text += `${settings.description}\n`;
+  }
+  text += '\n';
 
   for (let idx = 0; idx < poll.options.length; idx++) {
     const option = poll.options[idx];

@@ -13,6 +13,7 @@ interface PollSettings {
   ratingScale?: number;
   allowAddingOptions?: boolean;
   reminders?: boolean;
+  description?: string;
 }
 
 export function registerPollCreationSubmission(app: App): void {
@@ -22,6 +23,7 @@ export function registerPollCreationSubmission(app: App): void {
 
     // Extract values
     const question = values.question_block?.question_input?.value?.trim();
+    const description = values.description_block?.description_input?.value?.trim() || undefined;
     const pollType = values.poll_type_block?.poll_type_select?.selected_option?.value;
     const channelId = values.channel_block?.channel_select?.selected_conversation;
 
@@ -58,6 +60,11 @@ export function registerPollCreationSubmission(app: App): void {
       allowAddingOptions: addOptionsChecked.some((o: { value: string }) => o.value === 'allow_adding_options'),
       reminders: remindersChecked.some((o: { value: string }) => o.value === 'reminders'),
     };
+
+    // Description
+    if (description) {
+      settings.description = description;
+    }
 
     // Rating scale
     if (pollType === 'rating') {

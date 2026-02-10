@@ -189,106 +189,69 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     },
   });
 
-  // Settings divider
+  // Settings — consolidated checkboxes with descriptions
   blocks.push({ type: 'divider' });
-  blocks.push({
-    type: 'section',
-    text: { type: 'mrkdwn', text: '*Poll Settings*' },
-  });
 
-  // Anonymous Voting
   const anonymousOption = {
-    text: { type: 'plain_text' as const, text: 'Hide voter identities' },
+    text: { type: 'plain_text' as const, text: 'Anonymous Voting' },
+    description: { type: 'plain_text' as const, text: 'Voter identities are hidden from results' },
     value: 'anonymous',
   };
-  blocks.push({
-    type: 'input',
-    block_id: 'anonymous_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Anonymous Voting' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'anonymous_toggle',
-      options: [anonymousOption],
-      ...(prefill?.anonymous ? { initial_options: [anonymousOption] } : {}),
-    },
-  });
-
-  // Allow Vote Change
   const voteChangeOption = {
-    text: { type: 'plain_text' as const, text: 'Let voters update their selection' },
+    text: { type: 'plain_text' as const, text: 'Allow Vote Change' },
+    description: { type: 'plain_text' as const, text: 'Voters can change or retract their vote' },
     value: 'vote_change',
   };
-  const voteChangeDefault = prefill ? prefill.allowVoteChange : true;
-  blocks.push({
-    type: 'input',
-    block_id: 'vote_change_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Allow Vote Change' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'vote_change_toggle',
-      options: [voteChangeOption],
-      ...(voteChangeDefault !== false ? { initial_options: [voteChangeOption] } : {}),
-    },
-  });
-
-  // Show Live Results
   const liveResultsOption = {
-    text: { type: 'plain_text' as const, text: 'Show results as votes come in' },
+    text: { type: 'plain_text' as const, text: 'Show Live Results' },
+    description: { type: 'plain_text' as const, text: 'Results are visible before the poll closes' },
     value: 'live_results',
   };
-  const liveResultsDefault = prefill ? prefill.liveResults : true;
-  blocks.push({
-    type: 'input',
-    block_id: 'live_results_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Show Live Results' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'live_results_toggle',
-      options: [liveResultsOption],
-      ...(liveResultsDefault !== false ? { initial_options: [liveResultsOption] } : {}),
-    },
-  });
-
-  // Send Reminders (only useful when poll has a close time)
   const remindersOption = {
-    text: { type: 'plain_text' as const, text: 'DM non-voters before the poll closes' },
+    text: { type: 'plain_text' as const, text: 'Send Reminders' },
+    description: { type: 'plain_text' as const, text: 'DM non-voters before the poll closes' },
     value: 'reminders',
   };
+  const addOptionsOption = {
+    text: { type: 'plain_text' as const, text: 'Voter-Added Options' },
+    description: { type: 'plain_text' as const, text: 'Voters can suggest new options' },
+    value: 'allow_adding_options',
+  };
+
+  const settingsOptions: typeof anonymousOption[] = [
+    anonymousOption,
+    voteChangeOption,
+    liveResultsOption,
+    remindersOption,
+  ];
+
+  // Only include "Allow Adding Options" for applicable poll types
+  if (pollType === 'single_choice' || pollType === 'multi_select') {
+    settingsOptions.push(addOptionsOption);
+  }
+
+  // Build initial selections
+  const settingsInitial: typeof anonymousOption[] = [];
+  if (prefill?.anonymous) settingsInitial.push(anonymousOption);
+  const voteChangeDefault = prefill ? prefill.allowVoteChange : true;
+  if (voteChangeDefault !== false) settingsInitial.push(voteChangeOption);
+  const liveResultsDefault = prefill ? prefill.liveResults : true;
+  if (liveResultsDefault !== false) settingsInitial.push(liveResultsOption);
+  if (prefill?.reminders) settingsInitial.push(remindersOption);
+  if (prefill?.allowAddingOptions) settingsInitial.push(addOptionsOption);
+
   blocks.push({
     type: 'input',
-    block_id: 'reminders_block',
+    block_id: 'settings_block',
     optional: true,
-    label: { type: 'plain_text', text: 'Send Reminders' },
+    label: { type: 'plain_text', text: 'Poll Settings' },
     element: {
       type: 'checkboxes',
-      action_id: 'reminders_toggle',
-      options: [remindersOption],
-      ...(prefill?.reminders ? { initial_options: [remindersOption] } : {}),
+      action_id: 'settings_checkboxes',
+      options: settingsOptions,
+      ...(settingsInitial.length > 0 ? { initial_options: settingsInitial } : {}),
     },
   });
-
-  // Allow Adding Options (only for single_choice and multi_select)
-  if (pollType === 'single_choice' || pollType === 'multi_select') {
-    const addOptionsOption = {
-      text: { type: 'plain_text' as const, text: 'Let voters add new options' },
-      value: 'allow_adding_options',
-    };
-    blocks.push({
-      type: 'input',
-      block_id: 'add_options_block',
-      optional: true,
-      label: { type: 'plain_text', text: 'Voter-Added Options' },
-      element: {
-        type: 'checkboxes',
-        action_id: 'add_options_toggle',
-        options: [addOptionsOption],
-        ...(prefill?.allowAddingOptions ? { initial_options: [addOptionsOption] } : {}),
-      },
-    });
-  }
 
   // Close Method
   blocks.push({

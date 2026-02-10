@@ -46,20 +46,16 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // Extract settings
-    const anonymousChecked = values.anonymous_block?.anonymous_toggle?.selected_options || [];
-    const voteChangeChecked = values.vote_change_block?.vote_change_toggle?.selected_options || [];
-    const liveResultsChecked = values.live_results_block?.live_results_toggle?.selected_options || [];
-
-    const addOptionsChecked = values.add_options_block?.add_options_toggle?.selected_options || [];
-    const remindersChecked = values.reminders_block?.reminders_toggle?.selected_options || [];
+    // Extract settings from consolidated checkboxes
+    const settingsChecked = values.settings_block?.settings_checkboxes?.selected_options || [];
+    const selectedValues = new Set(settingsChecked.map((o: { value: string }) => o.value));
 
     const settings: PollSettings = {
-      anonymous: anonymousChecked.some((o: { value: string }) => o.value === 'anonymous'),
-      allowVoteChange: voteChangeChecked.some((o: { value: string }) => o.value === 'vote_change'),
-      liveResults: liveResultsChecked.some((o: { value: string }) => o.value === 'live_results'),
-      allowAddingOptions: addOptionsChecked.some((o: { value: string }) => o.value === 'allow_adding_options'),
-      reminders: remindersChecked.some((o: { value: string }) => o.value === 'reminders'),
+      anonymous: selectedValues.has('anonymous'),
+      allowVoteChange: selectedValues.has('vote_change'),
+      liveResults: selectedValues.has('live_results'),
+      allowAddingOptions: selectedValues.has('allow_adding_options'),
+      reminders: selectedValues.has('reminders'),
     };
 
     // Description

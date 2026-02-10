@@ -8,6 +8,7 @@ import { registerListActions } from './listActions';
 import { registerShareResultsAction } from './shareResultsAction';
 import { registerEditPollAction } from './editPollAction';
 import { registerRepostAction } from './repostAction';
+import { registerScheduleRepostAction } from './scheduleRepostAction';
 
 export function registerActions(app: App): void {
   registerModalActions(app);
@@ -19,4 +20,5 @@ export function registerActions(app: App): void {
   registerShareResultsAction(app);
   registerEditPollAction(app);
   registerRepostAction(app);
+  registerScheduleRepostAction(app);
 }

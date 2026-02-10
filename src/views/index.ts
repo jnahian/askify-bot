@@ -5,6 +5,7 @@ import { registerSaveTemplateSubmission } from '../actions/templateActions';
 import { registerAddOptionSubmission } from '../actions/addOptionAction';
 import { registerShareResultsSubmission } from '../actions/shareResultsAction';
 import { registerRepostSubmission } from '../actions/repostAction';
+import { registerScheduleRepostSubmission } from '../actions/scheduleRepostAction';
 
 export function registerViews(app: App): void {
   registerPollCreationSubmission(app);
@@ -13,4 +14,5 @@ export function registerViews(app: App): void {
   registerAddOptionSubmission(app);
   registerShareResultsSubmission(app);
   registerRepostSubmission(app);
+  registerScheduleRepostSubmission(app);
 }

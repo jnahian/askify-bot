@@ -262,7 +262,7 @@ Core polling functionality covering the most common use cases.
 
 - DM results to creator on poll close
 
-- Core database schema and Sequelize models
+- Core database schema and Prisma models
 
 ## **6.2 Phase 2 — Enhanced (Weeks 4–5)**
 

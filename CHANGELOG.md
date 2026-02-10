@@ -55,6 +55,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Reminder job every 15 minutes for non-voter DMs
 - Startup recovery job for missed scheduled polls and auto-close events
 
+#### App Experience
+- App Home tab with usage guide, commands reference, and feature overview
+- DM response handler — bot replies helpfully when users message it directly
+
 #### Developer Experience
 - Global request logging middleware with execution time for all commands, actions, and views
 - Rich `/askify help` command with usage guide and tips

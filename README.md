@@ -16,6 +16,8 @@ An internal Slack poll bot for team decisions, engagement, and feedback.
 - **Share Results** — Post formatted results to any channel after closing
 - **Inline Quick Polls** — Create polls from the command line: `/askify poll "Q?" "A" "B" --flags`
 - **Dynamic Modals** — Poll creation modal adapts based on poll type, close method, and scheduling
+- **App Home Tab** — Usage guide and feature overview accessible from the bot's Home tab
+- **DM Responses** — Bot responds helpfully when users message it directly
 
 ## Quick Start
 
@@ -62,7 +64,8 @@ npm run prisma:generate  # Generate Prisma Client
 3. Add the `/askify` slash command
 4. Enable **Interactivity**
 5. Add bot token scopes: `chat:write`, `commands`, `channels:read`, `users:read`, `im:write`
-6. Install to your workspace
+6. Subscribe to bot events: `app_home_opened`, `message.im`
+7. Install to your workspace
 
 ### 5. Run
 
@@ -110,6 +113,8 @@ src/
   commands/           # Slash command handlers
   actions/            # Block action handlers (votes, buttons)
   views/              # Modal definitions & submission handlers
+  events/             # Event handlers (DM messages, App Home tab)
+  middleware/         # Global middleware (request logger)
   services/           # Business logic (poll, vote, template)
   blocks/             # Block Kit message builders
   jobs/               # Cron jobs (auto-close, reminders, scheduled posts)

@@ -43,6 +43,8 @@ src/
   commands/           # /askify slash command + subcommands
   actions/            # Button/select action handlers
   views/              # Modal submission handlers
+  events/             # Event handlers (DM messages, App Home tab)
+  middleware/         # Global middleware (request logger)
   services/           # Business logic & database operations
   blocks/             # Block Kit message builders
   jobs/               # Background cron jobs
@@ -109,6 +111,11 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) with emoji p
 
 1. Create `src/jobs/myJob.ts` with a `startMyJob(client: WebClient)` function
 2. Add the start call to `src/jobs/index.ts`
+
+### New Event Handler
+
+1. Create `src/events/myHandler.ts` with a `registerMyHandler(app: App)` function
+2. Add the registration call to `src/events/index.ts`
 
 ### New Block Kit Builder
 

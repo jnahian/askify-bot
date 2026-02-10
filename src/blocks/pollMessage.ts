@@ -1,6 +1,7 @@
 import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
+import { getOptionEmoji, getButtonEmoji } from '../utils/emojiPrefix';
 
 interface PollSettings {
   anonymous?: boolean;
@@ -54,10 +55,13 @@ export function buildPollMessage(
   for (let idx = 0; idx < poll.options.length; idx++) {
     const option = poll.options[idx];
     const voteCount = option._count.votes;
+    const emoji = getOptionEmoji(poll.pollType, idx, option.label);
+    const btnEmoji = getButtonEmoji(poll.pollType, idx, option.label);
+    const labelWithEmoji = `${emoji} ${option.label}`;
 
     if (showResults) {
       // Show bar chart with color coding by position
-      let text = `*${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
+      let text = `*${labelWithEmoji}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
       // Show voter names (non-anonymous, non-closed or always for closed)
       if (!settings.anonymous && voterNames?.has(option.id)) {
@@ -75,7 +79,7 @@ export function buildPollMessage(
           : {
               accessory: {
                 type: 'button',
-                text: { type: 'plain_text', text: option.label, emoji: true },
+                text: { type: 'plain_text', text: btnEmoji, emoji: true },
                 action_id: `vote_${option.id}`,
                 value: `${poll.id}:${option.id}`,
               } as Button,
@@ -85,10 +89,10 @@ export function buildPollMessage(
       // No results shown — just buttons
       blocks.push({
         type: 'section',
-        text: { type: 'mrkdwn', text: `*${option.label}*` },
+        text: { type: 'mrkdwn', text: `*${labelWithEmoji}*` },
         accessory: {
           type: 'button',
-          text: { type: 'plain_text', text: 'Vote', emoji: true },
+          text: { type: 'plain_text', text: btnEmoji, emoji: true },
           action_id: `vote_${option.id}`,
           value: `${poll.id}:${option.id}`,
         } as Button,
@@ -152,9 +156,11 @@ export function buildResultsDM(
   const totalVoters = poll._count.votes;
   let text = `:bar_chart: *Poll Results: ${poll.question}*\n\n`;
 
-  for (const option of poll.options) {
+  for (let idx = 0; idx < poll.options.length; idx++) {
+    const option = poll.options[idx];
     const voteCount = option._count.votes;
-    text += `*${option.label}*\n${renderBar(voteCount, totalVoters)}\n`;
+    const emoji = getOptionEmoji(poll.pollType, idx, option.label);
+    text += `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters)}\n`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;

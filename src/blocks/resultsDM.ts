@@ -1,6 +1,7 @@
 import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
+import { getOptionEmoji } from '../utils/emojiPrefix';
 
 interface PollSettings {
   anonymous?: boolean;
@@ -35,7 +36,8 @@ export function buildResultsDMBlocks(
   for (let idx = 0; idx < poll.options.length; idx++) {
     const option = poll.options[idx];
     const voteCount = option._count.votes;
-    let text = `*${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
+    const emoji = getOptionEmoji(poll.pollType, idx, option.label);
+    let text = `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;

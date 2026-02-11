@@ -1,0 +1,46 @@
+name: Deploy to VPS
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+
+            cd ${{ secrets.VPS_APP_PATH }}
+
+            echo "==> Fetching tags..."
+            git fetch --tags
+
+            echo "==> Checking out ${{ github.event.release.tag_name }}..."
+            git checkout ${{ github.event.release.tag_name }}
+
+            echo "==> Installing dependencies..."
+            npm ci --omit=dev
+
+            echo "==> Generating Prisma client..."
+            npx prisma generate
+
+            echo "==> Building..."
+            npm run build
+
+            echo "==> Running database migrations..."
+            npx prisma migrate deploy
+
+            echo "==> Restarting app..."
+            pm2 restart ecosystem.config.cjs --env production
+
+            echo "==> Deploy complete! Tag: ${{ github.event.release.tag_name }}"

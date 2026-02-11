@@ -3,6 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { getScheduledPolls, activatePoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 
 export function startScheduledPollJob(client: WebClient): void {
   // Run every minute
@@ -34,11 +35,9 @@ export function startScheduledPollJob(client: WebClient): void {
             await updatePollMessageTs(poll.id, result.ts);
           }
 
-          // Notify creator
-          await client.chat.postMessage({
-            channel: poll.creatorId,
-            text: `:white_check_mark: Your scheduled poll *"${poll.question}"* is now live in <#${poll.channelId}>!`,
-          });
+          // Notify creator with action buttons
+          const dm = buildCreatorNotifyDM(poll, { isScheduled: true });
+          await client.chat.postMessage({ channel: poll.creatorId, ...dm });
 
           console.log(`Posted scheduled poll ${poll.id}: "${poll.question}"`);
         } catch (err) {

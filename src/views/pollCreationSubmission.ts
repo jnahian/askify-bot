@@ -3,6 +3,7 @@ import { MODAL_CALLBACK_ID } from './pollCreationModal';
 import { createPoll } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 
 type ViewSubmissionArgs = SlackViewMiddlewareArgs<ViewSubmitAction> & AllMiddlewareArgs;
 
@@ -145,13 +146,10 @@ export function registerPollCreationSubmission(app: App): void {
 
     if (isScheduled) {
       // DM creator confirming scheduled time
-      const scheduleStr = scheduledAt!.toLocaleString('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
+      const scheduleTs = Math.floor(scheduledAt!.getTime() / 1000);
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:clock3: Your poll *"${question}"* has been scheduled for *${scheduleStr}*.\nIt will be posted to <#${channelId}>.`,
+        text: `:clock3: Your poll *"${question}"* has been scheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt!.toISOString()}>*.\nIt will be posted to <#${channelId}>.`,
       });
     } else {
       // Post poll message to channel immediately
@@ -179,31 +177,37 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // DM creator with "Save as Template" option
-    await client.chat.postMessage({
-      channel: creatorId,
-      text: `Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}! Want to save this configuration as a template for future use?`,
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `:white_check_mark: Your poll *"${question}"* has been ${isScheduled ? 'scheduled' : 'created'}!\nWant to save this configuration as a template?`,
-          },
-        },
-        {
-          type: 'actions',
-          elements: [
-            {
-              type: 'button',
-              text: { type: 'plain_text', text: ':floppy_disk: Save as Template', emoji: true },
-              action_id: 'save_as_template',
-              value: poll.id,
-              style: 'primary',
+    // DM creator with "Save as Template" and (if live) "Close Poll" buttons
+    if (!isScheduled) {
+      const dm = buildCreatorNotifyDM(poll);
+      await client.chat.postMessage({ channel: creatorId, ...dm });
+    } else {
+      // Scheduled polls aren't live yet — only offer "Save as Template"
+      await client.chat.postMessage({
+        channel: creatorId,
+        text: `Your poll "${question}" has been scheduled!`,
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `:white_check_mark: Your poll *"${question}"* has been scheduled!\nWant to save this configuration as a template?`,
             },
-          ],
-        },
-      ],
-    });
+          },
+          {
+            type: 'actions',
+            elements: [
+              {
+                type: 'button',
+                text: { type: 'plain_text', text: ':floppy_disk: Save as Template', emoji: true },
+                action_id: 'save_as_template',
+                value: poll.id,
+                style: 'primary',
+              },
+            ],
+          },
+        ],
+      });
+    }
   });
 }

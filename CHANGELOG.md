@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.1] - 2026-02-11
+
+### Fixed
+- Scheduled polls now include "Close Poll" and "Save as Template" buttons in the creator DM when they go live (previously plain text only)
+- Startup recovery polls now include the same action buttons in the creator DM
+- Remove "Close Poll" button from channel message — only the creator can close via DM
+- Poll question max length reduced from 300 to 150 characters to match Slack header block limit
+- Scheduled poll times now display in each user's local timezone using Slack date formatting
+- Fix extra trailing divider appearing in polls without action buttons
+
+### Added
+- GitHub Actions workflow for auto-deploying to VPS via SSH on release publish
+- Release script (`npm run release`) that reads version from `package.json`, extracts changelog notes, and creates a GitHub release
+- PM2 ecosystem config (`ecosystem.config.cjs`) with log formatting and restart backoff
+
+### Changed
+- Extract shared `buildCreatorNotifyDM()` block builder used by all creator notification paths
+- Simplify App Home UI for better readability — consolidated sections and condensed command references
+
 ## [1.0.0] - 2026-02-10
 
 ### Added

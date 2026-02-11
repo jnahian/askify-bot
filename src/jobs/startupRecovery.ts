@@ -5,6 +5,7 @@ import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 
 /**
  * Run once on startup to handle anything missed while the bot was down.
@@ -34,10 +35,8 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
           await updatePollMessageTs(poll.id, result.ts);
         }
 
-        await client.chat.postMessage({
-          channel: poll.creatorId,
-          text: `:white_check_mark: Your scheduled poll *"${poll.question}"* is now live in <#${poll.channelId}>! (posted on startup recovery)`,
-        });
+        const dm = buildCreatorNotifyDM(poll, { isScheduled: true, isRecovery: true });
+        await client.chat.postMessage({ channel: poll.creatorId, ...dm });
 
         console.log(`[Recovery] Posted overdue scheduled poll ${poll.id}: "${poll.question}"`);
       } catch (err) {

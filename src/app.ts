@@ -7,6 +7,7 @@ import { registerViews } from './views';
 import { registerEvents } from './events';
 import { startJobs } from './jobs';
 import { runStartupRecovery } from './jobs/startupRecovery';
+import { startHealthServer } from './lib/healthServer';
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -31,4 +32,7 @@ registerEvents(app);
   await runStartupRecovery(app.client);
 
   startJobs(app.client);
+
+  // Start health check server
+  startHealthServer(app.client);
 })();

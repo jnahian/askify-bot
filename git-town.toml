@@ -6,19 +6,22 @@ order = "asc"
 
 [create]
 new-branch-type = "feature"
-share-new-branches = "propose"
-stash = true
+share-new-branches = "no"
+stash = false
+
+[hosting]
+dev-remote = "origin"
+github-connector = "gh" # or "api"
+
 
 [ship]
-delete-tracking-branch = true
-strategy = "always-merge"
+delete-tracking-branch = false
+strategy = "api"
 
 [sync]
-auto-sync = true
 feature-strategy = "merge"
 perennial-strategy = "rebase"
 prototype-strategy = "rebase"
-push-branches = false
 push-hook = true
-tags = false
+tags = true
 upstream = true

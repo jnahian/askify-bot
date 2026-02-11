@@ -27,3 +27,7 @@ Thumbs.db
 npm-debug.log*
 
 /src/generated/prisma
+
+# Github action ssh key
+ga
+ga.pub

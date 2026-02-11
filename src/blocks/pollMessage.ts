@@ -112,7 +112,6 @@ export function buildPollMessage(
 
   // Action buttons (only for active polls)
   if (!isClosed) {
-    blocks.push({ type: 'divider' });
     const actionElements: Button[] = [];
 
     // Add Option button (when allowed)
@@ -126,6 +125,7 @@ export function buildPollMessage(
     }
 
     if (actionElements.length > 0) {
+      blocks.push({ type: 'divider' });
       blocks.push({
         type: 'actions',
         block_id: 'poll_actions',

@@ -16,7 +16,6 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             set -e
 
@@ -44,3 +43,23 @@ jobs:
             pm2 restart ecosystem.config.cjs --env production
 
             echo "==> Deploy complete! Tag: ${{ github.event.release.tag_name }}"
+
+      - name: Health Check
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_APP_PATH }}
+
+            # Read PORT from .env, default to 3000
+            PORT=$(grep -E '^PORT=' .env | cut -d '=' -f2 || echo "3000")
+
+            echo "==> Waiting for app to start..."
+            sleep 5
+
+            echo "==> Running health check on port ${PORT}..."
+            curl -f http://localhost:${PORT}/health || exit 1
+
+            echo "==> Health check passed!"

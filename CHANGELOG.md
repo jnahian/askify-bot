@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Scheduled poll times now display in each user's local timezone using Slack date formatting
 - Fix extra trailing divider appearing in polls without action buttons
 
+### Added
+- GitHub Actions workflow for auto-deploying to VPS via SSH on release publish
+- Release script (`npm run release`) that reads version from `package.json`, extracts changelog notes, and creates a GitHub release
+- PM2 ecosystem config (`ecosystem.config.cjs`) with log formatting and restart backoff
+
 ### Changed
 - Extract shared `buildCreatorNotifyDM()` block builder used by all creator notification paths
 - Simplify App Home UI for better readability — consolidated sections and condensed command references

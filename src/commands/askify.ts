@@ -91,7 +91,7 @@ function parseListFilter(text: string): { options: GetUserPollsOptions; label: s
   if (dateRangeMatch) {
     const from = new Date(dateRangeMatch[1]);
     const to = new Date(dateRangeMatch[2]);
-    to.setHours(23, 59, 59, 999);
+    to.setUTCHours(23, 59, 59, 999);
 
     if (isNaN(from.getTime()) || isNaN(to.getTime())) {
       return { error: 'Invalid date format. Use `YYYY-MM-DD YYYY-MM-DD` (e.g., `2025-01-01 2025-01-31`).' };

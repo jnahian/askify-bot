@@ -1,0 +1,36 @@
+{
+  "version": "1.1.0",
+  "date": "2026-02-12",
+  "type": "feature",
+  "title": "UI Improvements & List Enhancements",
+  "items": [
+    {
+      "type": "feature",
+      "text": "Poll Description Field — Optional multiline description in poll creation modal"
+    },
+    {
+      "type": "feature",
+      "text": "Number & Star Emojis — Auto-prefix options with 1️⃣ 2️⃣ 3️⃣ or ⭐⭐⭐ for visual clarity"
+    },
+    {
+      "type": "feature",
+      "text": "Maybe Toggle — Optional 'Include Maybe' checkbox for Yes/No polls"
+    },
+    {
+      "type": "feature",
+      "text": "Results Modal — 'Results' button in /askify list to view poll results in a modal"
+    },
+    {
+      "type": "feature",
+      "text": "Date Range Filtering — Filter polls by 7d, 30d, or YYYY-MM-DD YYYY-MM-DD"
+    },
+    {
+      "type": "improvement",
+      "text": "Poll Creation Modal UX — Radio buttons for Poll Type and Post Timing"
+    },
+    {
+      "type": "improvement",
+      "text": "Enhanced Poll List — Shows all statuses (active, scheduled, closed) with enriched poll cards"
+    }
+  ]
+}

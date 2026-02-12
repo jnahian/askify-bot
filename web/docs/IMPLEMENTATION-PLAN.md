@@ -633,7 +633,10 @@ content/changelog/
 
 ---
 
-## Phase 4: Legal Pages
+## Phase 4: Legal Pages ✅ COMPLETE
+
+> **Status:** Complete (2026-02-12)
+> **Pages:** Terms of Service, Privacy Policy
 
 ### 4.1 Terms of Service
 
@@ -874,9 +877,9 @@ npm run build
 - [x] Changelog routes (/changelog, /changelog/$version)
 - [x] SEO meta (title, description with summary)
 
-### Phase 4: Legal
-- [ ] Terms of Service page
-- [ ] Privacy Policy page
+### Phase 4: Legal ✅ COMPLETE
+- [x] Terms of Service page (8 sections, table of contents, anchor links)
+- [x] Privacy Policy page (8 sections, self-hosted notice, data handling)
 
 ### Phase 5: UI Components ✅ COMPLETE
 - [x] Button (3 variants, 3 sizes, href support)
@@ -919,9 +922,9 @@ npm run build
 - **Phase 1:** Landing Page (Hero, Features, How It Works, Use Cases, Screenshots, CTA)
 - **Phase 2:** Documentation System (8 docs, rendering, sidebar, routes)
 - **Phase 3:** Changelog System (3 versions, badges, latest highlight)
+- **Phase 4:** Legal Pages (Terms of Service, Privacy Policy with placeholder content)
 
 ### ⏳ Pending
-- **Phase 4:** Legal Pages
 - **Phase 6:** Final Polish
 - **Phase 7:** Deployment
 

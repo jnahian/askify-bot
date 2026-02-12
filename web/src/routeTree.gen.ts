@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as DocsRouteRouteImport } from './routes/docs/route'
 import { Route as ChangelogRouteRouteImport } from './routes/changelog/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +19,16 @@ import { Route as ChangelogIndexRouteImport } from './routes/changelog/index'
 import { Route as DocsIdRouteImport } from './routes/docs/$id'
 import { Route as ChangelogVersionRouteImport } from './routes/changelog/$version'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRouteRoute = DocsRouteRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -57,6 +69,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRouteRouteWithChildren
   '/docs': typeof DocsRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/changelog/$version': typeof ChangelogVersionRoute
   '/docs/$id': typeof DocsIdRoute
   '/changelog/': typeof ChangelogIndexRoute
@@ -64,6 +78,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/changelog/$version': typeof ChangelogVersionRoute
   '/docs/$id': typeof DocsIdRoute
   '/changelog': typeof ChangelogIndexRoute
@@ -74,6 +90,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRouteRouteWithChildren
   '/docs': typeof DocsRouteRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/terms': typeof TermsRoute
   '/changelog/$version': typeof ChangelogVersionRoute
   '/docs/$id': typeof DocsIdRoute
   '/changelog/': typeof ChangelogIndexRoute
@@ -85,17 +103,28 @@ export interface FileRouteTypes {
     | '/'
     | '/changelog'
     | '/docs'
+    | '/privacy'
+    | '/terms'
     | '/changelog/$version'
     | '/docs/$id'
     | '/changelog/'
     | '/docs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/changelog/$version' | '/docs/$id' | '/changelog' | '/docs'
+  to:
+    | '/'
+    | '/privacy'
+    | '/terms'
+    | '/changelog/$version'
+    | '/docs/$id'
+    | '/changelog'
+    | '/docs'
   id:
     | '__root__'
     | '/'
     | '/changelog'
     | '/docs'
+    | '/privacy'
+    | '/terms'
     | '/changelog/$version'
     | '/docs/$id'
     | '/changelog/'
@@ -106,10 +135,26 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChangelogRouteRoute: typeof ChangelogRouteRouteWithChildren
   DocsRouteRoute: typeof DocsRouteRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -194,6 +239,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChangelogRouteRoute: ChangelogRouteRouteWithChildren,
   DocsRouteRoute: DocsRouteRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

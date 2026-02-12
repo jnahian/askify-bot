@@ -33,7 +33,7 @@ export function generateMeta(metadata: SEOMetadata) {
     modifiedTime,
   } = metadata
 
-  const siteUrl = 'https://askify.app' // TODO: Move to env config
+  const siteUrl = 'https://askify.jnahian.me' // TODO: Move to env config
 
   const meta = [
     // Basic Meta
@@ -46,7 +46,10 @@ export function generateMeta(metadata: SEOMetadata) {
     { property: 'og:description', content: description },
     { property: 'og:type', content: ogType },
     { property: 'og:image', content: `${siteUrl}${ogImage}` },
-    { property: 'og:url', content: canonical ? `${siteUrl}${canonical}` : siteUrl },
+    {
+      property: 'og:url',
+      content: canonical ? `${siteUrl}${canonical}` : siteUrl,
+    },
     { property: 'og:site_name', content: 'Askify' },
 
     // Twitter Card
@@ -56,14 +59,20 @@ export function generateMeta(metadata: SEOMetadata) {
     { name: 'twitter:image', content: `${siteUrl}${ogImage}` },
 
     // Article specific
-    ...(publishedTime ? [{ property: 'article:published_time', content: publishedTime }] : []),
-    ...(modifiedTime ? [{ property: 'article:modified_time', content: modifiedTime }] : []),
+    ...(publishedTime
+      ? [{ property: 'article:published_time', content: publishedTime }]
+      : []),
+    ...(modifiedTime
+      ? [{ property: 'article:modified_time', content: modifiedTime }]
+      : []),
   ]
 
   return {
     title: `${title} — Askify`,
     meta,
-    link: canonical ? [{ rel: 'canonical', href: `${siteUrl}${canonical}` }] : [],
+    link: canonical
+      ? [{ rel: 'canonical', href: `${siteUrl}${canonical}` }]
+      : [],
   }
 }
 
@@ -71,7 +80,7 @@ export function generateMeta(metadata: SEOMetadata) {
  * Generate structured data (JSON-LD) for a page
  */
 export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb', data: any) {
-  const baseUrl = 'https://askify.app'
+  const baseUrl = 'https://askify.jnahian.me'
 
   switch (type) {
     case 'website':
@@ -134,7 +143,7 @@ export function generateSitemapURL(
   options: Omit<SitemapURL, 'loc'> = {},
 ): SitemapURL {
   return {
-    loc: `https://askify.app${path}`,
+    loc: `https://askify.jnahian.me${path}`,
     changefreq: 'weekly',
     priority: 0.7,
     ...options,

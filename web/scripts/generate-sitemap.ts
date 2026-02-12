@@ -7,7 +7,7 @@ import { writeFileSync } from 'fs'
 import { join } from 'path'
 
 // Simple sitemap generator - runs at build time
-const baseUrl = 'https://askify.app'
+const baseUrl = 'https://askify.jnahian.me'
 
 const staticPages = [
   { loc: '/', priority: 1.0, changefreq: 'weekly' },

@@ -153,7 +153,7 @@ npm run build
 Create `.env` (if needed):
 
 ```env
-VITE_SITE_URL=https://askify.app
+VITE_SITE_URL=https://askify.jnahian.me
 VITE_SLACK_CLIENT_ID=your_client_id
 ```
 

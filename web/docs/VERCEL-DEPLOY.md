@@ -83,11 +83,11 @@ No environment variables needed for the website! It's completely static.
 If you want to customize the site URL (for SEO/OG tags), you can set:
 
 - **Key:** `VITE_SITE_URL`
-- **Value:** `https://askify.app`
+- **Value:** `https://askify.jnahian.me`
 
 Then update `src/lib/seo.ts` to use:
 ```typescript
-const siteUrl = import.meta.env.VITE_SITE_URL || 'https://askify.app'
+const siteUrl = import.meta.env.VITE_SITE_URL || 'https://askify.jnahian.me'
 ```
 
 ---
@@ -167,7 +167,7 @@ After deployment, your site will be available at:
 
 - **Preview:** `https://askify-web-<hash>.vercel.app`
 - **Production:** `https://askify-web.vercel.app`
-- **Custom Domain:** `https://askify.app` (if configured)
+- **Custom Domain:** `https://askify.jnahian.me` (if configured)
 
 ---
 
@@ -251,6 +251,6 @@ If you prefer to keep everything on your VPS:
 2. Use PM2 with `ecosystem.config.cjs`
 3. Set up Nginx reverse proxy:
    - Bot: `https://api.askify.app` (port 4050)
-   - Website: `https://askify.app` (port 4051)
+   - Website: `https://askify.jnahian.me` (port 4051)
 
 Both approaches work great!

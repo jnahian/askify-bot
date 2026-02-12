@@ -1,9 +1,14 @@
-import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import {
+  createRootRoute,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
-import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { Navbar } from '@/components/layout/Navbar'
 import { NotFound } from '@/components/NotFound'
 
 import globalsCss from '@/styles/globals.css?url'
@@ -24,11 +29,13 @@ export const Route = createRootRoute({
       },
       {
         name: 'description',
-        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free and open-source.',
+        content:
+          'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free and open-source.',
       },
       {
         name: 'keywords',
-        content: 'slack polls, slack bot, team voting, slack survey, poll bot, team decisions, slack app, open source',
+        content:
+          'slack polls, slack bot, team voting, slack survey, poll bot, team decisions, slack app, open source',
       },
       {
         name: 'author',
@@ -41,7 +48,8 @@ export const Route = createRootRoute({
       },
       {
         property: 'og:description',
-        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results.',
+        content:
+          'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results.',
       },
       {
         property: 'og:type',
@@ -49,11 +57,11 @@ export const Route = createRootRoute({
       },
       {
         property: 'og:url',
-        content: 'https://askify.app',
+        content: 'https://askify.jnahian.me',
       },
       {
         property: 'og:image',
-        content: 'https://askify.app/assets/og-images/default.png',
+        content: 'https://askify.jnahian.me/assets/og-images/default.png',
       },
       {
         property: 'og:site_name',
@@ -70,11 +78,12 @@ export const Route = createRootRoute({
       },
       {
         name: 'twitter:description',
-        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, and visual results.',
+        content:
+          'Create interactive polls in Slack with 4 poll types, anonymous voting, and visual results.',
       },
       {
         name: 'twitter:image',
-        content: 'https://askify.app/assets/og-images/default.png',
+        content: 'https://askify.jnahian.me/assets/og-images/default.png',
       },
       // Theme color
       {
@@ -94,7 +103,7 @@ export const Route = createRootRoute({
       },
       {
         rel: 'canonical',
-        href: 'https://askify.app',
+        href: 'https://askify.jnahian.me',
       },
       {
         rel: 'manifest',

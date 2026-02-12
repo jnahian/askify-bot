@@ -29,7 +29,7 @@ export function Navbar() {
             <img
               src="/logo.jpeg"
               alt="Askify"
-              className="w-8 h-8 object-contain rounded-lg"
+              className="w-8 h-8 object-contain rounded-sm"
             />
             <span>Askify</span>
           </Link>

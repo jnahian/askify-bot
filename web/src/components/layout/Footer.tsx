@@ -44,7 +44,7 @@ export function Footer() {
               <img
                 src="/logo.PNG"
                 alt="Askify"
-                className="w-8 h-8 object-contain"
+                className="w-8 h-8 object-contain rounded-lg"
               />
               <span>Askify</span>
             </Link>

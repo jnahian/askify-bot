@@ -1,8 +1,8 @@
+import { Button } from '@/components/ui/Button'
 import { Link } from '@tanstack/react-router'
-import { Menu, X, Github } from 'lucide-react'
+import { Github, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { Container } from './Container'
-import { Button } from '@/components/ui/Button'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -27,9 +27,9 @@ export function Navbar() {
             className="flex items-center gap-2 text-xl font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity"
           >
             <img
-              src="/logo.PNG"
+              src="/logo.jpeg"
               alt="Askify"
-              className="w-8 h-8 object-contain"
+              className="w-8 h-8 object-contain rounded-lg"
             />
             <span>Askify</span>
           </Link>

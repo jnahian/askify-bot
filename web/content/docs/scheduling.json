@@ -1,0 +1,178 @@
+{
+  "id": "scheduling",
+  "title": "Scheduling & Auto-Close",
+  "description": "Schedule polls for future posting and configure auto-close",
+  "category": "Advanced Features",
+  "order": 1,
+  "sections": [
+    {
+      "heading": "Scheduled Polls",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Schedule polls to be posted at a future date and time. Perfect for recurring check-ins, weekly polls, or timed announcements."
+        },
+        {
+          "type": "heading",
+          "text": "How to Schedule",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Open the poll creation modal with /askify",
+            "Configure your poll (question, type, options, settings)",
+            "Under 'Post Timing', select 'Schedule for later'",
+            "Choose date and time using the datetime picker",
+            "Click 'Create Poll'"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The poll will be posted automatically at the scheduled time. You'll receive a DM confirmation with the scheduled time displayed in your local timezone."
+        },
+        {
+          "type": "note",
+          "text": "Scheduled polls appear in /askify list with a 'Scheduled' status. You can cancel them before they're posted."
+        }
+      ]
+    },
+    {
+      "heading": "Auto-Close Methods",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Configure how and when your poll closes. Choose from three methods:"
+        },
+        {
+          "type": "heading",
+          "text": "Manual Close",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "You close the poll manually when ready. A 'Close Poll' button appears in your creator DM."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Full control over close timing",
+            "No automatic closure",
+            "Best for polls with uncertain timelines"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Duration-Based",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Poll closes automatically after a specified duration (e.g., 2 hours, 3 days)."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Examples:\n- 30m: 30 minutes\n- 2h: 2 hours\n- 24h: 1 day\n- 3d: 3 days"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Countdown timer shown in poll message",
+            "Closes automatically when time expires",
+            "Best for time-sensitive decisions"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Date/Time-Based",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Poll closes at a specific date and time."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Pick exact close moment",
+            "Displayed in each voter's local timezone",
+            "Best for deadline-based polls"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Reminders",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Enable reminders to DM non-voters before the poll closes, boosting participation."
+        },
+        {
+          "type": "heading",
+          "text": "How Reminders Work",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Askify DMs channel members who haven't voted yet",
+            "Smart timing: 1 hour before close for short polls, 24 hours for longer polls",
+            "Includes a deep link back to the poll message",
+            "Only sent once per poll per user"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Enabling Reminders",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "In the poll creation modal, check the 'Send Reminders' checkbox under voting settings."
+        },
+        {
+          "type": "note",
+          "text": "Reminders require an auto-close method (duration or date/time). They won't send for manual-close polls."
+        }
+      ]
+    },
+    {
+      "heading": "Managing Scheduled Polls",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "View and manage scheduled polls using /askify list:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Scheduled polls show with a 'Scheduled' badge",
+            "See the scheduled post time",
+            "Cancel button removes the scheduled poll before it posts",
+            "Cannot edit scheduled polls (cancel and recreate instead)"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Timezone Handling",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "All times are displayed in each user's local timezone thanks to Slack's datetime formatting:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Scheduled post times show in your timezone",
+            "Close times adapt to each viewer's timezone",
+            "Consistent experience across global teams"
+          ]
+        }
+      ]
+    }
+  ]
+}

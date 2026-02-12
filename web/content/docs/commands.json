@@ -1,0 +1,226 @@
+{
+  "id": "commands",
+  "title": "Commands",
+  "description": "Master all Askify slash commands",
+  "category": "Core Features",
+  "order": 2,
+  "sections": [
+    {
+      "heading": "Overview",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify provides slash commands for creating polls, managing templates, and viewing your poll history."
+        }
+      ]
+    },
+    {
+      "heading": "/askify",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Opens the poll creation modal with all configuration options."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "/askify"
+        },
+        {
+          "type": "paragraph",
+          "text": "This is the primary command for creating polls. The modal includes:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Poll question input",
+            "Poll type selection (single choice, multi-select, yes/no/maybe, rating)",
+            "Custom options (for single choice and multi-select)",
+            "Target channel selection",
+            "Voting settings (anonymous, vote change, live results, reminders)",
+            "Close method (manual, duration, or specific date/time)",
+            "Scheduling options",
+            "Template loading"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "/askify poll (Inline Quick Polls)",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Create polls directly from the command line without opening a modal. Perfect for quick, simple polls."
+        },
+        {
+          "type": "heading",
+          "text": "Basic Syntax",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "/askify poll \"Question?\" \"Option 1\" \"Option 2\" [flags]"
+        },
+        {
+          "type": "heading",
+          "text": "Examples",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "# Simple single choice\n/askify poll \"What's for lunch?\" \"Pizza\" \"Sushi\" \"Tacos\"\n\n# Multi-select with anonymous voting\n/askify poll \"Best framework?\" \"React\" \"Vue\" \"Svelte\" --multi --anon\n\n# Yes/No with auto-close\n/askify poll \"Move standup to 10am?\" --yesno --close 30m\n\n# Yes/No without Maybe option\n/askify poll \"Deploy today?\" --yesno --no-maybe --close 2h\n\n# Rating scale\n/askify poll \"Rate the sprint\" --rating\n\n# Rating scale 1-10\n/askify poll \"Rate the presentation\" --rating 10"
+        },
+        {
+          "type": "heading",
+          "text": "Available Flags",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "--multi: Create multi-select poll",
+            "--yesno: Create Yes/No/Maybe poll (no options needed)",
+            "--no-maybe: Exclude 'Maybe' option from Yes/No polls",
+            "--rating [scale]: Create rating scale poll (default 5, optional 10)",
+            "--anon: Enable anonymous voting",
+            "--close <N>h|m: Auto-close after duration (e.g., 2h, 30m)"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Inline polls always post to the current channel and use default settings. For advanced configuration, use the full modal."
+        }
+      ]
+    },
+    {
+      "heading": "/askify list",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "View your polls with filtering options."
+        },
+        {
+          "type": "heading",
+          "text": "Basic Usage",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "# Show latest 10 polls (default)\n/askify list\n\n# Last 7 days\n/askify list 7d\n\n# Last 30 days\n/askify list 30d\n\n# Specific date range\n/askify list 2026-02-01 2026-02-12"
+        },
+        {
+          "type": "heading",
+          "text": "What it shows",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "The list displays all your polls (active, scheduled, and closed) with:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Poll question",
+            "Poll type and status",
+            "Vote count and option count",
+            "Created date and closed date (if applicable)",
+            "Action buttons: Close Poll, Cancel (scheduled), Results"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "The 'Results' button opens a modal showing full results with bar charts, percentages, and voter names (if not anonymous)."
+        }
+      ]
+    },
+    {
+      "heading": "/askify templates",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Manage your saved poll templates."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "/askify templates"
+        },
+        {
+          "type": "paragraph",
+          "text": "This command displays all your saved templates with:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Template name",
+            "Poll type",
+            "Number of options",
+            "Action buttons: Use Template, Delete"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Using Templates",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Click 'Use Template' to open the poll creation modal with all settings pre-filled. You can modify any field before creating the poll."
+        },
+        {
+          "type": "heading",
+          "text": "Creating Templates",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "After creating a poll, Askify sends you a DM with a 'Save as Template' button. Click it to name and save your poll configuration for future reuse."
+        }
+      ]
+    },
+    {
+      "heading": "/askify help",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Display a comprehensive usage guide in Slack."
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "/askify help"
+        },
+        {
+          "type": "paragraph",
+          "text": "Shows an interactive guide with:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "All available commands",
+            "Quick examples",
+            "Inline poll syntax",
+            "Links to full documentation"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Command Tips",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Use inline polls for quick decisions; use the modal for complex configurations",
+            "Save frequently used poll configurations as templates",
+            "Use date range filtering in /askify list to find specific polls",
+            "The 'Results' button in /askify list works for both active and closed polls"
+          ]
+        }
+      ]
+    }
+  ]
+}

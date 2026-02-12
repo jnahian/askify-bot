@@ -1,0 +1,149 @@
+{
+  "id": "templates",
+  "title": "Templates",
+  "description": "Save and reuse poll configurations",
+  "category": "Advanced Features",
+  "order": 2,
+  "sections": [
+    {
+      "heading": "Overview",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Templates let you save poll configurations for quick reuse. Perfect for recurring polls like weekly check-ins, team lunches, or feedback surveys."
+        }
+      ]
+    },
+    {
+      "heading": "Creating Templates",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "After creating any poll, Askify sends you a DM with a 'Save as Template' button."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Create a poll using /askify",
+            "After the poll is created, check your DMs from Askify",
+            "Click the 'Save as Template' button",
+            "Enter a name for your template",
+            "Click Submit"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "The template saves:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Poll question",
+            "Poll type",
+            "All options (for single choice and multi-select)",
+            "All voting settings (anonymous, vote change, live results, reminders)",
+            "Close method (manual, duration, or date/time)",
+            "Poll description (if provided)"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Templates do NOT save the target channel or scheduled time. You'll choose these when using the template."
+        }
+      ]
+    },
+    {
+      "heading": "Using Templates",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Load a saved template when creating a new poll:"
+        },
+        {
+          "type": "heading",
+          "text": "Method 1: From Templates List",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Run /askify templates",
+            "Find your template in the list",
+            "Click 'Use Template'",
+            "The poll creation modal opens with all fields pre-filled",
+            "Modify any fields if needed",
+            "Select target channel and create"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Method 2: From Creation Modal",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Run /askify to open the creation modal",
+            "Look for the 'Load Template' dropdown at the bottom",
+            "Select a template from the dropdown",
+            "Modal fields update with template values",
+            "Modify and create as usual"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Managing Templates",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "View and delete templates using /askify templates:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Each template shows its name, poll type, and option count",
+            "Click 'Use Template' to create a poll from it",
+            "Click 'Delete' to remove a template permanently"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Deleting a template does not affect any polls created from it. Only the template itself is removed."
+        }
+      ]
+    },
+    {
+      "heading": "Template Use Cases",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Weekly team lunch polls with the same restaurants",
+            "Sprint retrospective rating polls",
+            "Recurring availability checks for meetings",
+            "Monthly feedback surveys with consistent questions",
+            "Standard approval workflows (e.g., deploy checklists)"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Tips",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Give templates descriptive names (e.g., 'Weekly Lunch Poll' not 'Poll 1')",
+            "Create templates for any polls you run more than once",
+            "Update templates by deleting old ones and saving new versions",
+            "Templates are private to you — other users can't see your templates"
+          ]
+        }
+      ]
+    }
+  ]
+}

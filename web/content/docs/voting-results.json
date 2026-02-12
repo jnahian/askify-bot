@@ -1,0 +1,211 @@
+{
+  "id": "voting-results",
+  "title": "Voting & Results",
+  "description": "How voting works and how to share results",
+  "category": "Core Features",
+  "order": 3,
+  "sections": [
+    {
+      "heading": "Voting Behavior",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify polls use interactive buttons for voting. The behavior depends on the poll type and settings."
+        },
+        {
+          "type": "heading",
+          "text": "Single Choice & Yes/No/Maybe",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click a button to cast your vote",
+            "Click the same button again to retract your vote",
+            "Click a different button to switch (if vote change is enabled)",
+            "Only one vote per person"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Multi-Select",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click any button to toggle it on/off",
+            "Select as many options as you want",
+            "Each selection is independent",
+            "Click again to deselect"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Rating Scale",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click any star rating (1-5 or 1-10)",
+            "Click the same rating to retract",
+            "Click a different rating to change",
+            "Average is calculated automatically"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Anonymous Mode",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "When anonymous voting is enabled:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Voter names are hidden from all results displays",
+            "Only vote counts and percentages are shown",
+            "Voter IDs are still stored in the database for deduplication",
+            "Results DMs show vote counts, not voter names",
+            "Perfect for sensitive decisions or feedback polls"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Anonymous mode protects voter privacy while still preventing double voting. The poll creator cannot see who voted for what."
+        }
+      ]
+    },
+    {
+      "heading": "Live Results",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "When live results are enabled (default), the poll message updates in real-time with every vote:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Bar charts update immediately",
+            "Vote counts and percentages refresh",
+            "Color-coded emoji bars visualize distribution",
+            "Voter names appear below each option (if not anonymous)"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When live results are disabled:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Voters can still cast votes",
+            "Results are hidden until the poll closes",
+            "Useful for preventing bandwagon effects"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Results Distribution",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Creator DM",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "When a poll closes, Askify sends a DM to the creator with:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Full results with bar charts",
+            "Vote counts and percentages",
+            "Voter names per option (if not anonymous)",
+            "Average rating (for rating scale polls)",
+            "'Share Results' button to post results to any channel"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Share to Channel",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Click the 'Share Results' button in your DM to:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Choose any channel to post results",
+            "Formatted message with bar charts",
+            "Includes vote counts and percentages",
+            "Respects anonymous setting (no voter names if anonymous)"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Results Modal",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "View results anytime using the 'Results' button in /askify list:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Available for both active and closed polls",
+            "Shows current vote tallies",
+            "Includes voter names (if not anonymous)",
+            "Rating average displayed for rating polls"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Voter Names Display",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "In non-anonymous polls, voter names appear below each option with color-coded emoji bullets:"
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Option: Pizza (5 votes, 50%)\n🟢 Alice\n🔵 Bob\n🟣 Charlie\n🟠 Diana\n🟡 Eve"
+        },
+        {
+          "type": "paragraph",
+          "text": "The colors help visually distinguish voters and make results easier to scan."
+        }
+      ]
+    },
+    {
+      "heading": "Vote Change Settings",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Poll creators can control whether voters can change their votes:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Allow Vote Change (default): Voters can switch or retract votes anytime",
+            "Disallow Vote Change: First vote is final, no changes allowed"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "This setting is configured in the poll creation modal."
+        }
+      ]
+    }
+  ]
+}

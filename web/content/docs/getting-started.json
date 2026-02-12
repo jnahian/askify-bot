@@ -1,0 +1,154 @@
+{
+  "id": "getting-started",
+  "title": "Getting Started",
+  "description": "Install and configure Askify in your Slack workspace",
+  "category": "Introduction",
+  "order": 1,
+  "sections": [
+    {
+      "heading": "Prerequisites",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Before installing Askify, ensure you have:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Admin access to your Slack workspace",
+            "Node.js 22 or higher installed (for self-hosting)",
+            "PostgreSQL database (we recommend Supabase for easy setup)"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Installation",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify is a self-hosted Slack bot. Follow these steps to get it running:"
+        },
+        {
+          "type": "heading",
+          "text": "1. Clone the Repository",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "git clone https://github.com/jnahian/askify-bot.git\ncd askify-bot\nnpm install"
+        },
+        {
+          "type": "heading",
+          "text": "2. Configure Environment Variables",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Copy the example environment file and fill in your credentials:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "cp .env.example .env"
+        },
+        {
+          "type": "paragraph",
+          "text": "You'll need to configure these variables:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "SLACK_BOT_TOKEN - Bot OAuth token (xoxb-...)",
+            "SLACK_SIGNING_SECRET - Request signing secret",
+            "SLACK_APP_TOKEN - App-level token for Socket Mode (xapp-...)",
+            "DATABASE_URL - PostgreSQL connection string"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "3. Set Up Database",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "npm run prisma:migrate\nnpm run prisma:generate"
+        },
+        {
+          "type": "heading",
+          "text": "4. Create Slack App",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Follow these steps in your Slack workspace:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Go to api.slack.com/apps and create a new app",
+            "Enable Socket Mode and generate an app-level token",
+            "Add the /askify slash command",
+            "Enable Interactivity",
+            "Add bot token scopes: chat:write, commands, channels:read, users:read, im:write",
+            "Subscribe to bot events: app_home_opened, message.im",
+            "Install to your workspace"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "5. Run Askify",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "npm run dev"
+        },
+        {
+          "type": "note",
+          "text": "For production deployment, use 'npm run build' followed by 'npm start'. See the Deployment guide for Docker instructions."
+        }
+      ]
+    },
+    {
+      "heading": "First Poll",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Once Askify is running, create your first poll in any Slack channel:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "/askify"
+        },
+        {
+          "type": "paragraph",
+          "text": "This opens the poll creation modal. Configure your poll settings and click Create!"
+        }
+      ]
+    },
+    {
+      "heading": "Next Steps",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Now that Askify is installed, explore these guides:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Learn about the four poll types",
+            "Master all slash commands",
+            "Configure voting settings and scheduling",
+            "Save polls as templates for quick reuse"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "version": "1.0.1",
+  "date": "2026-02-11",
+  "type": "fix",
+  "title": "Scheduled Polls & Creator DM Improvements",
+  "items": [
+    {
+      "type": "fix",
+      "text": "Scheduled polls now include 'Close Poll' and 'Save as Template' buttons in creator DM"
+    },
+    {
+      "type": "fix",
+      "text": "Poll question max length reduced from 300 to 150 characters (Slack header block limit)"
+    },
+    {
+      "type": "fix",
+      "text": "Scheduled poll times display in user's local timezone"
+    },
+    {
+      "type": "fix",
+      "text": "Remove extra trailing divider in polls without action buttons"
+    },
+    {
+      "type": "feature",
+      "text": "GitHub Actions workflow for auto-deployment to VPS"
+    },
+    {
+      "type": "feature",
+      "text": "Release script that reads version from package.json and creates GitHub releases"
+    },
+    {
+      "type": "improvement",
+      "text": "App Home UI simplified for better readability"
+    }
+  ]
+}

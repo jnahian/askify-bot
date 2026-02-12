@@ -1,0 +1,325 @@
+{
+  "id": "architecture",
+  "title": "Architecture & Tech Stack",
+  "description": "Technical overview for developers",
+  "category": "Reference",
+  "order": 1,
+  "sections": [
+    {
+      "heading": "Tech Stack",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify is built with modern, production-ready technologies:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Runtime: Node.js 22+",
+            "Framework: Bolt for JavaScript (@slack/bolt v4)",
+            "Database: PostgreSQL (via Supabase)",
+            "ORM: Prisma v7 with @prisma/adapter-pg",
+            "Scheduler: node-cron for background jobs",
+            "Deployment: Docker with multi-stage builds"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Database Schema",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify uses four main database models:"
+        },
+        {
+          "type": "heading",
+          "text": "Poll",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Stores poll metadata and configuration."
+        },
+        {
+          "type": "list",
+          "items": [
+            "UUID primary key",
+            "Creator ID, channel ID, message timestamp",
+            "Question text",
+            "Poll type (ENUM: single_choice, multi_select, yes_no, rating)",
+            "Settings (JSONB: anonymous, vote change, live results, reminders)",
+            "Status (ENUM: draft, scheduled, active, closed)",
+            "Scheduled and close timestamps"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "PollOption",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Stores individual poll options."
+        },
+        {
+          "type": "list",
+          "items": [
+            "UUID primary key",
+            "Foreign key to Poll",
+            "Label text (max 200 chars)",
+            "Position (display order)",
+            "Added by (user ID if voter-added)"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Vote",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Tracks individual votes."
+        },
+        {
+          "type": "list",
+          "items": [
+            "UUID primary key",
+            "Foreign keys to Poll and PollOption",
+            "Voter ID (Slack user ID)",
+            "Voted at timestamp"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "PollTemplate",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Stores saved poll configurations."
+        },
+        {
+          "type": "list",
+          "items": [
+            "UUID primary key",
+            "User ID (template owner)",
+            "Template name",
+            "Config (JSONB: full poll configuration)",
+            "Created at timestamp"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Architecture Overview",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify follows an event-driven architecture with these key components:"
+        },
+        {
+          "type": "heading",
+          "text": "Slash Commands",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Entry points for user interactions (src/commands/):"
+        },
+        {
+          "type": "list",
+          "items": [
+            "/askify - Opens poll creation modal",
+            "/askify poll - Inline quick poll creation",
+            "/askify list - Shows user's polls with filtering",
+            "/askify templates - Manages poll templates",
+            "/askify help - Displays usage guide"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Actions",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Handle button clicks and select menus (src/actions/):"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Vote buttons (regex: /^vote_.+$/)",
+            "Close poll, add option, save template buttons",
+            "Modal select menus with dispatch_action",
+            "List actions (close, cancel, results)"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Views",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Process modal submissions (src/views/):"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Poll creation modal",
+            "Template save modal",
+            "Add option modal",
+            "Share results modal"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Background Jobs",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Scheduled tasks using node-cron (src/jobs/):"
+        },
+        {
+          "type": "list",
+          "items": [
+            "autoCloseJob - Closes expired polls (every minute)",
+            "scheduledPollJob - Posts scheduled polls (every minute)",
+            "reminderJob - Sends reminder DMs (every 15 minutes)",
+            "startupRecovery - Catches up on missed events (on startup)"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Services",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Business logic and database operations (src/services/):"
+        },
+        {
+          "type": "list",
+          "items": [
+            "pollService - CRUD operations for polls",
+            "voteService - Vote processing and deduplication",
+            "templateService - Template management"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Event Flow",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Typical poll lifecycle:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "User runs /askify → Slash command handler opens modal",
+            "User submits modal → View handler validates and creates poll in database",
+            "If scheduled: Job picks it up at scheduled time and posts",
+            "If immediate: Bot posts poll message via chat.postMessage",
+            "Voters click buttons → Action handler records votes, updates message",
+            "Vote updates debounced (500ms) to batch rapid clicks",
+            "Auto-close job checks periodically, closes expired polls",
+            "On close: Results DM sent to creator, voting disabled",
+            "Creator clicks 'Share Results' → Posts to chosen channel"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Key Patterns",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Socket Mode",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Askify uses Slack Socket Mode for real-time communication without exposing a public endpoint. This eliminates the need for ngrok or public URLs during development."
+        },
+        {
+          "type": "heading",
+          "text": "Debounced Updates",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Rapid vote clicks are debounced per poll (500ms). The debounced callback refetches fresh data, ensuring the final update reflects current state."
+        },
+        {
+          "type": "heading",
+          "text": "Dynamic Modals",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Modal select elements with dispatch_action: true trigger handlers that rebuild and update the modal via client.views.update()."
+        },
+        {
+          "type": "heading",
+          "text": "Retry Logic",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Exponential backoff for Slack API rate limits using withRetry() wrapper (src/utils/slackRetry.ts)."
+        }
+      ]
+    },
+    {
+      "heading": "Project Structure",
+      "content": [
+        {
+          "type": "code",
+          "language": "text",
+          "value": "src/\n  app.ts              # Entry point\n  lib/prisma.ts       # Prisma singleton\n  commands/           # Slash command handlers\n  actions/            # Button/select handlers\n  views/              # Modal submissions\n  events/             # Event handlers (DM, App Home)\n  middleware/         # Request logger\n  services/           # Business logic\n  blocks/             # Block Kit builders\n  jobs/               # Background jobs\n  utils/              # Helpers\nprisma/\n  schema.prisma       # Database schema"
+        }
+      ]
+    },
+    {
+      "heading": "Development",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Common development commands:"
+        },
+        {
+          "type": "code",
+          "language": "bash",
+          "value": "# Development\nnpm run dev              # Hot-reload with nodemon\n\n# Build\nnpm run build            # Compile TypeScript\nnpm start                # Run compiled app\n\n# Database\nnpm run prisma:migrate   # Create/apply migrations\nnpm run prisma:generate  # Regenerate Prisma Client\nnpm run prisma:studio    # Open database browser\n\n# Type checking\nnpx tsc --noEmit         # Check types without building"
+        }
+      ]
+    },
+    {
+      "heading": "Deployment",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify is designed for self-hosting. Deployment options:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Docker: Multi-stage Dockerfile included",
+            "VPS: Deploy to any server with Node.js and PostgreSQL",
+            "PM2: Process manager for production",
+            "GitHub Actions: Automated deployment pipeline"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "See docs/DEPLOYMENT.md in the repository for detailed instructions."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "id": "poll-types",
+  "title": "Poll Types",
+  "description": "Understand the four poll types and when to use each",
+  "category": "Core Features",
+  "order": 1,
+  "sections": [
+    {
+      "heading": "Overview",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Askify supports four distinct poll types, each designed for specific use cases. Choose the right type based on how you want your team to respond."
+        }
+      ]
+    },
+    {
+      "heading": "Single Choice",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Voters select exactly one option. Perfect for decisions where only one choice makes sense."
+        },
+        {
+          "type": "heading",
+          "text": "When to use",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Team decisions with mutually exclusive options",
+            "Preference polls (e.g., 'Which design do you prefer?')",
+            "Scheduling (e.g., 'Best time for the meeting?')"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Example",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Question: Where should we have the team offsite?\nOptions:\n  1️⃣ Mountains (45%)\n  2️⃣ Beach (30%)\n  3️⃣ City (25%)"
+        },
+        {
+          "type": "heading",
+          "text": "Voting behavior",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click an option to vote",
+            "Click the same option again to retract your vote",
+            "Click a different option to switch (if vote change is enabled)"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Multi-Select",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Voters can select multiple options. Each option tracks its vote count independently."
+        },
+        {
+          "type": "heading",
+          "text": "When to use",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Gathering multiple inputs (e.g., 'Which features should we prioritize?')",
+            "Interest checks (e.g., 'Which topics interest you?')",
+            "Availability polls (e.g., 'Which days work for you?')"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Example",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Question: Which features should we build next? (select all)\nOptions:\n  1️⃣ Dark mode (12 votes)\n  2️⃣ Export results (8 votes)\n  3️⃣ Poll templates (15 votes)\n  4️⃣ Reminders (10 votes)"
+        },
+        {
+          "type": "heading",
+          "text": "Voting behavior",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Click any option to toggle it on/off",
+            "Select as many options as you want",
+            "Each selection is independent"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Yes / No / Maybe",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Quick three-option poll for consensus checks. No need to specify custom options."
+        },
+        {
+          "type": "heading",
+          "text": "When to use",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Quick approval checks (e.g., 'Should we deploy today?')",
+            "Consensus building (e.g., 'Move standup to 10am?')",
+            "Simple decisions that need fast feedback"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Example",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Question: Should we move standup to 10am?\nOptions:\n  ✅ Yes (18 votes)\n  ❌ No (3 votes)\n  🤷 Maybe (5 votes)"
+        },
+        {
+          "type": "note",
+          "text": "You can optionally hide the 'Maybe' option if you want a strict Yes/No poll by unchecking 'Include Maybe' in the poll creation modal."
+        },
+        {
+          "type": "heading",
+          "text": "Voting behavior",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Same as single choice - one vote per person, with emoji buttons (✅ ❌ 🤷)."
+        }
+      ]
+    },
+    {
+      "heading": "Rating Scale",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Voters rate on a numeric scale (1-5 or 1-10). Results show the average rating and distribution."
+        },
+        {
+          "type": "heading",
+          "text": "When to use",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "Satisfaction surveys (e.g., 'Rate this sprint')",
+            "Feedback collection (e.g., 'How was the presentation?')",
+            "Measuring sentiment or agreement strength"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Example",
+          "level": 3
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Question: Rate this sprint (1-5)\nOptions:\n  ⭐ 1 (0 votes)\n  ⭐⭐ 2 (1 vote)\n  ⭐⭐⭐ 3 (3 votes)\n  ⭐⭐⭐⭐ 4 (8 votes)\n  ⭐⭐⭐⭐⭐ 5 (5 votes)\n\nAverage: 4.0"
+        },
+        {
+          "type": "heading",
+          "text": "Scale options",
+          "level": 3
+        },
+        {
+          "type": "list",
+          "items": [
+            "1-5 scale: Default, best for quick sentiment checks",
+            "1-10 scale: More granular, useful for detailed feedback"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Voting behavior",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Click any star rating to vote. The poll shows both individual vote counts and the calculated average."
+        }
+      ]
+    },
+    {
+      "heading": "Quick Reference",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Choose your poll type based on the response format:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Single Choice: One option, mutually exclusive",
+            "Multi-Select: Multiple options, independent selections",
+            "Yes/No/Maybe: Quick consensus, pre-set options",
+            "Rating Scale: Numeric feedback, shows average"
+          ]
+        }
+      ]
+    }
+  ]
+}

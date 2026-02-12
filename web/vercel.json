@@ -3,9 +3,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": null,
-<<<<<<< HEAD
   "outputDirectory": "dist/server"
-=======
-  "outputDirectory": ".output/public"
->>>>>>> b10c13ec5162e510a3f1f15775ba3ceb7b8965c2
 }

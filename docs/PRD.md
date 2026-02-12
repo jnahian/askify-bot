@@ -143,15 +143,15 @@ The following core tables support the Askify data model:
 **polls**
 
 | Column       | Type        | Description                                           |
-| :----------- | :---------- | :---------------------------------------------------- | ------------ | ------ | ------ |
+| :----------- | :---------- | :---------------------------------------------------- |
 | id           | UUID (PK)   | Unique poll identifier                                |
 | creator_id   | VARCHAR     | Slack user ID of poll creator                         |
 | channel_id   | VARCHAR     | Target Slack channel ID                               |
 | message_ts   | VARCHAR     | Slack message timestamp (for updates)                 |
 | question     | TEXT        | Poll question text                                    |
-| poll_type    | ENUM        | single_choice                                         | multi_select | yes_no | rating |
+| poll_type    | ENUM        | `single_choice`, `multi_select`, `yes_no`, `rating`   |
 | settings     | JSONB       | Anonymous, vote change, live results, reminders, etc. |
-| status       | ENUM        | draft                                                 | scheduled    | active | closed |
+| status       | ENUM        | `draft`, `scheduled`, `active`, `closed`              |
 | scheduled_at | TIMESTAMPTZ | When to post (null \= immediate)                      |
 | closes_at    | TIMESTAMPTZ | Auto-close time (null \= manual)                      |
 | created_at   | TIMESTAMPTZ | Record creation timestamp                             |
@@ -262,7 +262,7 @@ Core polling functionality covering the most common use cases.
 
 - DM results to creator on poll close
 
-- Core database schema and Sequelize models
+- Core database schema and Prisma models
 
 ## **6.2 Phase 2 — Enhanced (Weeks 4–5)**
 

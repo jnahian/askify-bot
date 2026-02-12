@@ -2,11 +2,11 @@ const BAR_LENGTH = 14;
 
 // Color-coded bar segments based on position/ranking
 const BAR_COLORS = [
-  ':large_green_square:',   // 1st place / high
-  ':large_blue_square:',    // 2nd place
-  ':large_purple_square:',  // 3rd place
-  ':large_orange_square:',  // 4th place
-  ':large_yellow_square:',  // 5th+
+  ":large_green_square:", // 1st place / high
+  ":large_orange_square:", // 4th place
+  ":large_blue_square:", // 2nd place
+  ":large_purple_square:", // 3rd place
+  ":large_yellow_square:", // 5th+
 ];
 
 const EMPTY_SEGMENT = ':white_large_square:';
@@ -46,6 +46,8 @@ export function renderResultsText(
   totalVoters: number,
 ): string {
   return options
-    .map((opt, i) => `${opt.label}\n${renderBar(opt.voteCount, totalVoters, i)}`)
-    .join('\n\n');
+    .map(
+      (opt, i) => `${opt.label}\n\n${renderBar(opt.voteCount, totalVoters, i)}`,
+    )
+    .join("\n\n");
 }

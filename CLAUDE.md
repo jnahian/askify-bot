@@ -22,20 +22,24 @@ npx tsc --noEmit         # Type-check without emitting (use for validation)
 
 **Entry point:** `src/app.ts` — creates the Bolt app, registers all handlers, runs startup recovery, then starts cron jobs.
 
-**Startup order:** `registerCommands` → `registerActions` → `registerViews` → `app.start()` → `runStartupRecovery()` → `startJobs()`
+**Startup order:** `registerRequestLogger` → `registerCommands` → `registerActions` → `registerViews` → `registerEvents` → `app.start()` → `runStartupRecovery()` → `startJobs()`
 
 **Module registration pattern:** Each directory has an `index.ts` that exports a `register*(app)` or `start*(client)` function called from `app.ts`. To add a new handler, create the file and wire it through the directory's `index.ts`.
 
 ```
-src/commands/   → app.command() handlers (/askify with subcommands: help, list, templates)
-src/actions/    → app.action() handlers (buttons, selects, regex-matched patterns)
-src/views/      → app.view() handlers (modal submissions)
-src/services/   → Business logic + Prisma DB operations (pollService, voteService, templateService)
-src/blocks/     → Block Kit message builders (return { blocks, text })
-src/jobs/       → node-cron background jobs + one-time startup recovery
-src/utils/      → Pure utilities (barChart, debounce, slackRetry)
-src/lib/        → Shared singletons (Prisma client)
+src/commands/    → app.command() handlers (/askify with subcommands: help, list, templates, poll)
+src/actions/     → app.action() handlers (buttons, selects, regex-matched patterns)
+src/views/       → app.view() handlers (modal submissions)
+src/events/      → app.event() handlers (DM messages, App Home tab)
+src/middleware/  → Global middleware (request logger, registered before handlers)
+src/services/    → Business logic + Prisma DB operations (pollService, voteService, templateService)
+src/blocks/      → Block Kit message builders (return { blocks, text })
+src/jobs/        → node-cron background jobs + one-time startup recovery
+src/utils/       → Pure utilities (barChart, debounce, slackRetry, channelError)
+src/lib/         → Shared singletons (Prisma client)
 ```
+
+**No test framework** is currently configured. Type-check with `npx tsc --noEmit`.
 
 **Event flow:** `/askify` → opens modal → submission creates poll in DB → posts to channel (or schedules) → vote clicks update DB → debounced `chat.update` refreshes message → close (manual/auto-close cron) disables voting → DMs results with "Share Results" button → share posts to chosen channel.
 
@@ -70,6 +74,11 @@ Select elements with `dispatch_action: true` trigger `app.action()` handlers tha
 ### Poll Settings JSON
 Stored in `Poll.settings` column: `{ anonymous, allowVoteChange, liveResults, ratingScale?, allowAddingOptions?, reminders? }`. Defaults: `allowVoteChange: true`, `liveResults: true`. The `allowAddingOptions` checkbox only appears for `single_choice`/`multi_select` poll types.
 
+### Vote Semantics
+- **Single choice / yes_no / rating:** Clicking the same option retracts the vote; clicking a different option switches (if vote change allowed). One vote per voter.
+- **Multi-select:** Clicking an option toggles it on/off. Multiple selections per voter.
+- `VoteResult.action` returns `'cast'`, `'retracted'`, `'switched'`, or `'rejected'`.
+
 ### Vote Update Debouncing
 Rapid votes are debounced per poll ID (500ms) via `src/utils/debounce.ts`. The debounced callback re-fetches fresh poll data at execution time, so the final update always reflects the latest state.
 
@@ -84,6 +93,13 @@ Rapid votes are debounced per poll ID (500ms) via `src/utils/debounce.ts`. The d
 
 ### Types from Slack
 Import `KnownBlock`, `Button`, `View` from `@slack/types` (not `@slack/bolt`). The `@slack/bolt` package re-exports some but not all types.
+
+### Key Types
+`PollWithOptions` (in `pollService.ts`) is the primary interface used across blocks, actions, and jobs. It includes nested `options` with `_count.votes` and poll-level `_count.votes`. Cast from Prisma results via `as unknown as PollWithOptions`.
+
+### Block Builders
+- `blocks/pollMessage.ts` — `buildPollMessage()` for the channel message, `buildResultsDM()` for plain-text DM results
+- `blocks/resultsDM.ts` — `buildResultsDMBlocks()` for rich Block Kit DM results with "Share Results" button
 
 ### Message Updates
 Require storing `message_ts` from `chat.postMessage` response — saved via `updatePollMessageTs()`. The `PollWithOptions` interface includes `messageTs` for this purpose.

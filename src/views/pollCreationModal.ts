@@ -14,6 +14,7 @@ export interface ModalOptions {
   scheduleMethod?: string;
   prefill?: {
     question?: string;
+    description?: string;
     options?: string[];
     ratingScale?: number;
     anonymous?: boolean;
@@ -21,6 +22,7 @@ export interface ModalOptions {
     liveResults?: boolean;
     allowAddingOptions?: boolean;
     reminders?: boolean;
+    includeMaybe?: boolean;
   };
 }
 
@@ -50,23 +52,38 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     },
   });
 
-  // Poll Type
+  // Poll Description (optional)
+  blocks.push({
+    type: 'input',
+    block_id: 'description_block',
+    optional: true,
+    label: { type: 'plain_text', text: 'Description' },
+    element: {
+      type: 'plain_text_input',
+      action_id: 'description_input',
+      placeholder: { type: 'plain_text', text: 'Add context or instructions for your poll (optional)' },
+      multiline: true,
+      max_length: 500,
+      ...(prefill?.description ? { initial_value: prefill.description } : {}),
+    },
+  });
+
+  // Poll Type (radio buttons)
   blocks.push({
     type: 'input',
     block_id: 'poll_type_block',
     dispatch_action: true,
     label: { type: 'plain_text', text: 'Poll Type' },
     element: {
-      type: 'static_select',
+      type: 'radio_buttons',
       action_id: POLL_TYPE_ACTION_ID,
-      placeholder: { type: 'plain_text', text: 'Select poll type' },
       options: [
         { text: { type: 'plain_text', text: 'Single Choice' }, value: 'single_choice' },
         { text: { type: 'plain_text', text: 'Multi-Select' }, value: 'multi_select' },
         { text: { type: 'plain_text', text: 'Yes / No / Maybe' }, value: 'yes_no' },
         { text: { type: 'plain_text', text: 'Rating Scale' }, value: 'rating' },
       ],
-      ...(pollType ? { initial_option: getPollTypeOption(pollType) } : {}),
+      initial_option: getPollTypeOption(pollType || 'single_choice'),
     },
   });
 
@@ -86,6 +103,27 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
           { text: { type: 'plain_text', text: '1–10' }, value: '10' },
         ],
         ...(ratingVal ? { initial_option: { text: { type: 'plain_text' as const, text: ratingVal === '10' ? '1–10' : '1–5' }, value: ratingVal } } : {}),
+      },
+    });
+  }
+
+  // Include Maybe option (only for yes_no type)
+  if (pollType === 'yes_no') {
+    const includeMaybeOption = {
+      text: { type: 'plain_text' as const, text: 'Include "Maybe" option' },
+      value: 'include_maybe',
+    };
+    const includeMaybeDefault = prefill ? prefill.includeMaybe !== false : true;
+    blocks.push({
+      type: 'input',
+      block_id: 'include_maybe_block',
+      optional: true,
+      label: { type: 'plain_text', text: 'Maybe Option' },
+      element: {
+        type: 'checkboxes',
+        action_id: 'include_maybe_toggle',
+        options: [includeMaybeOption],
+        ...(includeMaybeDefault ? { initial_options: [includeMaybeOption] } : {}),
       },
     });
   }
@@ -150,106 +188,71 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     },
   });
 
-  // Settings divider
+  // Settings — consolidated checkboxes with descriptions
   blocks.push({ type: 'divider' });
-  blocks.push({
-    type: 'section',
-    text: { type: 'mrkdwn', text: '*Poll Settings*' },
-  });
 
-  // Anonymous Voting
   const anonymousOption = {
-    text: { type: 'plain_text' as const, text: 'Hide voter identities' },
+    text: { type: 'plain_text' as const, text: 'Anonymous Voting' },
+    description: { type: 'plain_text' as const, text: 'Voter identities are hidden from results' },
     value: 'anonymous',
   };
-  blocks.push({
-    type: 'input',
-    block_id: 'anonymous_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Anonymous Voting' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'anonymous_toggle',
-      options: [anonymousOption],
-      ...(prefill?.anonymous ? { initial_options: [anonymousOption] } : {}),
-    },
-  });
-
-  // Allow Vote Change
   const voteChangeOption = {
-    text: { type: 'plain_text' as const, text: 'Let voters update their selection' },
+    text: { type: 'plain_text' as const, text: 'Allow Vote Change' },
+    description: { type: 'plain_text' as const, text: 'Voters can change or retract their vote' },
     value: 'vote_change',
   };
-  const voteChangeDefault = prefill ? prefill.allowVoteChange : true;
-  blocks.push({
-    type: 'input',
-    block_id: 'vote_change_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Allow Vote Change' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'vote_change_toggle',
-      options: [voteChangeOption],
-      ...(voteChangeDefault !== false ? { initial_options: [voteChangeOption] } : {}),
-    },
-  });
-
-  // Show Live Results
   const liveResultsOption = {
-    text: { type: 'plain_text' as const, text: 'Show results as votes come in' },
+    text: { type: 'plain_text' as const, text: 'Show Live Results' },
+    description: { type: 'plain_text' as const, text: 'Results are visible before the poll closes' },
     value: 'live_results',
   };
-  const liveResultsDefault = prefill ? prefill.liveResults : true;
-  blocks.push({
-    type: 'input',
-    block_id: 'live_results_block',
-    optional: true,
-    label: { type: 'plain_text', text: 'Show Live Results' },
-    element: {
-      type: 'checkboxes',
-      action_id: 'live_results_toggle',
-      options: [liveResultsOption],
-      ...(liveResultsDefault !== false ? { initial_options: [liveResultsOption] } : {}),
-    },
-  });
-
-  // Send Reminders (only useful when poll has a close time)
   const remindersOption = {
-    text: { type: 'plain_text' as const, text: 'DM non-voters before the poll closes' },
+    text: { type: 'plain_text' as const, text: 'Send Reminders' },
+    description: { type: 'plain_text' as const, text: 'DM non-voters before the poll closes' },
     value: 'reminders',
   };
+  const addOptionsOption = {
+    text: { type: 'plain_text' as const, text: 'Voter-Added Options' },
+    description: { type: 'plain_text' as const, text: 'Voters can suggest new options' },
+    value: 'allow_adding_options',
+  };
+
+  const settingsOptions: typeof anonymousOption[] = [
+    anonymousOption,
+    voteChangeOption,
+    liveResultsOption,
+    remindersOption,
+  ];
+
+  // Only include "Allow Adding Options" for applicable poll types
+  if (pollType === 'single_choice' || pollType === 'multi_select') {
+    settingsOptions.push(addOptionsOption);
+  }
+
+  // Build initial selections
+  const settingsInitial: typeof anonymousOption[] = [];
+  if (prefill?.anonymous) settingsInitial.push(anonymousOption);
+  const voteChangeDefault = prefill ? prefill.allowVoteChange : true;
+  if (voteChangeDefault !== false) settingsInitial.push(voteChangeOption);
+  const liveResultsDefault = prefill ? prefill.liveResults : true;
+  if (liveResultsDefault !== false) settingsInitial.push(liveResultsOption);
+  if (prefill?.reminders) settingsInitial.push(remindersOption);
+  if (prefill?.allowAddingOptions && (pollType === 'single_choice' || pollType === 'multi_select')) {
+    settingsInitial.push(addOptionsOption);
+  }
+
   blocks.push({
     type: 'input',
-    block_id: 'reminders_block',
+    block_id: 'settings_block',
     optional: true,
-    label: { type: 'plain_text', text: 'Send Reminders' },
+    label: { type: 'plain_text', text: 'Poll Settings' },
     element: {
       type: 'checkboxes',
-      action_id: 'reminders_toggle',
-      options: [remindersOption],
-      ...(prefill?.reminders ? { initial_options: [remindersOption] } : {}),
+      action_id: 'settings_checkboxes',
+      options: settingsOptions,
+      ...(settingsInitial.length > 0 ? { initial_options: settingsInitial } : {}),
     },
   });
-
-  // Allow Adding Options (only for single_choice and multi_select)
-  if (pollType === 'single_choice' || pollType === 'multi_select') {
-    const addOptionsOption = {
-      text: { type: 'plain_text' as const, text: 'Let voters add new options' },
-      value: 'allow_adding_options',
-    };
-    blocks.push({
-      type: 'input',
-      block_id: 'add_options_block',
-      optional: true,
-      label: { type: 'plain_text', text: 'Voter-Added Options' },
-      element: {
-        type: 'checkboxes',
-        action_id: 'add_options_toggle',
-        options: [addOptionsOption],
-        ...(prefill?.allowAddingOptions ? { initial_options: [addOptionsOption] } : {}),
-      },
-    });
-  }
 
   // Close Method
   blocks.push({
@@ -305,22 +308,20 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     text: { type: 'mrkdwn', text: '*Scheduling*' },
   });
 
-  // Post Timing
+  // Post Timing (radio buttons)
   blocks.push({
     type: 'input',
     block_id: 'schedule_method_block',
     dispatch_action: true,
-    optional: true,
     label: { type: 'plain_text', text: 'Post Timing' },
     element: {
-      type: 'static_select',
+      type: 'radio_buttons',
       action_id: SCHEDULE_METHOD_ACTION_ID,
-      placeholder: { type: 'plain_text', text: 'Post Immediately (default)' },
       options: [
         { text: { type: 'plain_text', text: 'Post Immediately' }, value: 'now' },
         { text: { type: 'plain_text', text: 'Schedule for Later' }, value: 'scheduled' },
       ],
-      ...(scheduleMethod ? { initial_option: getScheduleMethodOption(scheduleMethod) } : {}),
+      initial_option: getScheduleMethodOption(scheduleMethod || 'now'),
     },
   });
 

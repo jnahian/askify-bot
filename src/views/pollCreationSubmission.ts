@@ -14,6 +14,8 @@ interface PollSettings {
   ratingScale?: number;
   allowAddingOptions?: boolean;
   reminders?: boolean;
+  description?: string;
+  includeMaybe?: boolean;
 }
 
 export function registerPollCreationSubmission(app: App): void {
@@ -23,6 +25,7 @@ export function registerPollCreationSubmission(app: App): void {
 
     // Extract values
     const question = values.question_block?.question_input?.value?.trim();
+    const description = values.description_block?.description_input?.value?.trim() || undefined;
     const pollType = values.poll_type_block?.poll_type_select?.selected_option?.value;
     const channelId = values.channel_block?.channel_select?.selected_conversation;
 
@@ -44,21 +47,22 @@ export function registerPollCreationSubmission(app: App): void {
       }
     }
 
-    // Extract settings
-    const anonymousChecked = values.anonymous_block?.anonymous_toggle?.selected_options || [];
-    const voteChangeChecked = values.vote_change_block?.vote_change_toggle?.selected_options || [];
-    const liveResultsChecked = values.live_results_block?.live_results_toggle?.selected_options || [];
-
-    const addOptionsChecked = values.add_options_block?.add_options_toggle?.selected_options || [];
-    const remindersChecked = values.reminders_block?.reminders_toggle?.selected_options || [];
+    // Extract settings from consolidated checkboxes
+    const settingsChecked = values.settings_block?.settings_checkboxes?.selected_options || [];
+    const selectedValues = new Set(settingsChecked.map((o: { value: string }) => o.value));
 
     const settings: PollSettings = {
-      anonymous: anonymousChecked.some((o: { value: string }) => o.value === 'anonymous'),
-      allowVoteChange: voteChangeChecked.some((o: { value: string }) => o.value === 'vote_change'),
-      liveResults: liveResultsChecked.some((o: { value: string }) => o.value === 'live_results'),
-      allowAddingOptions: addOptionsChecked.some((o: { value: string }) => o.value === 'allow_adding_options'),
-      reminders: remindersChecked.some((o: { value: string }) => o.value === 'reminders'),
+      anonymous: selectedValues.has('anonymous'),
+      allowVoteChange: selectedValues.has('vote_change'),
+      liveResults: selectedValues.has('live_results'),
+      allowAddingOptions: selectedValues.has('allow_adding_options'),
+      reminders: selectedValues.has('reminders'),
     };
+
+    // Description
+    if (description) {
+      settings.description = description;
+    }
 
     // Rating scale
     if (pollType === 'rating') {
@@ -112,10 +116,17 @@ export function registerPollCreationSubmission(app: App): void {
 
     await ack();
 
+    // Include Maybe preference
+    const includeMaybeChecked = values.include_maybe_block?.include_maybe_toggle?.selected_options || [];
+    const includeMaybe = includeMaybeChecked.some((o: { value: string }) => o.value === 'include_maybe');
+    if (pollType === 'yes_no') {
+      settings.includeMaybe = includeMaybe;
+    }
+
     // Generate default options for special types
     let pollOptions = options;
     if (pollType === 'yes_no') {
-      pollOptions = ['Yes', 'No', 'Maybe'];
+      pollOptions = includeMaybe ? ['Yes', 'No', 'Maybe'] : ['Yes', 'No'];
     } else if (pollType === 'rating') {
       const max = settings.ratingScale || 5;
       pollOptions = Array.from({ length: max }, (_, i) => `${i + 1}`);

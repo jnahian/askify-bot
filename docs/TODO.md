@@ -18,6 +18,8 @@
     commands/           # Slash command handlers
     actions/            # Block action handlers (votes, buttons)
     views/              # Modal definitions & submission handlers
+    events/             # Event handlers (DM messages, App Home tab)
+    middleware/         # Global middleware (request logger)
     services/           # Business logic (poll, vote, template, results)
     blocks/             # Block Kit message builders
     jobs/               # Cron jobs (auto-close, reminders, scheduled posts)
@@ -190,6 +192,12 @@
   - Available commands and descriptions
   - Quick-start guide for creating a poll
   - Links or tips for poll types and settings
+
+### Step 17b: App Home & DM Handler
+
+- [x] **17b.1** App Home tab with usage guide, commands reference, poll types, and feature overview
+- [x] **17b.2** DM response handler — bot replies helpfully when users message it directly
+- [x] **17b.3** Global request logging middleware with execution time tracking
 
 ### Step 18: Improved Visuals & Formatting
 

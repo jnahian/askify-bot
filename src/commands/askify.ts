@@ -1,7 +1,7 @@
 import { App } from '@slack/bolt';
 import type { KnownBlock, Button } from '@slack/types';
 import { buildPollCreationModal } from '../views/pollCreationModal';
-import { createPoll, updatePollMessageTs, getUserPolls } from '../services/pollService';
+import { createPoll, updatePollMessageTs, getUserPolls, type GetUserPollsOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
@@ -13,6 +13,7 @@ interface InlinePollArgs {
   anonymous: boolean;
   closeDuration: number | null;
   ratingScale: number;
+  includeMaybe: boolean;
 }
 
 function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
@@ -34,10 +35,12 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
   let anonymous = false;
   let closeDuration: number | null = null;
   let ratingScale = 5;
+  let includeMaybe = true; // Default to including Maybe for yes/no polls
 
   if (flags.includes('--multi')) pollType = 'multi_select';
   if (flags.includes('--yesno')) pollType = 'yes_no';
   if (flags.includes('--anon')) anonymous = true;
+  if (flags.includes('--no-maybe')) includeMaybe = false;
 
   const ratingMatch = flags.match(/--rating(?:\s+(\d+))?/);
   if (ratingMatch) {
@@ -63,7 +66,46 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
     }
   }
 
-  return { question, options, pollType, anonymous, closeDuration, ratingScale };
+  return { question, options, pollType, anonymous, closeDuration, ratingScale, includeMaybe };
+}
+
+function parseListFilter(text: string): { options: GetUserPollsOptions; label: string } | { error: string } {
+  const trimmed = text.trim();
+
+  // No args — default latest 10
+  if (!trimmed) {
+    return { options: {}, label: '' };
+  }
+
+  // Relative: "7d", "30d", etc.
+  const relativeMatch = trimmed.match(/^(\d+)d$/i);
+  if (relativeMatch) {
+    const days = parseInt(relativeMatch[1], 10);
+    if (days <= 0 || days > 365) {
+      return { error: 'Please provide a day range between 1 and 365 (e.g., `7d`, `30d`).' };
+    }
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    return { options: { from }, label: `Last ${days} day${days !== 1 ? 's' : ''}` };
+  }
+
+  // Absolute: "YYYY-MM-DD YYYY-MM-DD"
+  const dateRangeMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{4}-\d{2}-\d{2})$/);
+  if (dateRangeMatch) {
+    const from = new Date(dateRangeMatch[1]);
+    const to = new Date(dateRangeMatch[2]);
+    to.setUTCHours(23, 59, 59, 999);
+
+    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+      return { error: 'Invalid date format. Use `YYYY-MM-DD YYYY-MM-DD` (e.g., `2025-01-01 2025-01-31`).' };
+    }
+    if (from > to) {
+      return { error: 'Start date must be before end date.' };
+    }
+    return { options: { from, to }, label: `${dateRangeMatch[1]} to ${dateRangeMatch[2]}` };
+  }
+
+  return { error: 'Invalid filter. Usage:\n`/askify list` — Latest 10 polls\n`/askify list 7d` — Last 7 days\n`/askify list 2025-01-01 2025-01-31` — Date range' };
 }
 
 export function registerAskifyCommand(app: App): void {
@@ -99,7 +141,9 @@ export function registerAskifyCommand(app: App): void {
               text: '*Commands*\n'
                 + '`/askify` — Open the poll creation modal\n'
                 + '`/askify poll "Q?" "Opt1" "Opt2"` — Quick inline poll\n'
-                + '`/askify list` — View your active & scheduled polls\n'
+                + '`/askify list` — View your latest 10 polls\n'
+                + '`/askify list 7d` — Polls from the last 7 days\n'
+                + '`/askify list 2025-01-01 2025-01-31` — Polls in a date range\n'
                 + '`/askify templates` — Manage saved poll templates\n'
                 + '`/askify help` — Show this help message',
             },
@@ -150,45 +194,101 @@ export function registerAskifyCommand(app: App): void {
 
     if (subcommand === 'list') {
       await ack();
-      const polls = await getUserPolls(command.user_id);
+
+      // Parse date filter arguments
+      const filterResult = parseListFilter(subArgs);
+      if ('error' in filterResult) {
+        await client.chat.postEphemeral({
+          channel: command.channel_id,
+          user: command.user_id,
+          text: filterResult.error,
+        });
+        return;
+      }
+
+      const polls = await getUserPolls(command.user_id, filterResult.options);
 
       if (polls.length === 0) {
         await client.chat.postEphemeral({
           channel: command.channel_id,
           user: command.user_id,
-          text: "You don't have any active or scheduled polls.",
+          text: `You don't have any polls${filterResult.label ? ` ${filterResult.label}` : ''}.`,
         });
         return;
       }
 
+      const POLL_TYPE_LABELS: Record<string, string> = {
+        single_choice: 'Single Choice',
+        multi_select: 'Multi-Select',
+        yes_no: 'Yes / No / Maybe',
+        rating: 'Rating Scale',
+      };
+
+      const STATUS_META: Record<string, { emoji: string; label: string }> = {
+        active: { emoji: ':large_green_circle:', label: 'Active' },
+        scheduled: { emoji: ':clock3:', label: 'Scheduled' },
+        closed: { emoji: ':no_entry_sign:', label: 'Closed' },
+      };
+
+      const headerText = filterResult.label
+        ? `Your Polls — ${filterResult.label}`
+        : 'Your Polls';
+
       const blocks: KnownBlock[] = [
         {
           type: 'header',
-          text: { type: 'plain_text', text: 'Your Polls' },
+          text: { type: 'plain_text', text: headerText },
+        },
+        {
+          type: 'context',
+          elements: [{ type: 'mrkdwn', text: `Showing ${polls.length} poll${polls.length !== 1 ? 's' : ''}` }],
         },
       ];
 
       for (const poll of polls) {
-        const statusEmoji = poll.status === 'active' ? ':large_green_circle:' : ':clock3:';
-        const statusLabel = poll.status === 'active' ? 'Active' : 'Scheduled';
+        const meta = STATUS_META[poll.status] || STATUS_META.active;
         const voteCount = poll._count.votes;
-        const closesInfo = poll.closesAt
-          ? `\nCloses: <!date^${Math.floor(poll.closesAt.getTime() / 1000)}^{date_short} at {time}|${poll.closesAt.toISOString()}>`
-          : '';
-        const scheduledInfo = poll.status === 'scheduled' && poll.scheduledAt
-          ? `\nScheduled for: <!date^${Math.floor(poll.scheduledAt.getTime() / 1000)}^{date_short} at {time}|${poll.scheduledAt.toISOString()}>`
-          : '';
+        const optionCount = poll.options.length;
+        const createdTs = Math.floor(poll.createdAt.getTime() / 1000);
+
+        // Build enriched body
+        let body = `${meta.emoji} *${poll.question}*\n`;
+        body += `${meta.label} · ${POLL_TYPE_LABELS[poll.pollType] || poll.pollType} · ${optionCount} options · ${voteCount} vote${voteCount !== 1 ? 's' : ''}\n`;
+        body += `<#${poll.channelId}> · Created <!date^${createdTs}^{date_short} at {time}|${poll.createdAt.toISOString()}>`;
+
+        if (poll.closesAt) {
+          const closesTs = Math.floor(poll.closesAt.getTime() / 1000);
+          body += `\n${poll.status === 'closed' ? 'Closed' : 'Closes'}: <!date^${closesTs}^{date_short} at {time}|${poll.closesAt.toISOString()}>`;
+        }
+
+        if (poll.status === 'scheduled' && poll.scheduledAt) {
+          const schedTs = Math.floor(poll.scheduledAt.getTime() / 1000);
+          body += `\nScheduled for: <!date^${schedTs}^{date_short} at {time}|${poll.scheduledAt.toISOString()}>`;
+        }
+
+        // Option preview (first 3 options)
+        const preview = poll.options.slice(0, 3).map(o => o.label).join(', ');
+        const moreCount = poll.options.length - 3;
+        body += `\n_Options: ${preview}${moreCount > 0 ? `, +${moreCount} more` : ''}_`;
 
         blocks.push({ type: 'divider' });
         blocks.push({
           type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `${statusEmoji} *${poll.question}*\n${statusLabel} in <#${poll.channelId}> · ${voteCount} vote${voteCount !== 1 ? 's' : ''}${closesInfo}${scheduledInfo}`,
-          },
+          text: { type: 'mrkdwn', text: body },
         });
 
+        // Action buttons
         const actionElements: Button[] = [];
+
+        // Results button for active and closed polls
+        if (poll.status === 'active' || poll.status === 'closed') {
+          actionElements.push({
+            type: 'button',
+            text: { type: 'plain_text', text: ':bar_chart: Results', emoji: true },
+            action_id: `list_results_${poll.id}`,
+            value: poll.id,
+          } as Button);
+        }
 
         if (poll.status === 'active' && poll.messageTs) {
           actionElements.push({
@@ -233,7 +333,7 @@ export function registerAskifyCommand(app: App): void {
       await client.chat.postEphemeral({
         channel: command.channel_id,
         user: command.user_id,
-        text: `You have ${polls.length} active/scheduled poll(s).`,
+        text: `You have ${polls.length} poll(s)${filterResult.label ? ` (${filterResult.label})` : ''}.`,
         blocks,
       });
       return;
@@ -326,6 +426,7 @@ export function registerAskifyCommand(app: App): void {
             + '*Flags:*\n'
             + '`--multi` — Multi-select poll\n'
             + '`--yesno` — Yes/No/Maybe poll (no options needed)\n'
+            + '`--no-maybe` — Exclude "Maybe" from Yes/No polls\n'
             + '`--rating` — Rating scale 1–5 (or `--rating 10` for 1–10)\n'
             + '`--anon` — Anonymous voting\n'
             + '`--close 2h` — Auto-close after duration (e.g. `30m`, `4h`)',
@@ -345,7 +446,7 @@ export function registerAskifyCommand(app: App): void {
 
       let pollOptions = parsed.options;
       if (parsed.pollType === 'yes_no') {
-        pollOptions = ['Yes', 'No', 'Maybe'];
+        pollOptions = parsed.includeMaybe ? ['Yes', 'No', 'Maybe'] : ['Yes', 'No'];
       } else if (parsed.pollType === 'rating') {
         pollOptions = Array.from({ length: parsed.ratingScale }, (_, i) => `${i + 1}`);
       }
@@ -355,6 +456,7 @@ export function registerAskifyCommand(app: App): void {
         allowVoteChange: true,
         liveResults: true,
         ...(parsed.pollType === 'rating' ? { ratingScale: parsed.ratingScale } : {}),
+        ...(parsed.pollType === 'yes_no' ? { includeMaybe: parsed.includeMaybe } : {}),
       };
 
       const closesAt = parsed.closeDuration

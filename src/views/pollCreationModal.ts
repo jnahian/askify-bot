@@ -83,7 +83,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
         { text: { type: 'plain_text', text: 'Yes / No / Maybe' }, value: 'yes_no' },
         { text: { type: 'plain_text', text: 'Rating Scale' }, value: 'rating' },
       ],
-      ...(pollType ? { initial_option: getPollTypeOption(pollType) } : {}),
+      initial_option: getPollTypeOption(pollType || 'single_choice'),
     },
   });
 

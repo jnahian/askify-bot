@@ -12,6 +12,12 @@ export const Route = createFileRoute('/privacy')({
         content: 'Privacy Policy for Askify Slack bot. Learn how we collect, use, and protect your data.',
       },
     ],
+    links: [
+      {
+        rel: 'canonical',
+        href: 'https://askify.jnahian.me/privacy',
+      },
+    ],
   }),
   component: PrivacyPage,
 })

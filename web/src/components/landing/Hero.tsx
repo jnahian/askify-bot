@@ -1,5 +1,6 @@
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
+import { SLACK_OAUTH_URL } from '@/lib/constants'
 
 export function Hero() {
   return (
@@ -41,7 +42,7 @@ export function Hero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button
-              href="https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID"
+              href={SLACK_OAUTH_URL}
               variant="primary"
               size="lg"
               external

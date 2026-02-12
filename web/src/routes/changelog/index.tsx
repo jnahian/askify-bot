@@ -18,6 +18,12 @@ export const Route = createFileRoute('/changelog/')({
         content: 'See what\'s new in Askify. Track new features, improvements, and bug fixes across all versions.',
       },
     ],
+    links: [
+      {
+        rel: 'canonical',
+        href: 'https://askify.jnahian.me/changelog',
+      },
+    ],
   }),
   component: ChangelogIndex,
 })

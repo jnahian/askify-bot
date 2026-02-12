@@ -3,6 +3,12 @@
  * Generate meta tags, Open Graph, Twitter Card, and structured data
  */
 
+/**
+ * Site URL - centralized configuration
+ * Can be overridden via environment variable
+ */
+const SITE_URL = import.meta.env.SITE_URL || 'https://askify.jnahian.me'
+
 export interface SEOMetadata {
   title: string
   description: string
@@ -33,8 +39,6 @@ export function generateMeta(metadata: SEOMetadata) {
     modifiedTime,
   } = metadata
 
-  const siteUrl = 'https://askify.jnahian.me' // TODO: Move to env config
-
   const meta = [
     // Basic Meta
     { name: 'description', content: description },
@@ -45,10 +49,10 @@ export function generateMeta(metadata: SEOMetadata) {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:type', content: ogType },
-    { property: 'og:image', content: `${siteUrl}${ogImage}` },
+    { property: 'og:image', content: `${SITE_URL}${ogImage}` },
     {
       property: 'og:url',
-      content: canonical ? `${siteUrl}${canonical}` : siteUrl,
+      content: canonical ? `${SITE_URL}${canonical}` : SITE_URL,
     },
     { property: 'og:site_name', content: 'Askify' },
 
@@ -56,7 +60,7 @@ export function generateMeta(metadata: SEOMetadata) {
     { name: 'twitter:card', content: twitterCard },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: `${siteUrl}${ogImage}` },
+    { name: 'twitter:image', content: `${SITE_URL}${ogImage}` },
 
     // Article specific
     ...(publishedTime
@@ -71,7 +75,7 @@ export function generateMeta(metadata: SEOMetadata) {
     title: `${title} — Askify`,
     meta,
     link: canonical
-      ? [{ rel: 'canonical', href: `${siteUrl}${canonical}` }]
+      ? [{ rel: 'canonical', href: `${SITE_URL}${canonical}` }]
       : [],
   }
 }
@@ -80,8 +84,6 @@ export function generateMeta(metadata: SEOMetadata) {
  * Generate structured data (JSON-LD) for a page
  */
 export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb', data: any) {
-  const baseUrl = 'https://askify.jnahian.me'
-
   switch (type) {
     case 'website':
       return {
@@ -89,10 +91,10 @@ export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb
         '@type': 'WebSite',
         name: 'Askify',
         description: 'Powerful Slack polls made simple',
-        url: baseUrl,
+        url: SITE_URL,
         potentialAction: {
           '@type': 'SearchAction',
-          target: `${baseUrl}/docs?q={search_term_string}`,
+          target: `${SITE_URL}/docs?q={search_term_string}`,
           'query-input': 'required name=search_term_string',
         },
       }
@@ -119,7 +121,7 @@ export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb
           '@type': 'ListItem',
           position: index + 1,
           name: item.name,
-          item: `${baseUrl}${item.path}`,
+          item: `${SITE_URL}${item.path}`,
         })),
       }
 
@@ -143,7 +145,7 @@ export function generateSitemapURL(
   options: Omit<SitemapURL, 'loc'> = {},
 ): SitemapURL {
   return {
-    loc: `https://askify.jnahian.me${path}`,
+    loc: `${SITE_URL}${path}`,
     changefreq: 'weekly',
     priority: 0.7,
     ...options,

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
+import { SLACK_OAUTH_URL } from '@/lib/constants'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -68,7 +69,7 @@ export function Navbar() {
 
             {/* CTA Button */}
             <Button
-              href="https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID"
+              href={SLACK_OAUTH_URL}
               variant="primary"
               size="sm"
             >
@@ -122,7 +123,7 @@ export function Navbar() {
               )}
 
               <Button
-                href="https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID"
+                href={SLACK_OAUTH_URL}
                 variant="primary"
                 size="sm"
                 className="w-full"

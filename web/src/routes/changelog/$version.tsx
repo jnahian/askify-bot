@@ -21,6 +21,14 @@ export const Route = createFileRoute('/changelog/$version')({
         content: loaderData ? getChangelogSummary(loaderData.changelog) : '',
       },
     ],
+    links: loaderData
+      ? [
+          {
+            rel: 'canonical',
+            href: `https://askify.jnahian.me/changelog/${loaderData.changelog.version}`,
+          },
+        ]
+      : [],
   }),
   component: ChangelogPage,
 })

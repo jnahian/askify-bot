@@ -27,6 +27,14 @@ export const Route = createFileRoute('/docs/$id')({
         content: loaderData?.doc.description,
       },
     ],
+    links: loaderData
+      ? [
+          {
+            rel: 'canonical',
+            href: `https://askify.jnahian.me/docs/${loaderData.doc.id}`,
+          },
+        ]
+      : [],
   }),
   component: DocPage,
 })

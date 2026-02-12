@@ -1,17 +1,16 @@
 # Askify Website - Deployment Guide
 
-> How to deploy the Askify website alongside the bot
+> How to deploy the Askify website
 
 ---
 
 ## Deployment Strategy
 
-The Askify website is served from the same Express server that runs the bot's health check endpoint. This means:
+The Askify website is a TanStack Start application that runs as a separate Node.js server. It can be deployed:
 
-- ✅ Single deployment (bot + website together)
-- ✅ Same port for both services
-- ✅ No separate hosting needed
-- ✅ Automatic deployment with bot updates
+- **Option A:** Separate deployment (Vercel, Netlify, Cloudflare Pages)
+- **Option B:** Same VPS as bot, different port
+- **Option C:** Behind reverse proxy (recommended for production)
 
 ---
 

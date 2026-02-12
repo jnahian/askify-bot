@@ -88,7 +88,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
         { text: { type: 'plain_text', text: 'Yes / No / Maybe' }, value: 'yes_no' },
         { text: { type: 'plain_text', text: 'Rating Scale' }, value: 'rating' },
       ],
-      ...(pollType ? { initial_option: getPollTypeOption(pollType) } : {}),
+      initial_option: getPollTypeOption(pollType || 'single_choice'),
     },
   });
 
@@ -242,7 +242,9 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
   const liveResultsDefault = prefill ? prefill.liveResults : true;
   if (liveResultsDefault !== false) settingsInitial.push(liveResultsOption);
   if (prefill?.reminders) settingsInitial.push(remindersOption);
-  if (prefill?.allowAddingOptions) settingsInitial.push(addOptionsOption);
+  if (prefill?.allowAddingOptions && (pollType === 'single_choice' || pollType === 'multi_select')) {
+    settingsInitial.push(addOptionsOption);
+  }
 
   blocks.push({
     type: 'input',

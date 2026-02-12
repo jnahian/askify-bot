@@ -1,11 +1,13 @@
 import { App } from '@slack/bolt';
-import type { KnownBlock } from '@slack/types';
-import { closePoll, cancelScheduledPoll, getPoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import type { KnownBlock } from "@slack/types";
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
-import { renderBar } from '../utils/barChart';
-import { getOptionEmoji } from '../utils/emojiPrefix';
+import {
+  cancelScheduledPoll,
+  closePoll,
+  getPoll,
+} from "../services/pollService";
+import { getVotersByOption } from "../services/voteService";
 
 export function registerListActions(app: App): void {
   // Close poll from /askify list
@@ -94,57 +96,25 @@ export function registerListActions(app: App): void {
       voterNames = await getVotersByOption(pollId);
     }
 
-    // Build modal blocks
-    const blocks: KnownBlock[] = [];
+    // Reuse buildResultsDMBlocks and adapt for modal
+    const { blocks: dmBlocks } = buildResultsDMBlocks(poll, settings, voterNames);
 
-    if (settings.description) {
-      blocks.push({
-        type: 'section',
-        text: { type: 'mrkdwn', text: settings.description },
-      });
-    }
+    // Remove the header (first block - modal has its own title)
+    const blocks = dmBlocks.slice(1);
 
-    blocks.push({
-      type: 'context',
-      elements: [{
+    // Find and update the context block to include status
+    const contextBlockIndex = blocks.findIndex(b => b.type === 'context');
+    if (contextBlockIndex !== -1 && blocks[contextBlockIndex].type === 'context') {
+      const contextBlock = blocks[contextBlockIndex];
+      const statusText = poll.status === 'closed' ? ':no_entry_sign: Closed' : ':large_green_circle: Active';
+      contextBlock.elements = [{
         type: 'mrkdwn',
-        text: `${totalVoters} total vote${totalVoters !== 1 ? 's' : ''} · Posted in <#${poll.channelId}> · ${poll.status === 'closed' ? ':no_entry_sign: Closed' : ':large_green_circle: Active'}`,
-      }],
-    });
-
-    blocks.push({ type: 'divider' });
-
-    for (let idx = 0; idx < poll.options.length; idx++) {
-      const option = poll.options[idx];
-      const voteCount = option._count.votes;
-      const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-      let text = `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
-
-      if (!settings.anonymous && voterNames?.has(option.id)) {
-        const names = voterNames.get(option.id)!;
-        if (names.length > 0) {
-          text += `\nVoters: ${names.map((n) => `<@${n}>`).join(', ')}`;
-        }
-      }
-
-      blocks.push({
-        type: 'section',
-        text: { type: 'mrkdwn', text },
-      });
+        text: `${totalVoters} total vote${totalVoters !== 1 ? 's' : ''} · Posted in <#${poll.channelId}> · ${statusText}`,
+      }];
     }
 
-    // Rating average
-    if (poll.pollType === 'rating' && totalVoters > 0) {
-      const weightedSum = poll.options.reduce(
-        (sum, opt) => sum + parseInt(opt.label, 10) * opt._count.votes,
-        0,
-      );
-      blocks.push({ type: 'divider' });
-      blocks.push({
-        type: 'section',
-        text: { type: 'mrkdwn', text: `:star: *Average Rating: ${(weightedSum / totalVoters).toFixed(1)}*` },
-      });
-    }
+    // Remove the last two blocks (divider + Share Results button)
+    blocks.splice(-2, 2);
 
     await client.views.open({
       trigger_id: body.trigger_id!,

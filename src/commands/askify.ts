@@ -13,6 +13,7 @@ interface InlinePollArgs {
   anonymous: boolean;
   closeDuration: number | null;
   ratingScale: number;
+  includeMaybe: boolean;
 }
 
 function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
@@ -34,10 +35,12 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
   let anonymous = false;
   let closeDuration: number | null = null;
   let ratingScale = 5;
+  let includeMaybe = true; // Default to including Maybe for yes/no polls
 
   if (flags.includes('--multi')) pollType = 'multi_select';
   if (flags.includes('--yesno')) pollType = 'yes_no';
   if (flags.includes('--anon')) anonymous = true;
+  if (flags.includes('--no-maybe')) includeMaybe = false;
 
   const ratingMatch = flags.match(/--rating(?:\s+(\d+))?/);
   if (ratingMatch) {
@@ -63,7 +66,7 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
     }
   }
 
-  return { question, options, pollType, anonymous, closeDuration, ratingScale };
+  return { question, options, pollType, anonymous, closeDuration, ratingScale, includeMaybe };
 }
 
 function parseListFilter(text: string): { options: GetUserPollsOptions; label: string } | { error: string } {
@@ -91,7 +94,7 @@ function parseListFilter(text: string): { options: GetUserPollsOptions; label: s
   if (dateRangeMatch) {
     const from = new Date(dateRangeMatch[1]);
     const to = new Date(dateRangeMatch[2]);
-    to.setHours(23, 59, 59, 999);
+    to.setUTCHours(23, 59, 59, 999);
 
     if (isNaN(from.getTime()) || isNaN(to.getTime())) {
       return { error: 'Invalid date format. Use `YYYY-MM-DD YYYY-MM-DD` (e.g., `2025-01-01 2025-01-31`).' };
@@ -445,6 +448,7 @@ export function registerAskifyCommand(app: App): void {
             + '*Flags:*\n'
             + '`--multi` — Multi-select poll\n'
             + '`--yesno` — Yes/No/Maybe poll (no options needed)\n'
+            + '`--no-maybe` — Exclude "Maybe" from Yes/No polls\n'
             + '`--rating` — Rating scale 1–5 (or `--rating 10` for 1–10)\n'
             + '`--anon` — Anonymous voting\n'
             + '`--close 2h` — Auto-close after duration (e.g. `30m`, `4h`)',
@@ -464,7 +468,7 @@ export function registerAskifyCommand(app: App): void {
 
       let pollOptions = parsed.options;
       if (parsed.pollType === 'yes_no') {
-        pollOptions = ['Yes', 'No', 'Maybe'];
+        pollOptions = parsed.includeMaybe ? ['Yes', 'No', 'Maybe'] : ['Yes', 'No'];
       } else if (parsed.pollType === 'rating') {
         pollOptions = Array.from({ length: parsed.ratingScale }, (_, i) => `${i + 1}`);
       }
@@ -474,6 +478,7 @@ export function registerAskifyCommand(app: App): void {
         allowVoteChange: true,
         liveResults: true,
         ...(parsed.pollType === 'rating' ? { ratingScale: parsed.ratingScale } : {}),
+        ...(parsed.pollType === 'yes_no' ? { includeMaybe: parsed.includeMaybe } : {}),
       };
 
       const closesAt = parsed.closeDuration

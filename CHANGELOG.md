@@ -4,6 +4,59 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.0] - 2026-02-12
+
+### Added
+- **Website & Landing Page**: Complete TanStack Start-based website with modern two-column hero, features grid, screenshots showcase, use cases, and call-to-action sections
+  - Responsive design with dark mode as default
+  - Modern UI with Lucide icons and Tailwind CSS
+  - PWA-ready with web app manifest and app icons
+- **Documentation System**: Interactive documentation with sidebar navigation and code highlighting
+  - Getting Started guide
+  - Poll Types reference
+  - Commands overview
+  - Scheduling & Templates
+  - Voting & Results
+  - Advanced Settings
+  - Architecture deep-dive
+- **Changelog Page**: Version history viewer with table of contents sidebar
+  - Filterable by version
+  - Semantic changelog with feature/improvement/fix badges
+  - Direct linking to specific versions
+- **Legal Pages**: Privacy Policy and Terms of Service pages
+  - GDPR and data protection compliance
+  - Comprehensive service terms
+- **PWA Support**: Installable web app experience
+  - Web app manifest with app icons (192x192, 512x512)
+  - Apple touch icon
+  - Favicon set (16x16, 32x32, ICO)
+- **SEO Optimization**: Enhanced discoverability
+  - Auto-generated sitemap.xml
+  - robots.txt configuration
+  - Meta tags and Open Graph support
+- **Vercel Deployment**: Configuration and deployment guide for Vercel platform
+  - Environment variable setup
+  - Build configuration
+  - Static export support
+
+### Changed
+- **Deployment**: Integrated website into PM2 ecosystem config
+  - Separate process for web server
+  - Shared environment variables via parent .env
+  - Health check endpoint remains in bot process
+- **Build Scripts**: Standardized web-related scripts to `web:*` naming convention
+  - `web:dev` — Development server with hot reload
+  - `web:build` — Production build
+  - `web:preview` — Preview production build
+- **Dependencies**: Separated frontend dependencies into `web/package.json`
+  - Cleaner root package.json for bot-only dependencies
+  - Independent versioning for web dependencies
+
+### Fixed
+- Handle missing website build gracefully in development mode
+- Import order and deprecated icon warnings in web components
+- CodeRabbit review feedback across web application
+
 ## [1.1.0] - 2026-02-12
 
 ### Added

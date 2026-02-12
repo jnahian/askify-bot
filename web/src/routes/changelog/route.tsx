@@ -8,7 +8,7 @@ export const Route = createFileRoute('/changelog')({
 function ChangelogLayout() {
   return (
     <div className="py-12">
-      <Container size="md">
+      <Container size="xl">
         <Outlet />
       </Container>
     </div>

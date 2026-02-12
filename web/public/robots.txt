@@ -1,0 +1,10 @@
+# robots.txt for Askify
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://askify.jnahian.me/sitemap.xml
+
+# Disallow admin or private paths (if any in future)
+# Disallow: /admin

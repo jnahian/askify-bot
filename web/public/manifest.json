@@ -1,0 +1,17 @@
+{
+  "name": "Askify",
+  "short_name": "Askify",
+  "description": "Powerful Slack polls made simple",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0f9ea8",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

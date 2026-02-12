@@ -6,6 +6,7 @@ export function startHealthServer(slackClient: WebClient): void {
   const app = express();
   const port = process.env.PORT || 3000;
 
+  // Health check endpoint
   app.get("/health", async (req: Request, res: Response) => {
     try {
       // Check database connectivity
@@ -33,6 +34,6 @@ export function startHealthServer(slackClient: WebClient): void {
   });
 
   app.listen(port, () => {
-    console.log(`Health server listening on port ${port}`);
+    console.log(`💚 Health server listening on port ${port}`);
   });
 }

@@ -144,6 +144,17 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker deployment instructions.
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
+## Website
+
+The Askify website is built with TanStack Start and served from the same Express server as the bot.
+
+- **Source:** [`web/`](web/)
+- **Live site:** Served at `http://localhost:3000` when running the bot
+- **Build:** `npm run build:web`
+- **Dev:** `npm run dev:web`
+
+See [web/README.md](web/README.md) for website development details.
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.

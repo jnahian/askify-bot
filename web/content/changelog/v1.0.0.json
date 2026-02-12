@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "date": "2026-02-10",
+  "type": "feature",
+  "title": "Initial Release",
+  "items": [
+    {
+      "type": "feature",
+      "text": "Four poll types: single choice, multi-select, yes/no/maybe, rating scale"
+    },
+    {
+      "type": "feature",
+      "text": "Inline quick poll creation with /askify poll command"
+    },
+    {
+      "type": "feature",
+      "text": "Real-time bar chart rendering with color-coded emoji"
+    },
+    {
+      "type": "feature",
+      "text": "Anonymous voting mode"
+    },
+    {
+      "type": "feature",
+      "text": "Scheduled polls with datetime picker"
+    },
+    {
+      "type": "feature",
+      "text": "Auto-close via duration or specific date/time"
+    },
+    {
+      "type": "feature",
+      "text": "Poll templates — save, load, and reuse"
+    },
+    {
+      "type": "feature",
+      "text": "Reminder DMs to non-voters with smart timing"
+    },
+    {
+      "type": "feature",
+      "text": "Vote change toggle and live results toggle"
+    },
+    {
+      "type": "feature",
+      "text": "Voter-added options for single/multi-select polls"
+    },
+    {
+      "type": "feature",
+      "text": "Share results to any channel with formatted bar charts"
+    },
+    {
+      "type": "feature",
+      "text": "App Home tab with usage guide"
+    },
+    {
+      "type": "feature",
+      "text": "DM response handler for direct messages"
+    },
+    {
+      "type": "feature",
+      "text": "Background jobs for auto-close, scheduled polls, and reminders"
+    },
+    {
+      "type": "feature",
+      "text": "Docker deployment with multi-stage builds"
+    }
+  ]
+}

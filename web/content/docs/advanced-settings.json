@@ -1,0 +1,227 @@
+{
+  "id": "advanced-settings",
+  "title": "Advanced Settings",
+  "description": "Fine-tune poll behavior with advanced options",
+  "category": "Advanced Features",
+  "order": 3,
+  "sections": [
+    {
+      "heading": "Voting Settings",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Configure how voters interact with your poll."
+        },
+        {
+          "type": "heading",
+          "text": "Allow Vote Change",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Default: ON. When enabled, voters can change or retract their votes anytime."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Voters can switch to a different option",
+            "Click the same option again to retract",
+            "Useful when opinions may evolve"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When disabled: First vote is final, no changes allowed."
+        },
+        {
+          "type": "heading",
+          "text": "Show Live Results",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Default: ON. When enabled, results update in real-time with each vote."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Bar charts refresh immediately",
+            "Voters see current vote distribution",
+            "Creates transparency and engagement"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "When disabled: Results hidden until poll closes."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Prevents bandwagon effects",
+            "Useful for sensitive decisions",
+            "Results revealed when poll closes"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Anonymous Voting",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Default: OFF. When enabled, voter identities are hidden from all results."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Only vote counts shown, no names",
+            "Voter IDs stored for deduplication",
+            "Creator cannot see who voted for what",
+            "Perfect for sensitive feedback or decisions"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Interaction Settings",
+      "content": [
+        {
+          "type": "heading",
+          "text": "Allow Adding Options",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Available for single choice and multi-select polls only. When enabled, voters can suggest new options."
+        },
+        {
+          "type": "list",
+          "items": [
+            "An 'Add Option' button appears on the poll",
+            "Voters click it to suggest a new choice",
+            "New options are added to the poll immediately",
+            "Useful when the creator might miss options"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Voter-added options show which user suggested them. All voters can then vote on the new option."
+        },
+        {
+          "type": "heading",
+          "text": "Send Reminders",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Default: OFF. When enabled, Askify DMs non-voters before the poll closes."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Sent 1 hour before close (short polls) or 24 hours (long polls)",
+            "Only sent to channel members who haven't voted",
+            "Includes a link back to the poll",
+            "One reminder per user per poll"
+          ]
+        },
+        {
+          "type": "note",
+          "text": "Reminders require an auto-close setting (duration or date/time). They won't send for manual-close polls."
+        }
+      ]
+    },
+    {
+      "heading": "Poll Description",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Add optional context or instructions below your poll question."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Multiline text field in poll creation modal",
+            "Displays below the question in the poll message",
+            "Included in results DM and shared results",
+            "Saved in templates for reuse"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Use descriptions to:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Provide context or background",
+            "Explain option meanings",
+            "Give voting instructions",
+            "Link to related documents"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Emoji Support",
+      "content": [
+        {
+          "type": "paragraph",
+          "text": "Use Slack emoji codes in poll questions and options."
+        },
+        {
+          "type": "code",
+          "language": "text",
+          "value": "Examples:\n:fire: Hot Topic\n:rocket: Launch Day\n:pizza: Team Lunch"
+        },
+        {
+          "type": "paragraph",
+          "text": "Emoji codes are automatically rendered as emoji in Slack:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Use :emoji_name: syntax",
+            "Works in questions, options, and descriptions",
+            "All Slack emoji codes supported",
+            "Custom workspace emoji also work"
+          ]
+        },
+        {
+          "type": "heading",
+          "text": "Auto-Prefix Emojis",
+          "level": 3
+        },
+        {
+          "type": "paragraph",
+          "text": "Askify automatically adds visual indicators to options:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Single choice / multi-select: Number emojis (1️⃣ 2️⃣ 3️⃣...)",
+            "Yes/No/Maybe: Action emojis (✅ ❌ 🤷)",
+            "Rating scale: Star emojis (⭐ ⭐⭐ ⭐⭐⭐...)",
+            "Vote buttons show emoji only for cleaner UI"
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Best Practices",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Use anonymous voting for sensitive feedback or performance reviews",
+            "Disable live results to prevent groupthink on important decisions",
+            "Enable reminders for critical polls with low initial participation",
+            "Add descriptions when options need explanation or context",
+            "Allow adding options when brainstorming or gathering ideas",
+            "Disable vote changes for formal votes or final decisions"
+          ]
+        }
+      ]
+    }
+  ]
+}

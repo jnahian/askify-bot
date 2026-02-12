@@ -1,0 +1,56 @@
+{
+  "version": "1.2.0",
+  "date": "2026-02-12",
+  "type": "feature",
+  "title": "Website Launch & Documentation",
+  "items": [
+    {
+      "type": "feature",
+      "text": "Website & Landing Page — Complete TanStack Start-based website with modern hero, features grid, and screenshots"
+    },
+    {
+      "type": "feature",
+      "text": "Documentation System — Interactive docs with sidebar navigation and code highlighting"
+    },
+    {
+      "type": "feature",
+      "text": "Changelog Page — Version history viewer with table of contents and filtering"
+    },
+    {
+      "type": "feature",
+      "text": "Legal Pages — Privacy Policy and Terms of Service for compliance"
+    },
+    {
+      "type": "feature",
+      "text": "PWA Support — Installable web app with manifest and app icons"
+    },
+    {
+      "type": "feature",
+      "text": "SEO Optimization — Sitemap, robots.txt, and meta tags for discoverability"
+    },
+    {
+      "type": "feature",
+      "text": "Vercel Deployment — Configuration and guide for Vercel platform"
+    },
+    {
+      "type": "improvement",
+      "text": "Deployment — Integrated website into PM2 ecosystem config"
+    },
+    {
+      "type": "improvement",
+      "text": "Build Scripts — Standardized web scripts to web:* naming convention"
+    },
+    {
+      "type": "improvement",
+      "text": "Dependencies — Separated frontend deps into web/package.json"
+    },
+    {
+      "type": "fix",
+      "text": "Handle missing website build gracefully in dev mode"
+    },
+    {
+      "type": "fix",
+      "text": "Import order and deprecated icon warnings in web components"
+    }
+  ]
+}

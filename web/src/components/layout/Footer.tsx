@@ -1,0 +1,122 @@
+import { Link } from '@tanstack/react-router'
+import { Container } from './Container'
+
+export function Footer() {
+  const footerSections = [
+    {
+      title: 'Product',
+      links: [
+        { href: '/#features', label: 'Features' },
+        { href: '/docs', label: 'Documentation' },
+        { href: '/changelog', label: 'Changelog' },
+        { href: 'https://github.com/jnahian/askify-bot', label: 'GitHub', external: true },
+      ],
+    },
+    {
+      title: 'Resources',
+      links: [
+        { href: '/docs/getting-started', label: 'Getting Started' },
+        { href: '/docs/commands', label: 'Commands' },
+        { href: '/docs/poll-types', label: 'Poll Types' },
+        { href: '/docs/architecture', label: 'Architecture' },
+      ],
+    },
+    {
+      title: 'Legal',
+      links: [
+        { href: '/terms', label: 'Terms of Service' },
+        { href: '/privacy', label: 'Privacy Policy' },
+      ],
+    },
+  ]
+
+  return (
+    <footer className="bg-[var(--bg-muted)] border-t border-[var(--border)] py-12">
+      <Container>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          {/* Brand Column */}
+          <div className="col-span-2 md:col-span-1">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-xl font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity mb-4"
+            >
+              <img
+                src="/logo.jpeg"
+                alt="Askify"
+                className="w-8 h-8 object-contain rounded-sm"
+              />
+              <span>Askify</span>
+            </Link>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              Powerful Slack polls made simple. Team decisions, engagement, and
+              feedback — all without leaving Slack.
+            </p>
+            <a
+              href="https://github.com/jnahian/askify-bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--brand)] transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+              </svg>
+              <span className="text-sm">Open Source</span>
+            </a>
+          </div>
+
+          {/* Footer Sections */}
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="font-semibold text-[var(--text-primary)] mb-4">
+                {section.title}
+              </h3>
+              <ul className="space-y-2">
+                {section.links.map((link) =>
+                  link.external ? (
+                    <li key={link.href}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-[var(--text-secondary)] hover:text-[var(--brand)] transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={link.href}>
+                      <Link
+                        to={link.href}
+                        className="text-sm text-[var(--text-secondary)] hover:text-[var(--brand)] transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ),
+                )}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-[var(--text-secondary)]">
+            © {new Date().getFullYear()} Askify. MIT License.
+          </p>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Built with{' '}
+            <a
+              href="https://tanstack.com/start"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--brand)] hover:underline"
+            >
+              TanStack Start
+            </a>
+          </p>
+        </div>
+      </Container>
+    </footer>
+  )
+}

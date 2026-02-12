@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --port ${WEB_PORT:-3001}",
     "build": "npm run generate:sitemap && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port ${WEB_PORT:-3001}",
     "test": "vitest run",
     "lint": "eslint",
     "format": "prettier",

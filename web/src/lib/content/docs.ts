@@ -1,6 +1,16 @@
 import { Doc, DocSchema, DocsByCategory } from './schemas'
 
 /**
+ * Explicit category order for documentation navigation
+ */
+const CATEGORY_ORDER = [
+  'Introduction',
+  'Core Features',
+  'Advanced Features',
+  'Reference',
+]
+
+/**
  * Load all documentation files
  * Returns validated and sorted docs
  */
@@ -26,6 +36,16 @@ export async function getAllDocs(): Promise<Doc[]> {
   // Sort by category and order
   return docs.sort((a, b) => {
     if (a.category !== b.category) {
+      const indexA = CATEGORY_ORDER.indexOf(a.category)
+      const indexB = CATEGORY_ORDER.indexOf(b.category)
+      // If both in the order map, use that order
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB
+      }
+      // If only one is in the map, prioritize it
+      if (indexA !== -1) return -1
+      if (indexB !== -1) return 1
+      // Fall back to alphabetical for unknown categories
       return a.category.localeCompare(b.category)
     }
     return a.order - b.order

@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
+import { SLACK_OAUTH_URL } from '@/lib/constants'
 
 export function HeroModern() {
   return (
@@ -41,7 +43,7 @@ export function HeroModern() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
               <Button
-                href="https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID"
+                href={SLACK_OAUTH_URL}
                 variant="primary"
                 size="lg"
                 external
@@ -168,6 +170,16 @@ function PollOption({
   color: string
   delay?: number
 }) {
+  const [currentWidth, setCurrentWidth] = useState(0)
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setCurrentWidth(percentage)
+    }, delay)
+
+    return () => clearTimeout(timeout)
+  }, [percentage, delay])
+
   return (
     <div className="group">
       <div className="flex items-center justify-between mb-1 text-sm">
@@ -180,8 +192,7 @@ function PollOption({
         <div
           className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`}
           style={{
-            width: `${percentage}%`,
-            animationDelay: `${delay}ms`,
+            width: `${currentWidth}%`,
           }}
         />
       </div>

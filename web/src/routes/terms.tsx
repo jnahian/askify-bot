@@ -12,6 +12,12 @@ export const Route = createFileRoute('/terms')({
         content: 'Terms of Service for Askify Slack bot. Read our terms and conditions for using Askify.',
       },
     ],
+    links: [
+      {
+        rel: 'canonical',
+        href: 'https://askify.jnahian.me/terms',
+      },
+    ],
   }),
   component: TermsPage,
 })

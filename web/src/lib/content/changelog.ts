@@ -78,7 +78,15 @@ export function getChangelogSummary(changelog: Changelog): string {
  * Returns true if v1 is newer than v2
  */
 export function isNewerVersion(v1: string, v2: string): boolean {
-  const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number)
+  const parse = (v: string) => {
+    const parts = v.replace(/^v/, '').split('.')
+    // Pad to 3 segments with '0' for missing parts
+    return [
+      parts[0] || '0',
+      parts[1] || '0',
+      parts[2] || '0',
+    ].map(Number)
+  }
   const [major1, minor1, patch1] = parse(v1)
   const [major2, minor2, patch2] = parse(v2)
 

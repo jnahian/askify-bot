@@ -62,10 +62,11 @@ git push origin website
    - **Framework Preset:** Other
    - **Root Directory:** `web`
    - **Build Command:** `npm run build`
-   - **Output Directory:** `dist/client`
    - **Install Command:** `npm install`
 
 4. Click **Deploy**
+
+> **Note:** Vercel will automatically detect the `api/index.js` serverless function and the `vercel.json` configuration. No need to set an output directory.
 
 ### 3. Configure Custom Domain (Optional)
 
@@ -94,17 +95,26 @@ const siteUrl = import.meta.env.VITE_SITE_URL || 'https://askify.jnahian.me'
 
 ## Vercel Configuration
 
-The `vercel.json` file is already configured:
+The `vercel.json` file is configured to deploy the TanStack Start SSR application:
 
 ```json
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": null,
-  "outputDirectory": "dist/client"
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
 }
 ```
+
+The `api/index.js` serverless function:
+- Handles all SSR page rendering via TanStack Start
+- Serves static assets (JS, CSS, images) from `dist/client`
+- Uses Web Standard Request/Response API
 
 ---
 
@@ -197,8 +207,10 @@ If the build works locally, it will work on Vercel!
 
 ### Routes return 404
 
-- Ensure `outputDirectory` is set to `dist/client`
-- TanStack Start handles routing automatically
+- Ensure the `api/index.js` serverless function exists
+- Verify `vercel.json` has the rewrite rule routing to `/api`
+- Check Vercel function logs for errors
+- TanStack Start server handles all routing automatically
 - Vercel should serve the app correctly
 
 ### Assets not loading

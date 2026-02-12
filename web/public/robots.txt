@@ -1,3 +1,10 @@
-# https://www.robotstxt.org/robotstxt.html
+# robots.txt for Askify
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemaps
+Sitemap: https://askify.app/sitemap.xml
+
+# Disallow admin or private paths (if any in future)
+# Disallow: /admin

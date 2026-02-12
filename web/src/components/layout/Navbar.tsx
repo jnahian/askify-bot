@@ -3,6 +3,7 @@ import { Menu, X, Github } from 'lucide-react'
 import { useState } from 'react'
 import { Container } from './Container'
 import { Button } from '@/components/ui/Button'
+import { ThemeToggle } from './ThemeToggle'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -35,7 +36,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) =>
               link.external ? (
                 <a
@@ -61,6 +62,9 @@ export function Navbar() {
                 </Link>
               ),
             )}
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
 
             {/* CTA Button */}
             <Button
@@ -90,6 +94,12 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-[var(--border)]">
             <div className="flex flex-col gap-4">
+              {/* Theme Toggle Mobile */}
+              <div className="flex items-center justify-between py-2">
+                <span className="text-[var(--text-secondary)]">Theme</span>
+                <ThemeToggle />
+              </div>
+
               {navLinks.map((link) =>
                 link.external ? (
                   <a

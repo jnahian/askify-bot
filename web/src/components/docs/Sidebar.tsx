@@ -8,8 +8,8 @@ interface SidebarProps {
 
 export function Sidebar({ docsByCategory, currentDocId }: SidebarProps) {
   return (
-    <aside className="w-full md:w-64 flex-shrink-0">
-      <nav className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pb-8">
+    <aside className="w-full md:w-64 flex-shrink-0" aria-label="Documentation navigation">
+      <nav className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pb-8" role="navigation">
         <div className="space-y-6">
           {docsByCategory.map((group) => (
             <div key={group.category}>

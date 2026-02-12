@@ -22,7 +22,62 @@ export const Route = createRootRoute({
       },
       {
         name: 'description',
+        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free and open-source.',
+      },
+      {
+        name: 'keywords',
+        content: 'slack polls, slack bot, team voting, slack survey, poll bot, team decisions, slack app, open source',
+      },
+      {
+        name: 'author',
+        content: 'Askify',
+      },
+      // Open Graph
+      {
+        property: 'og:title',
+        content: 'Askify — Powerful Slack Polls Made Simple',
+      },
+      {
+        property: 'og:description',
         content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results.',
+      },
+      {
+        property: 'og:type',
+        content: 'website',
+      },
+      {
+        property: 'og:url',
+        content: 'https://askify.app',
+      },
+      {
+        property: 'og:image',
+        content: 'https://askify.app/assets/og-images/default.png',
+      },
+      {
+        property: 'og:site_name',
+        content: 'Askify',
+      },
+      // Twitter Card
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image',
+      },
+      {
+        name: 'twitter:title',
+        content: 'Askify — Powerful Slack Polls Made Simple',
+      },
+      {
+        name: 'twitter:description',
+        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, and visual results.',
+      },
+      {
+        name: 'twitter:image',
+        content: 'https://askify.app/assets/og-images/default.png',
+      },
+      // Theme color
+      {
+        name: 'theme-color',
+        content: '#0f9ea8',
       },
     ],
     links: [
@@ -34,6 +89,14 @@ export const Route = createRootRoute({
         rel: 'icon',
         type: 'image/png',
         href: '/logo.PNG',
+      },
+      {
+        rel: 'canonical',
+        href: 'https://askify.app',
+      },
+      {
+        rel: 'manifest',
+        href: '/manifest.json',
       },
     ],
   }),

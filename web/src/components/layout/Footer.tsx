@@ -42,15 +42,15 @@ export function Footer() {
               className="flex items-center gap-2 text-xl font-bold text-[var(--text-primary)] hover:opacity-80 transition-opacity mb-4"
             >
               <img
-                src="/logo.PNG"
+                src="/logo.jpeg"
                 alt="Askify"
-                className="w-8 h-8 object-contain rounded-lg"
+                className="w-8 h-8 object-contain rounded-sm"
               />
               <span>Askify</span>
             </Link>
             <p className="text-sm text-[var(--text-secondary)] mb-4">
-              Powerful Slack polls made simple. Team decisions, engagement, and feedback — all
-              without leaving Slack.
+              Powerful Slack polls made simple. Team decisions, engagement, and
+              feedback — all without leaving Slack.
             </p>
             <a
               href="https://github.com/jnahian/askify-bot"

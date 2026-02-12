@@ -4,10 +4,12 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
+import { NotFound } from '@/components/NotFound'
 
 import globalsCss from '@/styles/globals.css?url'
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFound,
   head: () => ({
     meta: [
       {

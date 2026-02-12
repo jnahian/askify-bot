@@ -41,21 +41,20 @@ export function Screenshots() {
             <div key={index} className="group">
               {/* Screenshot Image */}
               <div className="relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] shadow-[var(--shadow-md)] mb-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 aspect-[4/3] flex items-center justify-center group-hover:shadow-[var(--shadow-lg)] transition-shadow">
-                {/* Placeholder for now - will be replaced with actual screenshots */}
+                {/* Placeholder for now - will be replaced with actual screenshots
                 <div className="text-center p-8">
                   <div className="text-6xl mb-4 opacity-20">📸</div>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Screenshot coming soon
                   </p>
-                </div>
-                {/* Uncomment when screenshots are ready:
+                </div> */}
+                {/* Uncomment when screenshots are ready: */}
                 <img
                   src={screenshot.image}
                   alt={screenshot.alt}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                */}
               </div>
 
               {/* Caption */}
@@ -82,7 +81,11 @@ export function Screenshots() {
               />
             </svg>
             <span>
-              Try it out: <a href="/docs/getting-started" className="underline font-medium">Install Askify</a> to see it in your Slack workspace
+              Try it out:{' '}
+              <a href="/docs/getting-started" className="underline font-medium">
+                Install Askify
+              </a>{' '}
+              to see it in your Slack workspace
             </span>
           </div>
         </div>

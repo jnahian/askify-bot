@@ -5,19 +5,19 @@ export function Screenshots() {
     {
       title: 'Poll Creation Modal',
       description: 'Intuitive modal with all configuration options',
-      image: '/assets/screenshots/poll-creation.png',
+      image: '/assets/screenshots/poll-creation.jpg',
       alt: 'Askify poll creation modal showing question input, poll type selection, and settings',
     },
     {
       title: 'Active Poll in Channel',
       description: 'Beautiful real-time bar charts with emoji',
-      image: '/assets/screenshots/active-poll.png',
+      image: '/assets/screenshots/active-poll.jpg',
       alt: 'Active poll message in Slack channel with colorful bar chart visualization',
     },
     {
       title: 'Results & Sharing',
       description: 'Formatted results with share options',
-      image: '/assets/screenshots/results.png',
+      image: '/assets/screenshots/results.jpg',
       alt: 'Poll results DM showing bar charts, percentages, and share results button',
     },
   ]

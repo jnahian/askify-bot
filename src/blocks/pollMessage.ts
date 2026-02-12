@@ -177,7 +177,7 @@ export function buildResultsDM(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    text += `*${emoji} ${option.label}*\n\n${renderBar(voteCount, totalVoters)}\n`;
+    text += `*${emoji} ${option.label}*\n\n${renderBar(voteCount, totalVoters, idx)}\n`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;

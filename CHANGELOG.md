@@ -4,6 +4,42 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2026-02-12
+
+### Added
+- **Poll Description Field**: Optional multiline description field in poll creation modal
+  - Displays below poll question in channel messages
+  - Included in results DM and shared results
+  - Saved in templates for reuse
+- **Number & Star Emojis**: Auto-prefix poll options with visual indicators
+  - Number emojis (1️⃣ 2️⃣ 3️⃣) for single choice, multi-select polls
+  - Emoji-only vote buttons for cleaner UI
+  - Star emojis (⭐⭐⭐) for rating scale polls
+  - Yes/No/Maybe polls use ✅ ❌ 🤷 emoji buttons
+- **Maybe Toggle**: Optional "Include Maybe" checkbox for Yes/No polls
+  - Default: Maybe included (backward compatible)
+  - When unchecked, creates Yes/No poll only
+- **Results Modal**: "Results" button on each poll in `/askify list`
+  - Opens modal with bar charts, percentages, and voter names
+  - Includes rating average for rating polls
+  - Available for active and closed polls
+- **Date Range Filtering**: Filter polls in `/askify list` by date
+  - Relative ranges: `7d`, `30d` (last N days)
+  - Absolute ranges: `YYYY-MM-DD YYYY-MM-DD`
+  - Display filter info in list header
+
+### Changed
+- **Poll Creation Modal UX**:
+  - Poll Type and Post Timing now use radio buttons (clearer selection)
+  - Settings checkboxes include helpful descriptions
+  - "Single Choice" pre-selected as default poll type
+- **Enhanced Poll List**:
+  - Default limit reduced from 20 to 10 polls
+  - Shows all poll statuses: active, scheduled, closed
+  - Enriched poll cards with type, option count, vote count, dates
+  - Visual separation by poll status
+  - Status emoji for closed polls (🚫)
+
 ## [1.0.1] - 2026-02-11
 
 ### Fixed

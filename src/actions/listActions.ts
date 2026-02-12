@@ -1,9 +1,13 @@
 import { App } from '@slack/bolt';
-import type { KnownBlock } from '@slack/types';
-import { closePoll, cancelScheduledPoll, getPoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import type { KnownBlock } from "@slack/types";
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
+import {
+  cancelScheduledPoll,
+  closePoll,
+  getPoll,
+} from "../services/pollService";
+import { getVotersByOption } from "../services/voteService";
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
 
@@ -118,7 +122,7 @@ export function registerListActions(app: App): void {
       const option = poll.options[idx];
       const voteCount = option._count.votes;
       const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-      let text = `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
+      let text = `*${emoji} ${option.label}*\n\n${renderBar(voteCount, totalVoters, idx)}`;
 
       if (!settings.anonymous && voterNames?.has(option.id)) {
         const names = voterNames.get(option.id)!;

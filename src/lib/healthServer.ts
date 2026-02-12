@@ -8,15 +8,11 @@ export function startHealthServer(slackClient: WebClient): void {
   const app = express();
   const port = process.env.PORT || 3000;
 
-  // Serve static files from web/dist/client (if built)
-  const webDistPath = path.join(__dirname, "../../web/dist/client");
-  const websiteBuilt = existsSync(webDistPath);
+  // Check if website is built
+  const webServerPath = path.join(__dirname, "../../web/dist/server/server.js");
+  const websiteBuilt = existsSync(webServerPath);
 
-  if (websiteBuilt) {
-    app.use(express.static(webDistPath));
-  }
-
-  // Health check endpoint
+  // Health check endpoint (must be before other routes)
   app.get("/health", async (req: Request, res: Response) => {
     try {
       // Check database connectivity
@@ -31,6 +27,7 @@ export function startHealthServer(slackClient: WebClient): void {
         checks: {
           database: "connected",
           slack: "connected",
+          website: websiteBuilt ? "built" : "not built",
         },
       });
     } catch (error) {
@@ -43,22 +40,30 @@ export function startHealthServer(slackClient: WebClient): void {
     }
   });
 
-  // Serve index.html for all other routes (SPA fallback) - only if website is built
+  // Serve website if built (TanStack Start SSR server)
   if (websiteBuilt) {
-    app.use((req: Request, res: Response) => {
-      res.sendFile(path.join(webDistPath, "index.html"));
-    });
+    // Import and use the TanStack Start server
+    import(webServerPath)
+      .then((webServer) => {
+        // TanStack Start's server exports a handler
+        if (webServer.default || webServer.handler) {
+          const handler = webServer.default || webServer.handler;
+          app.use(handler);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load website server:", err);
+      });
   } else {
     // Fallback message if website not built
     app.get("*", (req: Request, res: Response) => {
-      if (req.path === "/health") return;
       res.status(503).send(`
         <html>
-          <head><title>Askify</title></head>
-          <body style="font-family: system-ui; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center;">
+          <head><title>Askify</title><style>body{font-family:system-ui;max-width:600px;margin:100px auto;padding:20px;text-align:center;background:#0b1118;color:#fff;}</style></head>
+          <body>
             <h1>⚡ Askify Bot is Running</h1>
-            <p style="color: #666;">Website not built yet. Run <code>npm run web:build</code> to build the website.</p>
-            <p><a href="/health">View Health Check</a></p>
+            <p style="color: #b9c6d8;">Website not built yet. Run <code style="background:#16212c;padding:4px 8px;border-radius:4px;">npm run web:build</code> to build the website.</p>
+            <p><a href="/health" style="color:#0f9ea8;">View Health Check</a></p>
           </body>
         </html>
       `);

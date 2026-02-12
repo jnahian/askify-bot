@@ -1,11 +1,21 @@
 import { WebClient } from "@slack/web-api";
 import express, { Request, Response } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import prisma from "./prisma";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function startHealthServer(slackClient: WebClient): void {
   const app = express();
   const port = process.env.PORT || 3000;
 
+  // Serve static files from web/dist/client
+  const webDistPath = path.join(__dirname, "../../web/dist/client");
+  app.use(express.static(webDistPath));
+
+  // Health check endpoint
   app.get("/health", async (req: Request, res: Response) => {
     try {
       // Check database connectivity
@@ -32,7 +42,18 @@ export function startHealthServer(slackClient: WebClient): void {
     }
   });
 
+  // Serve index.html for all other routes (SPA fallback)
+  app.get("*", (req: Request, res: Response) => {
+    // Don't interfere with health check
+    if (req.path === "/health") {
+      return;
+    }
+    res.sendFile(path.join(webDistPath, "index.html"));
+  });
+
   app.listen(port, () => {
-    console.log(`Health server listening on port ${port}`);
+    console.log(`🌐 Website & health server listening on port ${port}`);
+    console.log(`   Website: http://localhost:${port}`);
+    console.log(`   Health: http://localhost:${port}/health`);
   });
 }

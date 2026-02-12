@@ -36,14 +36,6 @@ jobs:
             echo "==> Building bot..."
             npm run build
 
-            echo "==> Installing web dependencies..."
-            cd web
-            npm ci --omit=dev
-
-            echo "==> Building web app..."
-            npm run build
-            cd ..
-
             echo "==> Running database migrations..."
             npx prisma migrate deploy
 

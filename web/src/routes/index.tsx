@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Hero } from '@/components/landing/Hero'
+import { HeroModern } from '@/components/landing/HeroModern'
 import { FeaturesGrid } from '@/components/landing/FeaturesGrid'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { UseCases } from '@/components/landing/UseCases'
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/')({
 function LandingPage() {
   return (
     <div>
-      <Hero />
+      <HeroModern />
       <FeaturesGrid />
       <HowItWorks />
       <UseCases />

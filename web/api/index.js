@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises'
-import { join } from 'path'
+import { join, normalize, relative } from 'path'
 import { fileURLToPath } from 'url'
 import server from '../dist/server/server.js'
 
@@ -12,6 +12,9 @@ const staticExtensions = [
   '.woff', '.woff2', '.ttf', '.eot', '.webp', '.xml', '.json', '.webmanifest'
 ]
 
+// Regex to detect content-hashed files (e.g., main-Bugs4Q3d.js)
+const contentHashedFileRegex = /-[a-f0-9]{8,}\.(js|css)$/i
+
 export default async function handler(request) {
   const url = new URL(request.url)
   const pathname = url.pathname
@@ -21,9 +24,17 @@ export default async function handler(request) {
   
   if (isStaticFile) {
     try {
-      // Serve static files from dist/client
-      const filePath = join(clientDir, pathname)
-      const content = await readFile(filePath)
+      // Serve static files from dist/client with path traversal protection
+      const requestedPath = normalize(join(clientDir, pathname))
+      
+      // Security: Ensure the resolved path is within clientDir
+      const relativePath = relative(clientDir, requestedPath)
+      if (relativePath.startsWith('..') || requestedPath === clientDir) {
+        // Path traversal attempt detected
+        return new Response('Forbidden', { status: 403 })
+      }
+      
+      const content = await readFile(requestedPath)
       
       // Determine content type
       const ext = pathname.substring(pathname.lastIndexOf('.'))
@@ -46,13 +57,21 @@ export default async function handler(request) {
         '.webmanifest': 'application/manifest+json'
       }
       
+      // Use aggressive caching only for content-hashed files
+      const isContentHashed = contentHashedFileRegex.test(pathname)
+      const cacheControl = isContentHashed
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=3600'
+      
       return new Response(content, {
         headers: {
           'Content-Type': contentTypes[ext] || 'application/octet-stream',
-          'Cache-Control': 'public, max-age=31536000, immutable'
+          'Cache-Control': cacheControl
         }
       })
     } catch (error) {
+      // Log error for debugging but continue to SSR fallback
+      console.error(`Error serving static file ${pathname}:`, error.message)
       // File not found or error reading, fall through to SSR
     }
   }

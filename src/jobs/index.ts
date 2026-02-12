@@ -1,7 +1,7 @@
 import { WebClient } from '@slack/web-api';
 import { startAutoCloseJob } from './autoCloseJob';
-import { startScheduledPollJob } from './scheduledPollJob';
-import { startReminderJob } from './reminderJob';
+import { startReminderJob } from "./reminderJob";
+import { startScheduledPollJob } from "./scheduledPollJob";
 
 export function startJobs(client?: WebClient): void {
   if (client) {
@@ -9,5 +9,5 @@ export function startJobs(client?: WebClient): void {
     startScheduledPollJob(client);
     startReminderJob(client);
   }
-  console.log('Background jobs initialized');
+  console.log("💼 Background jobs initialized");
 }

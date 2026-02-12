@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
+import { useState } from 'react'
 
 interface CodeBlockProps {
   code: string
@@ -21,7 +21,9 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
     <div className="relative group my-4">
       {/* Language Label */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-800 dark:bg-gray-900 rounded-t-lg border-b border-gray-700">
-        <span className="text-xs font-mono text-gray-400 uppercase">{language}</span>
+        <span className="text-xs font-mono text-gray-400 uppercase">
+          {language}
+        </span>
 
         {/* Copy Button */}
         <button
@@ -44,7 +46,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
       </div>
 
       {/* Code Content */}
-      <pre className="overflow-x-auto p-4 bg-gray-900 dark:bg-gray-950 rounded-b-lg rounded-t-none">
+      <pre className="overflow-x-auto p-4 bg-gray-900 dark:bg-gray-950 rounded-b-lg">
         <code className="text-sm font-mono text-gray-100 leading-relaxed">
           {code}
         </code>

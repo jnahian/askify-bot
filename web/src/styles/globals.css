@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+/* Design Tokens - From TRD 5.2 */
+:root {
+  /* Brand Colors */
+  --brand: #0f9ea8;
+  --accent: #39c26a;
+
+  /* Backgrounds */
+  --bg: #ffffff;
+  --bg-muted: #f7f9fc;
+  --bg-dark: #0b1118;
+
+  /* Text */
+  --text-primary: #0b1118;
+  --text-secondary: #3b4b5d;
+  --text-inverse: #ffffff;
+
+  /* Border */
+  --border: #e5e7eb;
+
+  /* Status Colors */
+  --success: #39c26a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Dark Mode Tokens */
+.dark {
+  --bg: #0b1118;
+  --bg-muted: #16212c;
+  --text-primary: #ffffff;
+  --text-secondary: #b9c6d8;
+  --border: rgba(255, 255, 255, 0.12);
+}
+
+/* Base Styles */
+body {
+  @apply bg-[var(--bg)] text-[var(--text-primary)] antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* Gradient Utilities */
+.gradient-brand {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-[var(--brand)] to-[var(--accent)] bg-clip-text text-transparent;
+}
+
+/* Focus Styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-[var(--brand)] ring-offset-2 ring-offset-[var(--bg)];
+}
+
+/* Prose Styles for Documentation */
+.prose {
+  @apply max-w-none;
+}
+
+.prose p {
+  @apply mb-4 leading-7 text-[var(--text-primary)];
+}
+
+.prose h1 {
+  @apply text-3xl font-bold mb-4 mt-8 text-[var(--text-primary)];
+}
+
+.prose h2 {
+  @apply text-2xl font-bold mb-3 mt-6 text-[var(--text-primary)];
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mb-2 mt-4 text-[var(--text-primary)];
+}
+
+.prose ul,
+.prose ol {
+  @apply mb-4 pl-6 space-y-2;
+}
+
+.prose li {
+  @apply text-[var(--text-primary)];
+}
+
+.prose code {
+  @apply px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-sm font-mono text-[var(--brand)];
+}
+
+.prose pre {
+  @apply mb-4 p-4 bg-gray-900 dark:bg-gray-950 rounded-lg overflow-x-auto;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-gray-100;
+}
+
+.prose a {
+  @apply text-[var(--brand)] hover:text-[var(--accent)] underline transition-colors;
+}

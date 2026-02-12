@@ -34,6 +34,6 @@ export function startHealthServer(slackClient: WebClient): void {
   });
 
   app.listen(port, () => {
-    console.log(`Health server listening on port ${port}`);
+    console.log(`💚 Health server listening on port ${port}`);
   });
 }

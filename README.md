@@ -1,5 +1,7 @@
 # Askify
 
+[![Tests](https://github.com/jnahian/askify-bot/actions/workflows/test.yml/badge.svg)](https://github.com/jnahian/askify-bot/actions/workflows/test.yml)
+
 An internal Slack poll bot for team decisions, engagement, and feedback.
 
 ## Features

@@ -3,7 +3,7 @@
  * Provides a jest-mocked Prisma client with common operations
  */
 
-export const mockPrismaClient = {
+export const mockPrismaClient: any = {
   poll: {
     create: jest.fn(),
     findUnique: jest.fn(),
@@ -36,17 +36,17 @@ export const mockPrismaClient = {
     update: jest.fn(),
     delete: jest.fn(),
   },
-  $transaction: jest.fn((fn) => fn(mockPrismaClient)),
+  $transaction: jest.fn((fn: any) => fn(mockPrismaClient)),
 };
 
 /**
  * Reset all Prisma mock functions
  */
 export function resetPrismaMocks() {
-  Object.values(mockPrismaClient).forEach((model) => {
-    if (typeof model === 'object') {
-      Object.values(model).forEach((fn) => {
-        if (typeof fn === 'function' && 'mockClear' in fn) {
+  Object.values(mockPrismaClient).forEach((model: any) => {
+    if (typeof model === 'object' && model !== null) {
+      Object.values(model).forEach((fn: any) => {
+        if (typeof fn === 'function' && typeof fn.mockClear === 'function') {
           fn.mockClear();
         }
       });
@@ -55,7 +55,7 @@ export function resetPrismaMocks() {
 }
 
 // Mock the prisma module
-jest.mock('../src/lib/prisma', () => ({
+jest.mock('../../src/lib/prisma', () => ({
   __esModule: true,
   default: mockPrismaClient,
 }));

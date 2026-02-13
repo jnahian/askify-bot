@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Lock, Palmtree, Sparkles } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { SLACK_OAUTH_URL } from '@/lib/constants'
@@ -117,15 +118,16 @@ export function HeroModern() {
                       <div className="text-sm text-[var(--text-secondary)] mb-3">
                         just now
                       </div>
-                      <div className="text-[var(--text-primary)] font-medium mb-4">
-                        Where should we have the team offsite? 🏖️
+                      <div className="text-[var(--text-primary)] font-medium mb-4 flex items-center gap-2">
+                        Where should we have the team offsite?
+                        <Palmtree className="w-5 h-5 inline-block text-[var(--accent)]" />
                       </div>
 
                       {/* Poll Options with Animated Bars */}
                       <div className="space-y-2">
-                        <PollOption emoji="1️⃣" label="Mountains" percentage={45} color="bg-green-500" />
-                        <PollOption emoji="2️⃣" label="Beach" percentage={30} color="bg-blue-500" delay={100} />
-                        <PollOption emoji="3️⃣" label="City" percentage={25} color="bg-purple-500" delay={200} />
+                        <PollOption number={1} label="Mountains" percentage={45} color="bg-green-500" />
+                        <PollOption number={2} label="Beach" percentage={30} color="bg-blue-500" delay={100} />
+                        <PollOption number={3} label="City" percentage={25} color="bg-purple-500" delay={200} />
                       </div>
 
                       {/* Poll Footer */}
@@ -141,11 +143,13 @@ export function HeroModern() {
                 </div>
 
                 {/* Floating Elements */}
-                <div className="absolute -top-4 -right-4 bg-[var(--brand)] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg animate-bounce">
-                  Real-time ✨
+                <div className="absolute -top-4 -right-4 bg-[var(--brand)] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg animate-bounce flex items-center gap-1.5">
+                  Real-time
+                  <Sparkles className="w-3.5 h-3.5" />
                 </div>
-                <div className="absolute -bottom-4 -left-4 bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg">
-                  Anonymous 🔒
+                <div className="absolute -bottom-4 -left-4 bg-[var(--accent)] text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg flex items-center gap-1.5">
+                  Anonymous
+                  <Lock className="w-3.5 h-3.5" />
                 </div>
               </div>
             </div>
@@ -158,13 +162,13 @@ export function HeroModern() {
 
 // Poll Option Component with animated bar
 function PollOption({
-  emoji,
+  number,
   label,
   percentage,
   color,
   delay = 0,
 }: {
-  emoji: string
+  number: number
   label: string
   percentage: number
   color: string
@@ -183,8 +187,11 @@ function PollOption({
   return (
     <div className="group">
       <div className="flex items-center justify-between mb-1 text-sm">
-        <span className="text-[var(--text-primary)] font-medium">
-          {emoji} {label}
+        <span className="text-[var(--text-primary)] font-medium flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--bg-dark)]/20 text-xs font-semibold">
+            {number}
+          </span>
+          {label}
         </span>
         <span className="text-[var(--text-secondary)] text-xs">{percentage}%</span>
       </div>

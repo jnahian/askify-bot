@@ -56,6 +56,7 @@ export function registerEditPollAction(app: App): void {
         pollType: poll.pollType,
         closeMethod,
         scheduleMethod: 'scheduled',
+        initialChannel: poll.channelId,
         initialOptions: poll.options.length || 2,
         prefill: {
           question: poll.question,

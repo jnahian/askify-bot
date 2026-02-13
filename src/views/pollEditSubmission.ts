@@ -1,6 +1,9 @@
 import type { App } from '@slack/bolt';
 import { EDIT_MODAL_CALLBACK_ID } from './pollCreationModal';
-import { getPoll, updatePoll } from '../services/pollService';
+import { getPoll, updatePoll, updatePollMessageTs } from '../services/pollService';
+import { buildPollMessage } from '../blocks/pollMessage';
+import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 
 interface PollSettings {
   anonymous: boolean;
@@ -143,8 +146,11 @@ export function registerPollEditSubmission(app: App): void {
       }
     }
 
+    // Calculate status based on schedule method
+    const status: 'active' | 'scheduled' = isScheduled ? 'scheduled' : 'active';
+
     // Update poll
-    await updatePoll(pollId, {
+    const updatedPoll = await updatePoll(pollId, {
       question: question!,
       pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
       channelId: channelId!,
@@ -152,7 +158,38 @@ export function registerPollEditSubmission(app: App): void {
       settings: JSON.parse(JSON.stringify(settings)),
       closesAt,
       scheduledAt: isScheduled ? scheduledAt : null,
+      status,
     });
+
+    // If poll was changed to "Post Immediately", post it now
+    if (status === 'active') {
+      const message = buildPollMessage(updatedPoll, settings);
+      try {
+        const result = await client.chat.postMessage({
+          channel: channelId!,
+          ...message,
+        });
+
+        // Store message_ts for future updates
+        if (result.ts) {
+          await updatePollMessageTs(updatedPoll.id, result.ts);
+        }
+      } catch (err) {
+        if (isNotInChannelError(err)) {
+          await client.chat.postMessage({
+            channel: creatorId,
+            text: notInChannelText(channelId!),
+          });
+          return;
+        }
+        throw err;
+      }
+
+      // DM creator with poll management buttons
+      const dm = buildCreatorNotifyDM(updatedPoll);
+      await client.chat.postMessage({ channel: creatorId, ...dm });
+      return;
+    }
 
     // DM creator confirmation
     if (isScheduled && scheduledAt) {

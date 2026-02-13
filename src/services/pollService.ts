@@ -173,35 +173,39 @@ interface UpdatePollInput {
   settings: Prisma.InputJsonValue;
   closesAt: Date | null;
   scheduledAt: Date | null;
+  status: 'active' | 'scheduled';
 }
 
 export async function updatePoll(pollId: string, input: UpdatePollInput) {
-  // Delete existing options (cascade deletes votes too)
-  await prisma.pollOption.deleteMany({ where: { pollId } });
+  const poll = await prisma.$transaction(async (tx) => {
+    // Delete existing options (cascade deletes votes too)
+    await tx.pollOption.deleteMany({ where: { pollId } });
 
-  const poll = await prisma.poll.update({
-    where: { id: pollId },
-    data: {
-      question: input.question,
-      pollType: input.pollType as PollType,
-      channelId: input.channelId,
-      settings: input.settings,
-      closesAt: input.closesAt,
-      scheduledAt: input.scheduledAt,
-      options: {
-        create: input.options.map((label, index) => ({
-          label,
-          position: index,
-        })),
+    return tx.poll.update({
+      where: { id: pollId },
+      data: {
+        question: input.question,
+        pollType: input.pollType as PollType,
+        channelId: input.channelId,
+        settings: input.settings,
+        closesAt: input.closesAt,
+        scheduledAt: input.scheduledAt,
+        status: input.status as PollStatus,
+        options: {
+          create: input.options.map((label, index) => ({
+            label,
+            position: index,
+          })),
+        },
       },
-    },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
+      include: {
+        options: {
+          orderBy: { position: 'asc' },
+          include: { _count: { select: { votes: true } } },
+        },
+        _count: { select: { votes: true } },
       },
-      _count: { select: { votes: true } },
-    },
+    });
   });
 
   return poll as unknown as PollWithOptions;

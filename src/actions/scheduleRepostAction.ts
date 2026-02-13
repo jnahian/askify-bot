@@ -10,7 +10,15 @@ export function registerScheduleRepostAction(app: App): void {
 
     const pollId = action.value!;
     const poll = await getPoll(pollId);
-    if (!poll) return;
+
+    if (!poll) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Could not find this poll.',
+      });
+      return;
+    }
 
     await client.views.open({
       trigger_id: body.trigger_id!,

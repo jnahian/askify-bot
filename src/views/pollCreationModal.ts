@@ -15,6 +15,7 @@ export interface ModalOptions {
   pollType?: string;
   closeMethod?: string;
   scheduleMethod?: string;
+  initialChannel?: string;
   prefill?: {
     question?: string;
     description?: string;
@@ -37,6 +38,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     pollType,
     closeMethod,
     scheduleMethod,
+    initialChannel,
     prefill,
   } = opts;
 
@@ -188,7 +190,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     element: {
       type: 'conversations_select',
       action_id: 'channel_select',
-      default_to_current_conversation: true,
+      ...(initialChannel ? { initial_conversation: initialChannel } : { default_to_current_conversation: true }),
       filter: { include: ['public', 'private'], exclude_bot_users: true },
     },
   });

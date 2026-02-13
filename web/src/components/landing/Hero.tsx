@@ -13,7 +13,7 @@ export function Hero() {
       <div className="absolute top-40 right-10 w-72 h-72 bg-[var(--accent)] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
       <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-[var(--brand)] rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
 
-      <Container className="relative z-10">
+      <Container size="xl" className="relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--bg-muted)] border border-[var(--border)] rounded-full mb-8">
@@ -40,7 +40,7 @@ export function Hero() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button
               href={SLACK_OAUTH_URL}
               variant="primary"
@@ -59,7 +59,7 @@ export function Hero() {
               <span className="inline-block transition-transform group-hover:translate-x-1">
                 →
               </span>
-            </Button>
+            </Button> */}
 
             <Button variant="secondary" size="lg" href="/docs">
               View Documentation

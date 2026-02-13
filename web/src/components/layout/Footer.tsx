@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { Heart } from 'lucide-react'
 import { Container } from './Container'
 
 export function Footer() {
@@ -32,7 +33,7 @@ export function Footer() {
 
   return (
     <footer className="bg-[var(--bg-muted)] border-t border-[var(--border)] py-12">
-      <Container>
+      <Container size="xl">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
@@ -106,13 +107,14 @@ export function Footer() {
           </p>
           <p className="text-sm text-[var(--text-secondary)]">
             Built with{' '}
+            <Heart className="text-[var(--brand)] w-4 h-4 inline-block" /> by{' '}
             <a
-              href="https://tanstack.com/start"
+              href="https://jnahian.me"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--brand)] hover:underline"
             >
-              TanStack Start
+              Julkar Naen Nahian
             </a>
           </p>
         </div>

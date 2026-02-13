@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Lock, Palmtree, Sparkles } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
-import { SLACK_OAUTH_URL } from '@/lib/constants'
+import { Lock, Palmtree, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export function HeroModern() {
   return (
@@ -11,7 +10,7 @@ export function HeroModern() {
       <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)]/5 via-transparent to-[var(--accent)]/5" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[var(--brand)] rounded-full blur-3xl opacity-5" />
 
-      <Container className="relative z-10">
+      <Container size="xl" className="relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Content */}
           <div className="max-w-2xl">
@@ -35,7 +34,8 @@ export function HeroModern() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-[var(--text-secondary)] mb-8 leading-relaxed">
-              Team decisions, engagement, and feedback — all without leaving Slack.
+              Team decisions, engagement, and feedback — all without leaving
+              Slack.
               <span className="block mt-2">
                 Four poll types, real-time results, and smart scheduling.
               </span>
@@ -43,7 +43,7 @@ export function HeroModern() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
-              <Button
+              {/*   <Button
                 href={SLACK_OAUTH_URL}
                 variant="primary"
                 size="lg"
@@ -61,7 +61,7 @@ export function HeroModern() {
                 <span className="inline-block transition-transform group-hover:translate-x-1 ml-1">
                   →
                 </span>
-              </Button>
+              </Button> */}
 
               <Button variant="secondary" size="lg" href="/docs">
                 View Documentation
@@ -71,20 +71,44 @@ export function HeroModern() {
             {/* Quick Stats */}
             <div className="flex flex-wrap items-center gap-6 text-sm text-[var(--text-secondary)]">
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[var(--brand)]" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-4 h-4 text-[var(--brand)]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
                 <span>Open Source</span>
               </div>
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[var(--brand)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-4 h-4 text-[var(--brand)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
                 <span>Fast & Lightweight</span>
               </div>
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[var(--brand)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <svg
+                  className="w-4 h-4 text-[var(--brand)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
                 </svg>
                 <span>Self-Hosted</span>
               </div>
@@ -93,7 +117,7 @@ export function HeroModern() {
 
           {/* Right: Interactive Bot Animation */}
           <div className="relative lg:block">
-            <div className="relative w-full max-w-lg mx-auto">
+            <div className="relative w-full max-w-2xl mx-auto">
               {/* Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--accent)] rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
 
@@ -125,9 +149,26 @@ export function HeroModern() {
 
                       {/* Poll Options with Animated Bars */}
                       <div className="space-y-2">
-                        <PollOption number={1} label="Mountains" percentage={45} color="bg-green-500" />
-                        <PollOption number={2} label="Beach" percentage={30} color="bg-blue-500" delay={100} />
-                        <PollOption number={3} label="City" percentage={25} color="bg-purple-500" delay={200} />
+                        <PollOption
+                          number={1}
+                          label="Mountains"
+                          percentage={45}
+                          color="bg-green-500"
+                        />
+                        <PollOption
+                          number={2}
+                          label="Beach"
+                          percentage={30}
+                          color="bg-blue-500"
+                          delay={100}
+                        />
+                        <PollOption
+                          number={3}
+                          label="City"
+                          percentage={25}
+                          color="bg-purple-500"
+                          delay={200}
+                        />
                       </div>
 
                       {/* Poll Footer */}
@@ -193,7 +234,9 @@ function PollOption({
           </span>
           {label}
         </span>
-        <span className="text-[var(--text-secondary)] text-xs">{percentage}%</span>
+        <span className="text-[var(--text-secondary)] text-xs">
+          {percentage}%
+        </span>
       </div>
       <div className="h-2 bg-[var(--bg-dark)]/20 rounded-full overflow-hidden">
         <div

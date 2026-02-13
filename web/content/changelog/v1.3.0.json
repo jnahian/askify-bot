@@ -1,0 +1,20 @@
+{
+  "version": "1.3.0",
+  "date": "2026-02-13",
+  "type": "feature",
+  "title": "Poll Management Features",
+  "items": [
+    {
+      "type": "feature",
+      "text": "Poll Edit for Scheduled Polls — Edit scheduled polls before they go live with pre-filled modal"
+    },
+    {
+      "type": "feature",
+      "text": "Poll Repost — Repost closed polls as fresh copies with optional channel override"
+    },
+    {
+      "type": "feature",
+      "text": "Schedule Repost — Schedule reposts for recurring use cases with datetime picker and close method config"
+    }
+  ]
+}

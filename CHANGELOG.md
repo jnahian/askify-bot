@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.0] - 2026-02-13
+
+### Added
+- **Poll Edit for Scheduled Polls**: Edit scheduled polls before they go live
+  - "Edit" button in scheduled poll creator DM confirmation
+  - Pre-filled modal with existing poll configuration
+  - Update question, poll type, options, channel, settings, and schedule time
+  - Validation to ensure poll is still scheduled before allowing edit
+- **Poll Repost**: Repost closed polls as fresh copies
+  - "Repost" button in creator DM results and `/askify list` for closed polls
+  - Creates new poll with fresh vote counts
+  - Optional channel override via modal
+  - Posts to original or selected channel with new poll ID
+- **Schedule Repost**: Schedule reposts for recurring polls
+  - "Schedule Repost" button alongside repost option
+  - Datetime picker for scheduled post time
+  - Optional channel override and close method configuration
+  - Scheduled reposts appear in `/askify list` with "Scheduled" status
+
 ## [1.2.0] - 2026-02-12
 
 ### Added

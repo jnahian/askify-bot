@@ -1,6 +1,6 @@
 import type { Changelog } from '@/lib/content/schemas'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardHeader, CardContent } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { formatDate } from '@/lib/utils'
 
 interface ChangelogItemProps {
@@ -18,7 +18,10 @@ export function ChangelogItem({ changelog, isLatest }: ChangelogItemProps) {
               v{changelog.version}
             </h2>
             {isLatest && (
-              <Badge variant="version" className="bg-[var(--brand)] text-white border-[var(--brand)]">
+              <Badge
+                variant="version"
+                className="bg-[var(--brand)] text-white border-[var(--brand)]"
+              >
                 Latest
               </Badge>
             )}

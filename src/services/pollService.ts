@@ -165,6 +165,94 @@ export async function getUserPolls(userId: string, opts: GetUserPollsOptions = {
   return polls as unknown as PollWithOptions[];
 }
 
+interface UpdatePollInput {
+  question: string;
+  pollType: 'single_choice' | 'multi_select' | 'yes_no' | 'rating';
+  channelId: string;
+  options: string[];
+  settings: Prisma.InputJsonValue;
+  closesAt: Date | null;
+  scheduledAt: Date | null;
+  status: 'active' | 'scheduled';
+}
+
+export async function updatePoll(pollId: string, input: UpdatePollInput) {
+  const poll = await prisma.$transaction(async (tx) => {
+    // Delete existing options (cascade deletes votes too)
+    await tx.pollOption.deleteMany({ where: { pollId } });
+
+    return tx.poll.update({
+      where: { id: pollId },
+      data: {
+        question: input.question,
+        pollType: input.pollType as PollType,
+        channelId: input.channelId,
+        settings: input.settings,
+        closesAt: input.closesAt,
+        scheduledAt: input.scheduledAt,
+        status: input.status as PollStatus,
+        options: {
+          create: input.options.map((label, index) => ({
+            label,
+            position: index,
+          })),
+        },
+      },
+      include: {
+        options: {
+          orderBy: { position: 'asc' },
+          include: { _count: { select: { votes: true } } },
+        },
+        _count: { select: { votes: true } },
+      },
+    });
+  });
+
+  return poll as unknown as PollWithOptions;
+}
+
+interface RepostPollInput {
+  channelId?: string;
+  scheduledAt?: Date | null;
+  closesAt?: Date | null;
+}
+
+export async function repostPoll(sourcePollId: string, creatorId: string, opts: RepostPollInput = {}) {
+  const source = await getPoll(sourcePollId);
+  if (!source) throw new Error('Source poll not found');
+
+  const settings = source.settings as Record<string, unknown>;
+  const isScheduled = !!opts.scheduledAt;
+
+  const poll = await prisma.poll.create({
+    data: {
+      creatorId,
+      channelId: opts.channelId || source.channelId,
+      question: source.question,
+      pollType: source.pollType,
+      settings: JSON.parse(JSON.stringify(settings)),
+      status: (isScheduled ? 'scheduled' : 'active') as PollStatus,
+      closesAt: opts.closesAt || null,
+      scheduledAt: opts.scheduledAt || null,
+      options: {
+        create: source.options.map((opt) => ({
+          label: opt.label,
+          position: opt.position,
+        })),
+      },
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
+  });
+
+  return poll as unknown as PollWithOptions;
+}
+
 export async function cancelScheduledPoll(pollId: string) {
   return prisma.poll.update({
     where: { id: pollId },

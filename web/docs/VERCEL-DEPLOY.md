@@ -38,6 +38,7 @@ vercel --prod
 - Override settings: **N**
 
 Vercel will automatically:
+
 - Detect TanStack Start
 - Run `npm run build`
 - Deploy to a preview URL
@@ -49,6 +50,7 @@ Vercel will automatically:
 ### 1. Push to GitHub
 
 Ensure your `website` branch is pushed:
+
 ```bash
 git push origin website
 ```
@@ -86,6 +88,7 @@ If you want to customize the site URL (for SEO/OG tags), you can set:
 - **Value:** `https://askify.jnahian.me`
 
 Then update `src/lib/seo.ts` to use:
+
 ```typescript
 const siteUrl = import.meta.env.VITE_SITE_URL || 'https://askify.jnahian.me'
 ```
@@ -233,6 +236,7 @@ Deploys immediately to production.
 ## Cost
 
 Vercel Free Tier includes:
+
 - ✅ Unlimited preview deployments
 - ✅ 100GB bandwidth/month
 - ✅ Automatic SSL

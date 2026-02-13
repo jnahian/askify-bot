@@ -1,4 +1,4 @@
-import { type ReactNode, type ButtonHTMLAttributes } from 'react'
+import type {ButtonHTMLAttributes, ReactNode} from 'react';
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,8 +15,7 @@ const variantClasses = {
     'bg-gradient-to-r from-[var(--brand)] to-[var(--accent)] text-white hover:opacity-90 shadow-md hover:shadow-lg',
   secondary:
     'bg-transparent border-2 border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--brand)] hover:text-white',
-  ghost:
-    'bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-muted)]',
+  ghost: 'bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-muted)]',
 }
 
 const sizeClasses = {

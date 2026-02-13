@@ -14,7 +14,8 @@ export const Route = createFileRoute('/')({
       },
       {
         name: 'description',
-        content: 'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free and open-source.',
+        content:
+          'Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free and open-source.',
       },
     ],
     links: [

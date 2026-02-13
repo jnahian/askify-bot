@@ -17,11 +17,13 @@ The Askify website is a TanStack Start application that runs as a separate Node.
 ## How It Works
 
 The `healthServer.ts` file serves:
+
 1. Static files from `web/dist/client/` (built website)
 2. `/health` endpoint for health checks
 3. SPA fallback for all other routes (serves index.html)
 
 **Routes:**
+
 - `http://localhost:3000/` → Website landing page
 - `http://localhost:3000/docs` → Documentation
 - `http://localhost:3000/changelog` → Changelog
@@ -34,16 +36,19 @@ The `healthServer.ts` file serves:
 ### Development
 
 **Run bot only:**
+
 ```bash
 npm run dev
 ```
 
 **Run website only (for development):**
+
 ```bash
 npm run dev:web
 ```
 
 **Run both (in separate terminals):**
+
 ```bash
 # Terminal 1: Bot
 npm run dev
@@ -55,11 +60,13 @@ npm run dev:web
 ### Production Build
 
 Build both bot and website:
+
 ```bash
 npm run build
 ```
 
 This runs:
+
 1. `npm run build:bot` - Compiles TypeScript for bot
 2. `npm run build:web` - Builds website (runs `generate:sitemap` then `vite build`)
 
@@ -70,6 +77,7 @@ npm start
 ```
 
 The bot starts and serves:
+
 - Slack bot on Socket Mode
 - Website at `http://localhost:3000`
 - Health check at `http://localhost:3000/health`
@@ -108,6 +116,7 @@ askify-bot/
 No additional environment variables needed for the website. It uses the same Express server as the health check.
 
 **Optional (for production):**
+
 - `PORT` - Server port (default: 3000)
 
 ---
@@ -216,16 +225,19 @@ server {
 After deployment, verify:
 
 1. **Website loads:**
+
    ```bash
    curl http://localhost:3000/
    ```
 
 2. **Health check works:**
+
    ```bash
    curl http://localhost:3000/health
    ```
 
 3. **Static assets load:**
+
    ```bash
    curl http://localhost:3000/logo.PNG
    curl http://localhost:3000/sitemap.xml
@@ -272,6 +284,7 @@ dist/client/
 ### Website not loading
 
 Check that:
+
 - `web/dist/client/` directory exists
 - Build completed successfully: `npm run build:web`
 - Express server is serving static files (check healthServer.ts)
@@ -279,12 +292,14 @@ Check that:
 ### 404 on routes
 
 Ensure the SPA fallback is working:
+
 - All routes except `/health` should serve `index.html`
 - TanStack Router handles client-side routing
 
 ### Assets not loading
 
 Check paths in `healthServer.ts`:
+
 - Static path should point to `web/dist/client`
 - Verify files exist in dist after build
 

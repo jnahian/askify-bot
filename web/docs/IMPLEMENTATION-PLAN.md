@@ -19,15 +19,18 @@
 ## Sprint Breakdown
 
 ### Sprint 1: Foundation + Landing Page (Days 1-3)
+
 - Phase 0: Project setup
 - Phase 5: UI component library
 - Phase 1: Landing page
 
 ### Sprint 2: Content Pages (Days 4-6)
+
 - Phase 2: Documentation system
 - Phase 3: Changelog system
 
 ### Sprint 3: Polish (Days 7-8)
+
 - Phase 4: Legal pages
 - SEO optimization
 - Performance audit
@@ -44,12 +47,14 @@
 ### 0.1 Initialize TanStack Start Project
 
 **Tasks:**
+
 - [x] Create new TanStack Start project in `/web` directory
 - [x] Configure TypeScript (strict mode)
 - [x] Set up Tailwind CSS v4
 - [x] Configure build tools
 
 **Commands:**
+
 ```bash
 cd web
 npm create @tanstack/start@latest
@@ -57,6 +62,7 @@ npm install
 ```
 
 **Files Created:**
+
 ```
 web/
   package.json
@@ -70,10 +76,12 @@ web/
 ### 0.2 Create Project Structure
 
 **Tasks:**
+
 - [x] Create folder structure per TRD section 1.2
 - [x] Set up path aliases in tsconfig
 
 **Folder Structure:**
+
 ```
 web/
   src/
@@ -146,18 +154,21 @@ web/
 ### 0.3 Design System Setup
 
 **Tasks:**
+
 - [x] Create Tailwind config with design tokens (TRD section 5.2)
 - [x] Add CSS custom properties for colors, spacing, typography
 - [x] Configure dark mode strategy (class-based)
 - [x] Set up font stack (Inter or system fonts)
 
 **Files:**
+
 ```
 src/styles/
   globals.css       # CSS variables + Tailwind directives
 ```
 
 **CSS Variables (from TRD):**
+
 ```css
 :root {
   --brand: #0f9ea8;
@@ -193,12 +204,14 @@ src/styles/
 **File:** `src/lib/content/schemas.ts`
 
 **Tasks:**
+
 - [x] Create `ContentBlockSchema` (discriminated union)
 - [x] Create `DocSchema`
 - [x] Create `ChangelogSchema`
 - [x] Export TypeScript types from schemas
 
 **Blocks:**
+
 ```typescript
 ContentBlockSchema = z.discriminatedUnion('type', [
   paragraph,
@@ -216,6 +229,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **File:** `src/lib/content/docs.ts`
 
 **Functions:**
+
 - [x] `getAllDocs()` — Load all docs, validate with Zod
 - [x] `getDocById(id)` — Get single doc
 - [x] `getDocsByCategory()` — Group docs by category
@@ -225,6 +239,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **File:** `src/lib/content/changelog.ts`
 
 **Functions:**
+
 - [x] `getAllChangelogs()` — Load all changelog entries
 - [x] `getChangelogByVersion(version)` — Get single entry
 - [x] `getLatestChangelog()` — Get latest version
@@ -237,6 +252,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/layout/Navbar.tsx`
 
 **Features:**
+
 - [x] Logo (left)
 - [x] Links: Docs, Changelog, GitHub
 - [x] CTA: "Add to Slack" button (right)
@@ -246,6 +262,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/layout/Footer.tsx`
 
 **Features:**
+
 - [x] Four columns: Product, Resources, Legal, Brand
 - [x] Links styled consistently
 - [x] Responsive grid
@@ -255,6 +272,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/layout/Container.tsx`
 
 **Features:**
+
 - [x] Max width wrapper with size variants (sm/md/lg/xl/full)
 - [x] Responsive padding
 - [x] Reusable across all pages
@@ -266,6 +284,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **File:** `src/lib/seo.ts`
 
 **Functions:**
+
 - [x] `generateMeta()` — Generate meta tags with OG and Twitter Card
 - [x] `generateStructuredData()` — JSON-LD for website/article/breadcrumb
 - [x] `generateSitemapURL()` — Helper for sitemap generation
@@ -274,6 +293,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **File:** `src/lib/utils.ts`
 
 **Functions:**
+
 - [x] `cn()` — Merge Tailwind classes with clsx
 - [x] `formatDate()` — Human-readable date formatting
 - [x] `formatDateShort()` — Short date format
@@ -295,12 +315,14 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/landing/Hero.tsx`
 
 **Content:**
+
 - Headline: "Powerful Slack Polls Made Simple"
 - Subheadline: "Team decisions, engagement, and feedback — all without leaving Slack"
 - Primary CTA: "Add to Slack"
 - Secondary CTA: "View Documentation"
 
 **Design:**
+
 - [x] Gradient background with animated blobs
 - [x] Large headline with gradient text
 - [x] Buttons with Slack icon and animations
@@ -317,6 +339,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Content:** 6 features from CONTENT-MAP.md
 
 **Design:**
+
 - [ ] Grid layout (1 col mobile, 2 cols tablet, 3 cols desktop)
 - [ ] Card component with icon, title, description
 - [ ] Hover state with subtle lift
@@ -330,6 +353,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Content:** 3 steps (Create, Vote, Share)
 
 **Design:**
+
 - [ ] Horizontal timeline on desktop, vertical on mobile
 - [ ] Step numbers with gradient circles
 - [ ] Icon + title + description per step
@@ -343,6 +367,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Content:** 4 use cases from CONTENT-MAP.md
 
 **Design:**
+
 - [ ] Grid layout (2x2)
 - [ ] Card with emoji icon, title, description, example question
 
@@ -353,16 +378,19 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/landing/Screenshots.tsx`
 
 **Content:**
+
 - Poll creation modal screenshot
 - Active poll screenshot
 - Results screenshot
 
 **Design:**
+
 - [ ] Carousel or grid
 - [ ] Shadow + border for screenshot images
 - [ ] Captions below each screenshot
 
 **Assets Needed:**
+
 - [ ] Take screenshots from running Askify bot
 - [ ] Save to `public/assets/screenshots/`
 
@@ -373,11 +401,13 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 **Component:** `src/components/landing/CTASection.tsx`
 
 **Content:**
+
 - Headline: "Ready to transform team decisions?"
 - CTA: "Add to Slack — Free to Use"
 - Note: "Works with Slack's free and paid plans"
 
 **Design:**
+
 - [ ] Full-width section with gradient background
 - [ ] Centered content
 - [ ] Large button
@@ -387,6 +417,7 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 ### 1.7 Landing Page Meta
 
 **SEO:**
+
 - Title: "Askify — Powerful Slack Polls Made Simple"
 - Description: "Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free internal tool."
 - Open Graph image: Create OG image (1200x630)
@@ -401,11 +432,13 @@ ContentBlockSchema = z.discriminatedUnion('type', [
 ### 2.1 Create Doc JSON Files
 
 **Tasks:**
+
 - [ ] Create 8 JSON files from CONTENT-MAP.md
 - [ ] Validate with Zod schemas
 - [ ] Test loading with `getAllDocs()`
 
 **Files:**
+
 ```
 content/docs/
   getting-started.json
@@ -419,6 +452,7 @@ content/docs/
 ```
 
 **Sample Structure:**
+
 ```json
 {
   "id": "getting-started",
@@ -452,6 +486,7 @@ content/docs/
 **Component:** `src/components/docs/Sidebar.tsx`
 
 **Features:**
+
 - [ ] Auto-generated from `getAllDocs()`
 - [ ] Grouped by category
 - [ ] Sorted by order
@@ -459,6 +494,7 @@ content/docs/
 - [ ] Collapsible on mobile
 
 **Design:**
+
 - [ ] Fixed width (280px) on desktop
 - [ ] Full-height with scroll
 - [ ] Border-right
@@ -471,12 +507,14 @@ content/docs/
 **Component:** `src/components/docs/DocRenderer.tsx`
 
 **Features:**
+
 - [ ] Render content blocks by type
 - [ ] Switch statement for block types
 - [ ] Accessible heading hierarchy
 - [ ] Anchor links for sections
 
 **Block Renderers:**
+
 - `paragraph` → `<p className="...">{text}</p>`
 - `code` → `<CodeBlock language={...} value={...} />`
 - `list` → `<ul><li>...</li></ul>`
@@ -490,6 +528,7 @@ content/docs/
 **Component:** `src/components/docs/CodeBlock.tsx`
 
 **Features:**
+
 - [ ] Syntax highlighting (use Shiki)
 - [ ] Copy button (top-right)
 - [ ] Language label (top-left)
@@ -497,11 +536,13 @@ content/docs/
 - [ ] Line numbers (optional)
 
 **Dependencies:**
+
 ```bash
 npm install shiki
 ```
 
 **Design:**
+
 - [ ] Rounded corners
 - [ ] Background color (dark in light mode, darker in dark mode)
 - [ ] Copy button with success state
@@ -513,18 +554,21 @@ npm install shiki
 **Route:** `src/routes/docs/route.tsx`
 
 **Features:**
+
 - [ ] Layout with Sidebar + main content area
 - [ ] Redirect `/docs` to `/docs/getting-started`
 
 **Route:** `src/routes/docs/$id.tsx`
 
 **Features:**
+
 - [ ] Load doc by ID from loader
 - [ ] Render with DocRenderer
 - [ ] SEO meta injection
 - [ ] 404 if doc not found
 
 **Loader:**
+
 ```typescript
 export const loader = async ({ params }) => {
   const doc = await getDocById(params.id)
@@ -538,6 +582,7 @@ export const loader = async ({ params }) => {
 ### 2.6 Docs SEO
 
 **Meta:**
+
 - Title: `{doc.title} — Askify Docs`
 - Description: `{doc.description}`
 - Canonical: `/docs/{id}`
@@ -552,11 +597,13 @@ export const loader = async ({ params }) => {
 ### 3.1 Create Changelog JSON Files
 
 **Tasks:**
+
 - [ ] Create 3 changelog JSON files from CONTENT-MAP.md
 - [ ] Validate with Zod schemas
 - [ ] Test loading
 
 **Files:**
+
 ```
 content/changelog/
   v1.1.0.json
@@ -565,6 +612,7 @@ content/changelog/
 ```
 
 **Sample Structure:**
+
 ```json
 {
   "version": "1.1.0",
@@ -591,6 +639,7 @@ content/changelog/
 **Component:** `src/components/changelog/ChangelogItem.tsx`
 
 **Features:**
+
 - [ ] Version badge
 - [ ] Date (formatted)
 - [ ] Title
@@ -598,6 +647,7 @@ content/changelog/
 - [ ] Latest version highlight
 
 **Design:**
+
 - [ ] Card layout
 - [ ] Badge colors: feature (green), improvement (blue), fix (orange)
 - [ ] Date in secondary text color
@@ -609,6 +659,7 @@ content/changelog/
 **Route:** `src/routes/changelog/route.tsx`
 
 **Features:**
+
 - [ ] Load all changelog entries
 - [ ] Sort reverse chronological
 - [ ] Render with ChangelogItem
@@ -617,6 +668,7 @@ content/changelog/
 **Route:** `src/routes/changelog/$version.tsx`
 
 **Features:**
+
 - [ ] Load changelog by version
 - [ ] Full-page detail view
 - [ ] SEO meta
@@ -627,6 +679,7 @@ content/changelog/
 ### 3.4 Changelog SEO
 
 **Meta:**
+
 - Title: `Askify v{version} — Changelog`
 - Description: Auto-generate from first 2-3 items
 - Canonical: `/changelog/{version}`
@@ -643,12 +696,14 @@ content/changelog/
 **Route:** `src/routes/terms.tsx`
 
 **Content:**
+
 - [ ] Static JSX with structured sections
 - [ ] Last updated date at top
 - [ ] Table of contents with anchor links
 - [ ] 8 sections (from CONTENT-MAP.md)
 
 **Design:**
+
 - [ ] Container with max-width
 - [ ] Typography hierarchy (h1, h2, p)
 - [ ] Print-friendly styling
@@ -660,12 +715,14 @@ content/changelog/
 **Route:** `src/routes/privacy.tsx`
 
 **Content:**
+
 - [ ] Static JSX with structured sections
 - [ ] Last updated date
 - [ ] Table of contents
 - [ ] 6 sections (from CONTENT-MAP.md)
 
 **Design:**
+
 - [ ] Same as Terms of Service
 - [ ] Accessible heading hierarchy
 
@@ -681,14 +738,17 @@ content/changelog/
 **Component:** `src/components/ui/Button.tsx`
 
 **Variants:**
+
 - `primary` — Gradient background (teal → green)
 - `secondary` — Border with transparent bg
 - `ghost` — No border, transparent bg
 
 **Props:**
+
 - `variant`, `size` (sm, md, lg), `disabled`, `children`, `onClick`, `href` (renders as link), `external`
 
 **Design:**
+
 - [x] Focus ring (visible with ring-2)
 - [x] Hover state (opacity change)
 - [x] Disabled state (opacity 50%, cursor not-allowed)
@@ -700,6 +760,7 @@ content/changelog/
 **Component:** `src/components/ui/Card.tsx`
 
 **Features:**
+
 - [x] Rounded large radius (16px)
 - [x] Shadow (subtle with CSS variables)
 - [x] Border in light mode
@@ -708,6 +769,7 @@ content/changelog/
 - [x] Sub-components: CardHeader, CardTitle, CardDescription, CardContent, CardFooter
 
 **Props:**
+
 - `children`, `className`, `hover` (boolean), `noPadding` (boolean)
 
 ---
@@ -717,6 +779,7 @@ content/changelog/
 **Component:** `src/components/ui/Badge.tsx`
 
 **Variants:**
+
 - `feature` — Green (with dark mode variants)
 - `fix` — Orange
 - `improvement` — Blue
@@ -725,9 +788,11 @@ content/changelog/
 - `default` — Gray
 
 **Props:**
+
 - `variant`, `children`, `className`
 
 **Design:**
+
 - [x] Small text (text-xs)
 - [x] Padding (px-2.5 py-0.5)
 - [x] Rounded (rounded-md)
@@ -740,15 +805,18 @@ content/changelog/
 **Component:** `src/components/ui/Alert.tsx`
 
 **Variants:**
+
 - `info` — Blue background with Info icon
 - `warning` — Orange background with AlertTriangle icon
 - `success` — Green background with CheckCircle icon
 - `error` — Red background with XCircle icon
 
 **Props:**
+
 - `variant`, `children`, `className`, `icon` (boolean, default true)
 
 **Design:**
+
 - [x] Icon on left (Lucide React icons)
 - [x] Colored border-left-4
 - [x] Colored background (muted with dark mode)
@@ -764,6 +832,7 @@ content/changelog/
 ### 6.1 SEO Optimization
 
 **Tasks:**
+
 - [x] Generate sitemap.xml from content (16 URLs)
 - [x] Add robots.txt
 - [x] Open Graph meta tags in root route
@@ -779,6 +848,7 @@ content/changelog/
 ### 6.2 Performance Optimization
 
 **Tasks:**
+
 - [ ] Code splitting per route
 - [ ] Lazy load screenshots
 - [ ] Optimize images (WebP + fallback)
@@ -790,6 +860,7 @@ content/changelog/
 ### 6.3 Accessibility
 
 **Tasks:**
+
 - [x] Focus indicators on all interactive elements (ring-2)
 - [x] ARIA labels on buttons (nav toggle, copy button, theme toggle)
 - [x] Semantic HTML throughout (nav, main, aside, article, section)
@@ -804,6 +875,7 @@ content/changelog/
 ### 6.4 Dark Mode Implementation
 
 **Tasks:**
+
 - [x] ThemeToggle component with localStorage persistence
 - [x] System preference detection (prefers-color-scheme)
 - [x] Dark mode toggle in desktop navbar
@@ -818,6 +890,7 @@ content/changelog/
 ### 6.5 Responsive Testing
 
 **Tasks:**
+
 - [ ] Test all pages on mobile (375px)
 - [ ] Test on tablet (768px)
 - [ ] Test on desktop (1280px, 1920px)
@@ -830,6 +903,7 @@ content/changelog/
 ### 7.1 Build & Deploy
 
 **Tasks:**
+
 - [ ] Configure production build
 - [ ] Set up hosting (Vercel, Netlify, or Cloudflare Pages)
 - [ ] Configure custom domain
@@ -837,6 +911,7 @@ content/changelog/
 - [ ] Test production build
 
 **Build Command:**
+
 ```bash
 npm run build
 ```
@@ -846,6 +921,7 @@ npm run build
 ### 7.2 Analytics (Optional)
 
 **Tasks:**
+
 - [ ] Add analytics (Plausible or Simple Analytics)
 - [ ] Track page views
 - [ ] Privacy-friendly (no cookies)
@@ -855,6 +931,7 @@ npm run build
 ## Completion Checklist
 
 ### Phase 0: Foundation ✅ COMPLETE
+
 - [x] TanStack Start initialized
 - [x] TypeScript configured (strict mode)
 - [x] Tailwind v4 set up
@@ -867,6 +944,7 @@ npm run build
 - [x] Root route updated with layout
 
 ### Phase 1: Landing Page ✅ COMPLETE
+
 - [x] Hero section (with animated blobs, badge, social proof)
 - [x] Features grid (6 features with hover effects)
 - [x] How it works (3-step flow with icons)
@@ -876,6 +954,7 @@ npm run build
 - [x] Responsive design (mobile-first)
 
 ### Phase 2: Documentation
+
 - [ ] 8 doc JSON files created
 - [ ] Sidebar component
 - [ ] DocRenderer component
@@ -884,22 +963,26 @@ npm run build
 - [ ] SEO meta
 
 ### Phase 3: Changelog ✅ COMPLETE
+
 - [x] 3 changelog JSON files (v1.0.0, v1.0.1, v1.1.0)
 - [x] ChangelogItem component (with badges, latest highlight)
 - [x] Changelog routes (/changelog, /changelog/$version)
 - [x] SEO meta (title, description with summary)
 
 ### Phase 4: Legal ✅ COMPLETE
+
 - [x] Terms of Service page (8 sections, table of contents, anchor links)
 - [x] Privacy Policy page (8 sections, self-hosted notice, data handling)
 
 ### Phase 5: UI Components ✅ COMPLETE
+
 - [x] Button (3 variants, 3 sizes, href support)
 - [x] Card (+ CardHeader, CardTitle, CardDescription, CardContent, CardFooter)
 - [x] Badge (6 variants with dark mode)
 - [x] Alert (4 variants with icons)
 
 ### Phase 6: Polish ✅ COMPLETE
+
 - [x] SEO optimization (sitemap, robots.txt, OG meta, manifest)
 - [x] Dark mode toggle with persistence
 - [x] Accessibility improvements (ARIA, semantic HTML, focus)
@@ -908,6 +991,7 @@ npm run build
 - [ ] Responsive testing (manual)
 
 ### Phase 7: Deployment
+
 - [ ] Production build
 - [ ] Hosted and live
 - [ ] Custom domain configured
@@ -944,19 +1028,19 @@ npm run build
 
 ## Final Statistics
 
-| Metric | Value |
-|--------|-------|
-| **Total Commits** | 21 |
-| **Total Components** | 29 |
-| **Routes** | 13 |
-| **Pages** | 5 |
-| **Documentation Guides** | 8 |
-| **Changelog Versions** | 3 |
-| **JSON Content Files** | 11 |
-| **Lines of Code** | ~8,000 |
-| **TypeScript Errors** | 0 |
-| **Build Status** | ✓ Passing |
-| **Sitemap URLs** | 16 |
+| Metric                   | Value     |
+| ------------------------ | --------- |
+| **Total Commits**        | 21        |
+| **Total Components**     | 29        |
+| **Routes**               | 13        |
+| **Pages**                | 5         |
+| **Documentation Guides** | 8         |
+| **Changelog Versions**   | 3         |
+| **JSON Content Files**   | 11        |
+| **Lines of Code**        | ~8,000    |
+| **TypeScript Errors**    | 0         |
+| **Build Status**         | ✓ Passing |
+| **Sitemap URLs**         | 16        |
 
 ---
 
@@ -976,6 +1060,7 @@ npm run build
 ## Running the Project
 
 ### Development
+
 ```bash
 # Bot (port from PORT in .env, default 4050)
 npm run dev
@@ -985,6 +1070,7 @@ npm run web:dev
 ```
 
 ### Production
+
 ```bash
 # Build everything
 npm run build
@@ -998,6 +1084,7 @@ cd web && npm run preview  # Website on WEB_PORT
 ```
 
 ### Access
+
 - Bot health: `http://localhost:4050/health`
 - Website: `http://localhost:4051`
 

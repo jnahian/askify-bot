@@ -1,4 +1,4 @@
-# Askify v1.2.0 — Poll Management Features
+# Askify v1.3.0 — Poll Management Features
 
 > Derived from PRD v1.0 (February 9, 2026)
 > Complexity: Medium

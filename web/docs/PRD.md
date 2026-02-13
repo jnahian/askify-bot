@@ -192,7 +192,7 @@ Example:
 Create a content utility:
 
 ```ts
-/lib/cennott.ts;
+;/lib/cennott.ts
 ```
 
 Responsibilities:
@@ -212,17 +212,17 @@ Example:
 
 ```ts
 export interface DocSection {
-  heading: string;
-  content: ContentBlock[];
+  heading: string
+  content: ContentBlock[]
 }
 
 export interface DocPage {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  order: number;
-  sections: DocSection[];
+  id: string
+  title: string
+  description: string
+  category: string
+  order: number
+  sections: DocSection[]
 }
 ```
 

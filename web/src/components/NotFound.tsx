@@ -50,7 +50,10 @@ export function NotFound() {
               >
                 Commands
               </Link>
-              <Link to="/changelog" className="text-[var(--brand)] hover:underline">
+              <Link
+                to="/changelog"
+                className="text-[var(--brand)] hover:underline"
+              >
                 Changelog
               </Link>
               <a

@@ -1,6 +1,7 @@
 import type { View, KnownBlock } from '@slack/types';
 
 export const MODAL_CALLBACK_ID = 'poll_creation_modal';
+export const EDIT_MODAL_CALLBACK_ID = 'poll_edit_modal';
 export const POLL_TYPE_ACTION_ID = 'poll_type_select';
 export const CLOSE_METHOD_ACTION_ID = 'close_method_select';
 export const SCHEDULE_METHOD_ACTION_ID = 'schedule_method_select';
@@ -8,10 +9,13 @@ export const ADD_MODAL_OPTION_ACTION_ID = 'add_modal_option';
 export const REMOVE_MODAL_OPTION_ACTION_ID = 'remove_modal_option';
 
 export interface ModalOptions {
+  callbackId?: string;
+  privateMetadata?: string;
   initialOptions?: number;
   pollType?: string;
   closeMethod?: string;
   scheduleMethod?: string;
+  initialChannel?: string;
   prefill?: {
     question?: string;
     description?: string;
@@ -23,15 +27,20 @@ export interface ModalOptions {
     allowAddingOptions?: boolean;
     reminders?: boolean;
     includeMaybe?: boolean;
+    closesAt?: Date;
+    scheduledAt?: Date;
   };
 }
 
 export function buildPollCreationModal(opts: ModalOptions = {}): View {
   const {
+    callbackId,
+    privateMetadata,
     initialOptions = 2,
     pollType,
     closeMethod,
     scheduleMethod,
+    initialChannel,
     prefill,
   } = opts;
 
@@ -183,7 +192,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
     element: {
       type: 'conversations_select',
       action_id: 'channel_select',
-      default_to_current_conversation: true,
+      ...(initialChannel ? { initial_conversation: initialChannel } : { default_to_current_conversation: true }),
       filter: { include: ['public', 'private'], exclude_bot_users: true },
     },
   });
@@ -290,6 +299,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
 
   // Datetime picker (conditional)
   if (closeMethod === 'datetime') {
+    const initialDateTime = prefill?.closesAt ? Math.floor(prefill.closesAt.getTime() / 1000) : undefined;
     blocks.push({
       type: 'input',
       block_id: 'datetime_block',
@@ -297,6 +307,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       element: {
         type: 'datetimepicker',
         action_id: 'datetime_input',
+        ...(initialDateTime ? { initial_date_time: initialDateTime } : {}),
       },
     });
   }
@@ -327,6 +338,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
 
   // Schedule datetime picker (conditional)
   if (scheduleMethod === 'scheduled') {
+    const initialScheduleTime = prefill?.scheduledAt ? Math.floor(prefill.scheduledAt.getTime() / 1000) : undefined;
     blocks.push({
       type: 'input',
       block_id: 'schedule_datetime_block',
@@ -334,17 +346,24 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       element: {
         type: 'datetimepicker',
         action_id: 'schedule_datetime_input',
+        ...(initialScheduleTime ? { initial_date_time: initialScheduleTime } : {}),
       },
     });
   }
 
   const isScheduled = scheduleMethod === 'scheduled';
+  const isEdit = callbackId === EDIT_MODAL_CALLBACK_ID;
+  const titleText = isEdit ? 'Edit Poll' : 'Create a Poll';
+  const submitText = isEdit
+    ? 'Save Changes'
+    : isScheduled ? 'Schedule Poll' : 'Create Poll';
 
   return {
     type: 'modal',
-    callback_id: MODAL_CALLBACK_ID,
-    title: { type: 'plain_text', text: 'Create a Poll' },
-    submit: { type: 'plain_text', text: isScheduled ? 'Schedule Poll' : 'Create Poll' },
+    callback_id: callbackId || MODAL_CALLBACK_ID,
+    ...(privateMetadata ? { private_metadata: privateMetadata } : {}),
+    title: { type: 'plain_text', text: titleText },
+    submit: { type: 'plain_text', text: submitText },
     close: { type: 'plain_text', text: 'Cancel' },
     blocks,
   };

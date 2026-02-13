@@ -8,7 +8,12 @@ export function HowItWorks() {
       description:
         'Use /askify to open the poll creation modal. Configure poll type, options, settings, and scheduling in seconds.',
       icon: (
-        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-12 h-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -24,7 +29,12 @@ export function HowItWorks() {
       description:
         'Team members vote with interactive buttons. Real-time bar charts update instantly with color-coded emoji visualization.',
       icon: (
-        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-12 h-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -40,7 +50,12 @@ export function HowItWorks() {
       description:
         'Polls auto-close or close manually. Results sent via DM to creator, shareable to any channel with formatted charts.',
       icon: (
-        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-12 h-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -54,7 +69,7 @@ export function HowItWorks() {
 
   return (
     <section className="py-20">
-      <Container>
+      <Container size="xl">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[var(--text-primary)]">

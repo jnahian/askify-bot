@@ -1,6 +1,5 @@
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
-import { SLACK_OAUTH_URL } from '@/lib/constants'
 
 export function CTASection() {
   return (
@@ -27,7 +26,7 @@ export function CTASection() {
         </div>
       </div>
 
-      <Container className="relative z-10">
+      <Container size="xl" className="relative z-10">
         <div className="max-w-3xl mx-auto text-center text-white">
           {/* Main Heading */}
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
@@ -42,7 +41,7 @@ export function CTASection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <Button
+            {/* <Button
               href={SLACK_OAUTH_URL}
               variant="secondary"
               size="lg"
@@ -60,7 +59,7 @@ export function CTASection() {
               <span className="inline-block transition-transform group-hover:translate-x-1 ml-1">
                 →
               </span>
-            </Button>
+            </Button> */}
 
             <Button
               href="/docs"
@@ -75,11 +74,7 @@ export function CTASection() {
           {/* Trust Indicators */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm opacity-80">
             <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
               </svg>
               <span>Open Source (MIT)</span>

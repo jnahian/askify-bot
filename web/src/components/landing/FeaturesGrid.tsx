@@ -1,13 +1,14 @@
-import { Container } from '@/components/layout/Container'
-import { Card } from '@/components/ui/Card'
 import {
-  ListChecks,
   BarChart3,
-  Lock,
   CalendarClock,
   FolderKanban,
+  ListChecks,
+  Lock,
+  RefreshCw,
   Share2,
 } from 'lucide-react'
+import { Container } from '@/components/layout/Container'
+import { Card } from '@/components/ui/Card'
 
 export function FeaturesGrid() {
   const features = [
@@ -36,10 +37,10 @@ export function FeaturesGrid() {
         'Schedule polls for future posting and set auto-close with duration or specific date/time. Reminder DMs keep voters engaged.',
     },
     {
-      icon: FolderKanban,
-      title: 'Templates & Reuse',
+      icon: RefreshCw,
+      title: 'Poll Management',
       description:
-        'Save poll configurations as templates for quick reuse. Let voters suggest new options on single/multi-select polls.',
+        'Edit scheduled polls, repost closed polls as fresh copies, and schedule recurring polls. Save as templates and let voters add options.',
     },
     {
       icon: Share2,
@@ -51,7 +52,7 @@ export function FeaturesGrid() {
 
   return (
     <section className="py-20 bg-[var(--bg-muted)]">
-      <Container>
+      <Container size="xl">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[var(--text-primary)]">

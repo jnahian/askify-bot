@@ -9,7 +9,8 @@ export const Route = createFileRoute('/privacy')({
       },
       {
         name: 'description',
-        content: 'Privacy Policy for Askify Slack bot. Learn how we collect, use, and protect your data.',
+        content:
+          'Privacy Policy for Askify Slack bot. Learn how we collect, use, and protect your data.',
       },
     ],
     links: [
@@ -46,42 +47,66 @@ function PrivacyPage() {
             </h2>
             <ol className="space-y-2 text-sm">
               <li>
-                <a href="#overview" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#overview"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   1. Overview
                 </a>
               </li>
               <li>
-                <a href="#data-collection" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#data-collection"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   2. Data Collection
                 </a>
               </li>
               <li>
-                <a href="#data-usage" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#data-usage"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   3. Data Usage
                 </a>
               </li>
               <li>
-                <a href="#data-storage" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#data-storage"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   4. Data Storage
                 </a>
               </li>
               <li>
-                <a href="#anonymous-voting" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#anonymous-voting"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   5. Anonymous Voting
                 </a>
               </li>
               <li>
-                <a href="#user-rights" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#user-rights"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   6. User Rights
                 </a>
               </li>
               <li>
-                <a href="#security" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#security"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   7. Security
                 </a>
               </li>
               <li>
-                <a href="#contact" className="text-[var(--brand)] hover:underline">
+                <a
+                  href="#contact"
+                  className="text-[var(--brand)] hover:underline"
+                >
                   8. Contact Information
                 </a>
               </li>
@@ -92,26 +117,31 @@ function PrivacyPage() {
           <section id="overview" className="mb-8">
             <h2>1. Overview</h2>
             <p>
-              Askify is a self-hosted Slack bot designed for internal team polling. This Privacy
-              Policy explains what data we collect, how we use it, and your rights regarding your
-              data.
+              Askify is a self-hosted Slack bot designed for internal team
+              polling. This Privacy Policy explains what data we collect, how we
+              use it, and your rights regarding your data.
             </p>
             <p>
-              Because Askify is self-hosted, you maintain full control over where and how your data
-              is stored. This policy describes the data handling practices of the Askify application
-              itself.
+              Because Askify is self-hosted, you maintain full control over
+              where and how your data is stored. This policy describes the data
+              handling practices of the Askify application itself.
             </p>
           </section>
 
           <section id="data-collection" className="mb-8">
             <h2>2. Data Collection</h2>
-            <p>Askify collects and stores the following data to provide poll functionality:</p>
+            <p>
+              Askify collects and stores the following data to provide poll
+              functionality:
+            </p>
 
             <h3>Poll Data</h3>
             <ul>
               <li>Poll questions and descriptions</li>
               <li>Poll options and configuration settings</li>
-              <li>Poll type (single choice, multi-select, yes/no/maybe, rating)</li>
+              <li>
+                Poll type (single choice, multi-select, yes/no/maybe, rating)
+              </li>
               <li>Target channel IDs and message timestamps</li>
               <li>Poll creator user ID</li>
               <li>Scheduled and close timestamps</li>
@@ -162,16 +192,16 @@ function PrivacyPage() {
               <li>Store and load poll templates</li>
             </ul>
             <p>
-              We do not use your data for advertising, marketing, or any purpose outside of
-              providing poll functionality.
+              We do not use your data for advertising, marketing, or any purpose
+              outside of providing poll functionality.
             </p>
           </section>
 
           <section id="data-storage" className="mb-8">
             <h2>4. Data Storage</h2>
             <p>
-              Since Askify is self-hosted, all data is stored in your own PostgreSQL database. You
-              have full control over:
+              Since Askify is self-hosted, all data is stored in your own
+              PostgreSQL database. You have full control over:
             </p>
             <ul>
               <li>Where your data is physically located</li>
@@ -181,9 +211,10 @@ function PrivacyPage() {
               <li>Security configurations</li>
             </ul>
             <p>
-              We recommend using a managed database service like Supabase for security, backups, and
-              reliability. Ensure your database follows industry-standard security practices,
-              including encryption at rest and in transit.
+              We recommend using a managed database service like Supabase for
+              security, backups, and reliability. Ensure your database follows
+              industry-standard security practices, including encryption at rest
+              and in transit.
             </p>
           </section>
 
@@ -192,17 +223,19 @@ function PrivacyPage() {
             <p>When anonymous voting is enabled on a poll:</p>
             <ul>
               <li>
-                Voter user IDs are stored in the database for vote deduplication (to prevent voting
-                multiple times)
+                Voter user IDs are stored in the database for vote deduplication
+                (to prevent voting multiple times)
               </li>
               <li>Voter names are NOT displayed in poll results messages</li>
-              <li>Voter names are NOT displayed in results DMs or shared results</li>
+              <li>
+                Voter names are NOT displayed in results DMs or shared results
+              </li>
               <li>Only vote counts and percentages are shown</li>
               <li>The poll creator cannot see who voted for which option</li>
             </ul>
             <p>
-              Anonymous voting protects voter privacy while maintaining poll integrity by preventing
-              duplicate votes.
+              Anonymous voting protects voter privacy while maintaining poll
+              integrity by preventing duplicate votes.
             </p>
           </section>
 
@@ -222,21 +255,29 @@ function PrivacyPage() {
               <li>Close polls to disable voting (polls remain in database)</li>
               <li>Delete templates individually</li>
               <li>
-                Contact your workspace administrator to remove poll data from the database directly
+                Contact your workspace administrator to remove poll data from
+                the database directly
               </li>
             </ul>
 
             <h3>Retract Votes</h3>
             <ul>
-              <li>Click the same vote button to retract your vote (if vote change is enabled)</li>
+              <li>
+                Click the same vote button to retract your vote (if vote change
+                is enabled)
+              </li>
               <li>Your vote is removed from the poll immediately</li>
             </ul>
 
             <h3>Uninstall</h3>
             <ul>
-              <li>Uninstalling the Askify Slack app stops data collection immediately</li>
               <li>
-                Existing data remains in your database until manually deleted by your administrator
+                Uninstalling the Askify Slack app stops data collection
+                immediately
+              </li>
+              <li>
+                Existing data remains in your database until manually deleted by
+                your administrator
               </li>
             </ul>
           </section>
@@ -246,7 +287,8 @@ function PrivacyPage() {
             <p>Askify implements the following security measures:</p>
             <ul>
               <li>
-                Request verification using Slack's signing secret to prevent unauthorized access
+                Request verification using Slack's signing secret to prevent
+                unauthorized access
               </li>
               <li>Socket Mode communication (no public endpoints required)</li>
               <li>Parameterized database queries to prevent SQL injection</li>
@@ -254,13 +296,15 @@ function PrivacyPage() {
               <li>Vote deduplication to maintain poll integrity</li>
             </ul>
             <p>
-              As a self-hosted application, you are responsible for securing your deployment,
-              including:
+              As a self-hosted application, you are responsible for securing
+              your deployment, including:
             </p>
             <ul>
               <li>Keeping environment variables and API tokens secure</li>
               <li>Maintaining database security and access controls</li>
-              <li>Updating to the latest Askify version for security patches</li>
+              <li>
+                Updating to the latest Askify version for security patches
+              </li>
               <li>Following Slack's security best practices</li>
             </ul>
           </section>
@@ -268,8 +312,8 @@ function PrivacyPage() {
           <section id="contact" className="mb-8">
             <h2>8. Contact Information</h2>
             <p>
-              For questions, concerns, or requests regarding this Privacy Policy or your data,
-              please contact us:
+              For questions, concerns, or requests regarding this Privacy Policy
+              or your data, please contact us:
             </p>
             <ul>
               <li>
@@ -296,8 +340,9 @@ function PrivacyPage() {
               </li>
             </ul>
             <p>
-              Since Askify is open-source and self-hosted, your workspace administrator has primary
-              responsibility for data management and user privacy within your organization.
+              Since Askify is open-source and self-hosted, your workspace
+              administrator has primary responsibility for data management and
+              user privacy within your organization.
             </p>
           </section>
 
@@ -308,9 +353,10 @@ function PrivacyPage() {
                 Self-Hosted Privacy Notice
               </h3>
               <p className="text-sm text-[var(--text-secondary)]">
-                Askify is fully self-hosted on your infrastructure. No data is sent to external
-                servers, third-party services, or the Askify developers. Your workspace
-                administrator has complete control over data storage, access, and retention.
+                Askify is fully self-hosted on your infrastructure. No data is
+                sent to external servers, third-party services, or the Askify
+                developers. Your workspace administrator has complete control
+                over data storage, access, and retention.
               </p>
             </div>
           </footer>

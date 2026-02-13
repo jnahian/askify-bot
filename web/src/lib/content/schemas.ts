@@ -110,5 +110,5 @@ export type Changelog = z.infer<typeof ChangelogSchema>
  */
 export interface DocsByCategory {
   category: string
-  docs: Doc[]
+  docs: Array<Doc>
 }

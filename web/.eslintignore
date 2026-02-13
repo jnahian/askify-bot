@@ -1,0 +1,15 @@
+# Build outputs
+.output/
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Generated files
+.tanstack/
+.vinxi/
+.vercel/
+
+# Scripts (not in tsconfig)
+scripts/

@@ -1,9 +1,12 @@
-import { createFileRoute, notFound } from '@tanstack/react-router'
-import { getDocById, getAdjacentDocs, getDocsByCategory } from '@/lib/content/docs'
+import { Link, createFileRoute, notFound  } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  getAdjacentDocs,
+  getDocById,
+  getDocsByCategory,
+} from '@/lib/content/docs'
 import { DocRenderer } from '@/components/docs/DocRenderer'
 import { Sidebar } from '@/components/docs/Sidebar'
-import { Link } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export const Route = createFileRoute('/docs/$id')({
   loader: async ({ params }) => {
@@ -54,7 +57,9 @@ function DocPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-3">
           {doc.title}
         </h1>
-        <p className="text-lg text-[var(--text-secondary)]">{doc.description}</p>
+        <p className="text-lg text-[var(--text-secondary)]">
+          {doc.description}
+        </p>
       </header>
 
       {/* Document Content */}
@@ -70,7 +75,9 @@ function DocPage() {
           >
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             <div className="text-left">
-              <div className="text-xs uppercase tracking-wide mb-1">Previous</div>
+              <div className="text-xs uppercase tracking-wide mb-1">
+                Previous
+              </div>
               <div className="font-medium">{adjacent.prev.title}</div>
             </div>
           </Link>

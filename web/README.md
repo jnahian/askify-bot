@@ -127,8 +127,7 @@ public/
 ### Colors
 
 ```css
---brand: #0f9ea8     /* Teal */
---accent: #39c26a    /* Green */
+--brand: #0f9ea8 /* Teal */ --accent: #39c26a /* Green */;
 ```
 
 ### Components

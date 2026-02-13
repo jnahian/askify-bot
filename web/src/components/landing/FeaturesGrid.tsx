@@ -7,6 +7,7 @@ import {
   CalendarClock,
   FolderKanban,
   Share2,
+  RefreshCw,
 } from 'lucide-react'
 
 export function FeaturesGrid() {
@@ -36,10 +37,10 @@ export function FeaturesGrid() {
         'Schedule polls for future posting and set auto-close with duration or specific date/time. Reminder DMs keep voters engaged.',
     },
     {
-      icon: FolderKanban,
-      title: 'Templates & Reuse',
+      icon: RefreshCw,
+      title: 'Poll Management',
       description:
-        'Save poll configurations as templates for quick reuse. Let voters suggest new options on single/multi-select polls.',
+        'Edit scheduled polls, repost closed polls as fresh copies, and schedule recurring polls. Save as templates and let voters add options.',
     },
     {
       icon: Share2,

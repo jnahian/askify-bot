@@ -31,9 +31,16 @@ export function InteractivePollCreation() {
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg w-[380px] h-[600px] flex flex-col mx-auto">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Create a Poll
-          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <img
+              src="/logo.jpeg"
+              alt="Askify"
+              className="w-8 h-8 rounded object-cover"
+            />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Create a Poll
+            </h3>
+          </div>
         </div>
 
         {/* Modal Body */}

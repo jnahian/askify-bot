@@ -48,9 +48,11 @@ export function InteractivePoll() {
         {/* Poll Header */}
         <div className="mb-4 flex-shrink-0">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-[var(--brand)] to-[var(--accent)] flex items-center justify-center text-white font-bold text-sm">
-              A
-            </div>
+            <img
+              src="/logo.jpeg"
+              alt="Askify"
+              className="w-8 h-8 rounded object-cover"
+            />
             <span className="font-medium text-gray-900 dark:text-gray-100">
               Askify
             </span>

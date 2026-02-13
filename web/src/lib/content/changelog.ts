@@ -1,15 +1,16 @@
-import { Changelog, ChangelogSchema } from './schemas'
+import { ChangelogSchema } from './schemas'
+import type { Changelog} from './schemas';
 
 /**
  * Load all changelog entries
  * Returns validated and sorted (reverse chronological) changelogs
  */
-export async function getAllChangelogs(): Promise<Changelog[]> {
+export async function getAllChangelogs(): Promise<Array<Changelog>> {
   const changelogFiles = import.meta.glob('/content/changelog/*.json', {
     eager: true,
   })
 
-  const changelogs: Changelog[] = []
+  const changelogs: Array<Changelog> = []
 
   for (const [path, module] of Object.entries(changelogFiles)) {
     try {
@@ -24,7 +25,8 @@ export async function getAllChangelogs(): Promise<Changelog[]> {
 
   // Sort reverse chronological (newest first), then by version if dates are equal
   return changelogs.sort((a, b) => {
-    const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime()
+    const dateComparison =
+      new Date(b.date).getTime() - new Date(a.date).getTime()
     if (dateComparison !== 0) {
       return dateComparison
     }
@@ -56,7 +58,7 @@ export async function getLatestChangelog(): Promise<Changelog | null> {
  */
 export async function getChangelogsByType(
   type: Changelog['type'],
-): Promise<Changelog[]> {
+): Promise<Array<Changelog>> {
   const changelogs = await getAllChangelogs()
   return changelogs.filter((changelog) => changelog.type === type)
 }
@@ -64,7 +66,7 @@ export async function getChangelogsByType(
 /**
  * Get all versions (just version strings)
  */
-export async function getAllVersions(): Promise<string[]> {
+export async function getAllVersions(): Promise<Array<string>> {
   const changelogs = await getAllChangelogs()
   return changelogs.map((changelog) => changelog.version)
 }
@@ -86,11 +88,7 @@ export function isNewerVersion(v1: string, v2: string): boolean {
   const parse = (v: string) => {
     const parts = v.replace(/^v/, '').split('.')
     // Pad to 3 segments with '0' for missing parts
-    return [
-      parts[0] || '0',
-      parts[1] || '0',
-      parts[2] || '0',
-    ].map(Number)
+    return [parts[0] || '0', parts[1] || '0', parts[2] || '0'].map(Number)
   }
   const [major1, minor1, patch1] = parse(v1)
   const [major2, minor2, patch2] = parse(v2)

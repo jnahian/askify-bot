@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import type {ReactNode} from 'react';
 import { cn } from '@/lib/utils'
 
 interface CardProps {
@@ -8,14 +8,20 @@ interface CardProps {
   noPadding?: boolean
 }
 
-export function Card({ children, className, hover = false, noPadding = false }: CardProps) {
+export function Card({
+  children,
+  className,
+  hover = false,
+  noPadding = false,
+}: CardProps) {
   return (
     <div
       className={cn(
         'bg-[var(--bg)] rounded-[var(--radius-lg)] border border-[var(--border)]',
         'shadow-[var(--shadow-sm)]',
         'dark:bg-[var(--bg-muted)] dark:shadow-lg',
-        hover && 'transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]',
+        hover &&
+          'transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]',
         !noPadding && 'p-6',
         className,
       )}
@@ -47,7 +53,12 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className }: CardTitleProps) {
   return (
-    <h3 className={cn('text-xl font-semibold text-[var(--text-primary)]', className)}>
+    <h3
+      className={cn(
+        'text-xl font-semibold text-[var(--text-primary)]',
+        className,
+      )}
+    >
       {children}
     </h3>
   )
@@ -63,7 +74,12 @@ interface CardDescriptionProps {
 
 export function CardDescription({ children, className }: CardDescriptionProps) {
   return (
-    <p className={cn('text-sm text-[var(--text-secondary)] leading-relaxed', className)}>
+    <p
+      className={cn(
+        'text-sm text-[var(--text-secondary)] leading-relaxed',
+        className,
+      )}
+    >
       {children}
     </p>
   )

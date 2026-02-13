@@ -1,7 +1,7 @@
-import { Container } from '@/components/layout/Container'
-import { Button } from '@/components/ui/Button'
 import { Lock, Palmtree, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Container } from '@/components/layout/Container'
+import { Button } from '@/components/ui/Button'
 
 export function HeroModern() {
   return (
@@ -117,7 +117,7 @@ export function HeroModern() {
 
           {/* Right: Interactive Bot Animation */}
           <div className="relative lg:block">
-            <div className="relative w-full max-w-2xl mx-auto">
+            <div className="relative w-full max-w-2x mx-auto">
               {/* Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--accent)] rounded-3xl blur-3xl opacity-20 animate-pulse"></div>
 

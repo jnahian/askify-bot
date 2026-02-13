@@ -8,6 +8,7 @@
 ## 1. Landing Page Content
 
 ### Hero Section
+
 **Headline:** "Powerful Slack Polls Made Simple"
 **Subheadline:** "Team decisions, engagement, and feedback — all without leaving Slack"
 **CTA:** "Add to Slack" (primary button)
@@ -89,6 +90,7 @@
 ---
 
 ### Screenshots Section
+
 - Poll creation modal screenshot
 - Active poll in channel screenshot
 - Results DM screenshot
@@ -97,6 +99,7 @@
 ---
 
 ### Final CTA Section
+
 **Headline:** "Ready to transform team decisions?"
 **CTA:** "Add to Slack — Free to Use"
 **Note:** "Works with Slack's free and paid plans"
@@ -108,9 +111,11 @@
 ### Category: Introduction
 
 #### Doc: Getting Started (`getting-started`)
+
 **Description:** Install and configure Askify in your Slack workspace
 
 **Sections:**
+
 1. **Installation**
    - Prerequisites: Slack workspace with admin access
    - Add to Slack button
@@ -131,9 +136,11 @@
 ### Category: Core Features
 
 #### Doc: Poll Types (`poll-types`)
+
 **Description:** Understand the four poll types and when to use each
 
 **Sections:**
+
 1. **Single Choice**
    - One vote per voter
    - Best for: decisions, preferences
@@ -159,9 +166,11 @@
 ---
 
 #### Doc: Commands (`commands`)
+
 **Description:** Master all Askify slash commands
 
 **Sections:**
+
 1. **Poll Creation**
    - `/askify` — Opens poll creation modal
    - `/askify poll "Question?" "Opt1" "Opt2"` — Quick inline poll
@@ -184,9 +193,11 @@
 ---
 
 #### Doc: Voting & Results (`voting-results`)
+
 **Description:** How voting works and how to share results
 
 **Sections:**
+
 1. **Voting Behavior**
    - Click button to vote
    - Click again to retract (if allowed)
@@ -213,9 +224,11 @@
 ### Category: Advanced Features
 
 #### Doc: Scheduling & Auto-Close (`scheduling`)
+
 **Description:** Schedule polls for future posting and configure auto-close
 
 **Sections:**
+
 1. **Scheduled Polls**
    - Select "Schedule for later"
    - Choose date and time
@@ -235,9 +248,11 @@
 ---
 
 #### Doc: Templates (`templates`)
+
 **Description:** Save and reuse poll configurations
 
 **Sections:**
+
 1. **Saving Templates**
    - "Save as Template" button in creator DM
    - Name your template
@@ -256,9 +271,11 @@
 ---
 
 #### Doc: Advanced Settings (`advanced-settings`)
+
 **Description:** Fine-tune poll behavior with advanced options
 
 **Sections:**
+
 1. **Voting Settings**
    - Allow Vote Change (default: on)
    - Show Live Results (default: on)
@@ -284,9 +301,11 @@
 ### Category: Reference
 
 #### Doc: Architecture & Tech Stack (`architecture`)
+
 **Description:** Technical overview for developers
 
 **Sections:**
+
 1. **Tech Stack**
    - Node.js 22+
    - @slack/bolt v4 (Socket Mode)
@@ -316,6 +335,7 @@
 **Title:** UI Improvements & List Enhancements
 
 **Items:**
+
 - type: feature
   text: "Poll Description Field — Optional multiline description in poll creation modal"
 - type: feature
@@ -340,6 +360,7 @@
 **Title:** Scheduled Polls & Creator DM Improvements
 
 **Items:**
+
 - type: fix
   text: "Scheduled polls now include 'Close Poll' and 'Save as Template' buttons in creator DM"
 - type: fix
@@ -360,6 +381,7 @@
 **Title:** Initial Release
 
 **Items:**
+
 - type: feature
   text: "Four poll types: single choice, multi-select, yes/no/maybe, rating scale"
 - type: feature
@@ -390,6 +412,7 @@
 **Last Updated:** 2026-02-12
 
 **Sections:**
+
 1. Acceptance of Terms
 2. Use License
 3. Service Description
@@ -399,7 +422,7 @@
 7. Termination
 8. Governing Law
 
-*(Full legal text to be provided by user or legal team)*
+_(Full legal text to be provided by user or legal team)_
 
 ---
 
@@ -408,6 +431,7 @@
 **Last Updated:** 2026-02-12
 
 **Sections:**
+
 1. **Data Collection**
    - Workspace ID, channel IDs, user IDs
    - Poll questions, options, votes
@@ -437,23 +461,26 @@
    - Email: support@askify.app (placeholder)
    - GitHub: github.com/jnahian/askify-bot
 
-*(Full legal text to be provided by user or legal team)*
+_(Full legal text to be provided by user or legal team)_
 
 ---
 
 ## 5. SEO Metadata
 
 ### Landing Page
+
 - **Title:** Askify — Powerful Slack Polls Made Simple
 - **Description:** Create interactive polls in Slack with 4 poll types, anonymous voting, scheduled posting, auto-close, reminders, and visual results. Free internal tool.
 - **Keywords:** Slack polls, Slack bot, team voting, Slack survey, poll bot, team decisions, Slack app
 
 ### Docs
+
 - **Title Format:** {doc.title} — Askify Docs
 - **Description:** {doc.description}
 - **Canonical:** /docs/{id}
 
 ### Changelog
+
 - **Title Format:** Askify v{version} — Changelog
 - **Description:** {auto-generated from items}
 - **Canonical:** /changelog/{version}
@@ -463,6 +490,7 @@
 ## 6. Navigation Structure
 
 ### Navbar
+
 - Logo (Askify)
 - Docs
 - Changelog
@@ -470,6 +498,7 @@
 - Add to Slack (CTA button)
 
 ### Footer
+
 - **Product**
   - Features
   - Documentation

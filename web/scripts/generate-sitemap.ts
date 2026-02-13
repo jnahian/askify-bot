@@ -3,8 +3,8 @@
  * Run with: npx tsx scripts/generate-sitemap.ts
  */
 
-import { writeFileSync } from 'fs'
-import { join } from 'path'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // Simple sitemap generator - runs at build time
 const baseUrl = 'https://askify.jnahian.me'

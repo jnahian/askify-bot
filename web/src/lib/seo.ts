@@ -16,7 +16,7 @@ export interface SEOMetadata {
   ogImage?: string
   ogType?: 'website' | 'article'
   twitterCard?: 'summary' | 'summary_large_image'
-  keywords?: string[]
+  keywords?: Array<string>
   author?: string
   publishedTime?: string
   modifiedTime?: string
@@ -83,7 +83,10 @@ export function generateMeta(metadata: SEOMetadata) {
 /**
  * Generate structured data (JSON-LD) for a page
  */
-export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb', data: any) {
+export function generateStructuredData(
+  type: 'website' | 'article' | 'breadcrumb',
+  data: any,
+) {
   switch (type) {
     case 'website':
       return {
@@ -136,7 +139,14 @@ export function generateStructuredData(type: 'website' | 'article' | 'breadcrumb
 export interface SitemapURL {
   loc: string
   lastmod?: string
-  changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
+  changefreq?:
+    | 'always'
+    | 'hourly'
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'yearly'
+    | 'never'
   priority?: number
 }
 

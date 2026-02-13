@@ -10,7 +10,11 @@ export function Footer() {
         { href: '/#features', label: 'Features' },
         { href: '/docs', label: 'Documentation' },
         { href: '/changelog', label: 'Changelog' },
-        { href: 'https://github.com/jnahian/askify-bot', label: 'GitHub', external: true },
+        {
+          href: 'https://github.com/jnahian/askify-bot',
+          label: 'GitHub',
+          external: true,
+        },
       ],
     },
     {

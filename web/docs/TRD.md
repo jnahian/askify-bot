@@ -145,27 +145,27 @@ Avoid one large JSON file.
 ### schemas.ts
 
 ```ts
-import { z } from "zod";
+import { z } from 'zod'
 
-export const ContentBlockSchema = z.discriminatedUnion("type", [
+export const ContentBlockSchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal("paragraph"),
+    type: z.literal('paragraph'),
     text: z.string(),
   }),
   z.object({
-    type: z.literal("code"),
+    type: z.literal('code'),
     language: z.string(),
     value: z.string(),
   }),
   z.object({
-    type: z.literal("list"),
+    type: z.literal('list'),
     items: z.array(z.string()),
   }),
   z.object({
-    type: z.literal("note"),
+    type: z.literal('note'),
     text: z.string(),
   }),
-]);
+])
 
 export const DocSchema = z.object({
   id: z.string(),
@@ -179,7 +179,7 @@ export const DocSchema = z.object({
       content: z.array(ContentBlockSchema),
     }),
   ),
-});
+})
 ```
 
 ---
@@ -204,10 +204,10 @@ Block-driven architecture:
 
 ```tsx
 switch (block.type) {
-  case "paragraph":
-  case "code":
-  case "list":
-  case "note":
+  case 'paragraph':
+  case 'code':
+  case 'list':
+  case 'note':
 }
 ```
 

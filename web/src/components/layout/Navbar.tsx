@@ -1,7 +1,7 @@
-import { Container } from '@/components/layout/Container'
 import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { Container } from '@/components/layout/Container'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

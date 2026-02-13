@@ -1,5 +1,5 @@
-import type { ContentBlock, DocSection } from '@/lib/content/schemas'
 import { CodeBlock } from './CodeBlock'
+import type { ContentBlock, DocSection } from '@/lib/content/schemas'
 import { Alert } from '@/components/ui/Alert'
 import { slugify } from '@/lib/utils'
 
@@ -11,7 +11,11 @@ export function DocRenderer({ sections }: DocRendererProps) {
   return (
     <div className="prose max-w-none">
       {sections.map((section, sectionIndex) => (
-        <section key={sectionIndex} id={slugify(section.heading)} className="mb-12">
+        <section
+          key={sectionIndex}
+          id={slugify(section.heading)}
+          className="mb-12"
+        >
           {/* Section Heading with Anchor */}
           <h2 className="group flex items-center gap-2">
             <span>{section.heading}</span>

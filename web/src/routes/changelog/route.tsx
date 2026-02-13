@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { Outlet, createFileRoute } from '@tanstack/react-router'
 import { Container } from '@/components/layout/Container'
 
 export const Route = createFileRoute('/changelog')({

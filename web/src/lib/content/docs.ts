@@ -1,4 +1,5 @@
-import { Doc, DocSchema, DocsByCategory } from './schemas'
+import { DocSchema } from './schemas'
+import type { Doc, DocsByCategory } from './schemas';
 
 /**
  * Explicit category order for documentation navigation
@@ -14,13 +15,13 @@ const CATEGORY_ORDER = [
  * Load all documentation files
  * Returns validated and sorted docs
  */
-export async function getAllDocs(): Promise<Doc[]> {
+export async function getAllDocs(): Promise<Array<Doc>> {
   // In development, we'll import JSON files directly
   // In production, this could be an API call or static import
 
   const docFiles = import.meta.glob('/content/docs/*.json', { eager: true })
 
-  const docs: Doc[] = []
+  const docs: Array<Doc> = []
 
   for (const [path, module] of Object.entries(docFiles)) {
     try {
@@ -64,7 +65,7 @@ export async function getDocById(id: string): Promise<Doc | null> {
  * Group docs by category
  * Returns array of categories with their docs
  */
-export async function getDocsByCategory(): Promise<DocsByCategory[]> {
+export async function getDocsByCategory(): Promise<Array<DocsByCategory>> {
   const docs = await getAllDocs()
 
   const grouped = docs.reduce((acc, doc) => {
@@ -75,7 +76,7 @@ export async function getDocsByCategory(): Promise<DocsByCategory[]> {
       acc.push({ category: doc.category, docs: [doc] })
     }
     return acc
-  }, [] as DocsByCategory[])
+  }, [] as Array<DocsByCategory>)
 
   return grouped
 }
@@ -83,7 +84,7 @@ export async function getDocsByCategory(): Promise<DocsByCategory[]> {
 /**
  * Get all unique categories
  */
-export async function getAllCategories(): Promise<string[]> {
+export async function getAllCategories(): Promise<Array<string>> {
   const docs = await getAllDocs()
   const categories = [...new Set(docs.map((doc) => doc.category))]
   return categories.sort()
@@ -112,7 +113,7 @@ export async function getAdjacentDocs(currentId: string): Promise<{
 /**
  * Search docs by query (simple text search)
  */
-export async function searchDocs(query: string): Promise<Doc[]> {
+export async function searchDocs(query: string): Promise<Array<Doc>> {
   const docs = await getAllDocs()
   const lowercaseQuery = query.toLowerCase()
 
@@ -130,7 +131,9 @@ export async function searchDocs(query: string): Promise<Doc[]> {
           return ''
         }),
       ]),
-    ].join(' ').toLowerCase()
+    ]
+      .join(' ')
+      .toLowerCase()
 
     return searchableText.includes(lowercaseQuery)
   })

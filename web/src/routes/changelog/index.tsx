@@ -15,7 +15,8 @@ export const Route = createFileRoute('/changelog/')({
       },
       {
         name: 'description',
-        content: 'See what\'s new in Askify. Track new features, improvements, and bug fixes across all versions.',
+        content:
+          "See what's new in Askify. Track new features, improvements, and bug fixes across all versions.",
       },
     ],
     links: [
@@ -41,7 +42,8 @@ function ChangelogIndex() {
             Changelog
           </h1>
           <p className="text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
-            Track new features, improvements, and bug fixes. Stay up to date with the latest Askify releases.
+            Track new features, improvements, and bug fixes. Stay up to date
+            with the latest Askify releases.
           </p>
         </header>
 
@@ -49,10 +51,7 @@ function ChangelogIndex() {
         <div className="space-y-8">
           {changelogs.map((changelog, index) => (
             <div key={changelog.version} id={`version-${changelog.version}`}>
-              <ChangelogItem
-                changelog={changelog}
-                isLatest={index === 0}
-              />
+              <ChangelogItem changelog={changelog} isLatest={index === 0} />
             </div>
           ))}
         </div>

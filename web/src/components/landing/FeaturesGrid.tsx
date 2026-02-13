@@ -1,14 +1,14 @@
-import { Container } from '@/components/layout/Container'
-import { Card } from '@/components/ui/Card'
 import {
-  ListChecks,
   BarChart3,
-  Lock,
   CalendarClock,
   FolderKanban,
-  Share2,
+  ListChecks,
+  Lock,
   RefreshCw,
+  Share2,
 } from 'lucide-react'
+import { Container } from '@/components/layout/Container'
+import { Card } from '@/components/ui/Card'
 
 export function FeaturesGrid() {
   const features = [

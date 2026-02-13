@@ -1,7 +1,10 @@
-import { createFileRoute, notFound, Link } from '@tanstack/react-router'
-import { getChangelogByVersion, getChangelogSummary } from '@/lib/content/changelog'
-import { ChangelogItem } from '@/components/changelog/ChangelogItem'
+import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
+import {
+  getChangelogByVersion,
+  getChangelogSummary,
+} from '@/lib/content/changelog'
+import { ChangelogItem } from '@/components/changelog/ChangelogItem'
 
 export const Route = createFileRoute('/changelog/$version')({
   loader: async ({ params }) => {

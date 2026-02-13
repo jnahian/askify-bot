@@ -2,8 +2,14 @@ import { useState } from 'react'
 
 export function InteractivePollCreation() {
   const [question, setQuestion] = useState('What should we have for lunch?')
-  const [pollType, setPollType] = useState<'single' | 'multi' | 'yesno' | 'rating'>('single')
-  const [options, setOptions] = useState(['🍕 Pizza', '🍔 Burgers', '🥗 Salads'])
+  const [pollType, setPollType] = useState<
+    'single' | 'multi' | 'yesno' | 'rating'
+  >('single')
+  const [options, setOptions] = useState([
+    '🍕 Pizza',
+    '🍔 Burgers',
+    '🥗 Salads',
+  ])
   const [showSuccess, setShowSuccess] = useState(false)
 
   const pollTypes = [

@@ -1,7 +1,12 @@
 import { useState } from 'react'
 
 export function InteractivePoll() {
-  const [votes, setVotes] = useState({ option1: 5, option2: 3, option3: 7, option4: 2 })
+  const [votes, setVotes] = useState({
+    option1: 5,
+    option2: 3,
+    option3: 7,
+    option4: 2,
+  })
   const [userVote, setUserVote] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
 

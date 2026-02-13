@@ -31,3 +31,5 @@ npm-debug.log*
 # Github action ssh key
 ga
 ga.pub
+.vercel
+.env*.local

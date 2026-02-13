@@ -1,10 +1,19 @@
+import { CheckCircle2,  Pizza, Star, Target } from 'lucide-react'
+import type {LucideIcon} from 'lucide-react';
 import { Container } from '@/components/layout/Container'
 import { Card, CardContent } from '@/components/ui/Card'
 
 export function UseCases() {
-  const useCases = [
+  const useCases: Array<{
+    icon: LucideIcon
+    title: string
+    description: string
+    example: string
+    pollType: string
+    bgColor: string
+  }> = [
     {
-      emoji: '🎯',
+      icon: Target,
       title: 'Team Decisions',
       description: 'Strategic choices made easy',
       example: '"Where should we have the team offsite?"',
@@ -12,7 +21,7 @@ export function UseCases() {
       bgColor: 'from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20',
     },
     {
-      emoji: '✅',
+      icon: CheckCircle2,
       title: 'Quick Consensus',
       description: 'Fast feedback loops',
       example: '"Should we move standup to 10am?"',
@@ -20,7 +29,7 @@ export function UseCases() {
       bgColor: 'from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20',
     },
     {
-      emoji: '⭐',
+      icon: Star,
       title: 'Feedback Collection',
       description: 'Measure satisfaction',
       example: '"Rate this sprint (1-5)"',
@@ -28,7 +37,7 @@ export function UseCases() {
       bgColor: 'from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20',
     },
     {
-      emoji: '🍕',
+      icon: Pizza,
       title: 'Engagement & Fun',
       description: 'Build team culture',
       example: '"What\'s for lunch today?"',
@@ -56,7 +65,9 @@ export function UseCases() {
             <Card key={index} hover noPadding>
               <div className={`p-6 bg-gradient-to-br ${useCase.bgColor} border-b border-[var(--border)]`}>
                 <div className="flex items-start gap-4">
-                  <div className="text-4xl">{useCase.emoji}</div>
+                  <div className="flex-shrink-0">
+                    <useCase.icon className="w-10 h-10 text-[var(--text-primary)]" strokeWidth={1.5} />
+                  </div>
                   <div>
                     <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">
                       {useCase.title}

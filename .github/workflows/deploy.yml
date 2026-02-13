@@ -33,13 +33,13 @@ jobs:
             echo "==> Generating Prisma client..."
             npx prisma generate
 
-            echo "==> Building..."
+            echo "==> Building bot..."
             npm run build
 
             echo "==> Running database migrations..."
             npx prisma migrate deploy
 
-            echo "==> Restarting app..."
+            echo "==> Restarting apps..."
             pm2 restart ecosystem.config.cjs --env production
 
             echo "==> Deploy complete! Tag: ${{ github.event.release.tag_name }}"

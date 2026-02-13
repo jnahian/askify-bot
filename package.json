@@ -4,8 +4,7 @@
   "description": "An internal Slack poll bot for team decisions, engagement, and feedback",
   "main": "dist/app.js",
   "scripts": {
-    "build": "npm run build:bot && npm run web:build",
-    "build:bot": "tsc",
+    "build": "tsc",
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts --ext ts",
     "web:dev": "cd web && npm run dev",

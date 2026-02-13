@@ -4,6 +4,7 @@ import viteReact from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'url'
 import { defineConfig } from 'vite'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
+import { nitro } from 'nitro/vite'
 
 import tailwindcss from '@tailwindcss/vite'
 
@@ -21,6 +22,7 @@ const config = defineConfig({
     }),
     tailwindcss(),
     tanstackStart(),
+    nitro(),
     viteReact(),
   ],
 })

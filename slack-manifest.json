@@ -2,7 +2,8 @@
   "display_information": {
     "name": "Askify",
     "description": "An internal Slack poll bot for team decisions, engagement, and feedback",
-    "background_color": "#4A154B"
+    "background_color": "#0f9ea8",
+    "long_description": "Askify is a powerful internal Slack poll bot that makes team decisions, engagement, and feedback collection simple and effective. Create polls with 4 different types (single choice, multi-select, yes/no/maybe, rating scale), schedule them for future posting, set auto-close timers, enable anonymous voting, and get beautifully formatted results with emoji bar charts. Save poll templates for reuse, allow voters to add options, and automatically remind non-voters before polls close. Visit https://askify.jnahian.me for full documentation."
   },
   "features": {
     "app_home": {
@@ -24,6 +25,9 @@
     ]
   },
   "oauth_config": {
+    "redirect_urls": [
+      "https://askify.jnahian.me"
+    ],
     "scopes": {
       "bot": [
         "chat:write",
@@ -49,5 +53,14 @@
     "org_deploy_enabled": true,
     "socket_mode_enabled": true,
     "token_rotation_enabled": false
+  },
+  "metadata": {
+    "major_version": 1,
+    "minor_version": 2
+  },
+  "_links": {
+    "documentation": "https://askify.jnahian.me/docs",
+    "privacy_policy": "https://askify.jnahian.me/privacy",
+    "support": "https://github.com/jnahian/askify-bot/issues"
   }
 }

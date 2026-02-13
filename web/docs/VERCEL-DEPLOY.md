@@ -62,8 +62,8 @@ git push origin website
    - **Framework Preset:** Other
    - **Root Directory:** `web`
    - **Build Command:** `npm run build`
-   - **Output Directory:** `dist/client`
    - **Install Command:** `npm install`
+   - **Output Directory:** Leave blank (Nitro auto-generates `.vercel/output/`)
 
 4. Click **Deploy**
 
@@ -100,11 +100,11 @@ The `vercel.json` file is already configured:
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": null,
-  "outputDirectory": "dist/client"
+  "installCommand": "npm install"
 }
 ```
+
+Nitro (configured in `vite.config.ts`) auto-detects the Vercel environment during build and generates the `.vercel/output/` directory in the correct format. No `framework` or `outputDirectory` overrides are needed.
 
 ---
 
@@ -165,9 +165,9 @@ After first deployment:
 
 After deployment, your site will be available at:
 
-- **Preview:** `https://askify-web-<hash>.vercel.app`
-- **Production:** `https://askify-web.vercel.app`
-- **Custom Domain:** `https://askify.jnahian.me` (if configured)
+- **Production (Custom Domain):** [askify.jnahian.me](https://askify.jnahian.me) ✅
+- **Vercel URL:** `https://askify-web.vercel.app`
+- **Preview:** `https://askify-web-<hash>.vercel.app` (per branch)
 
 ---
 
@@ -180,10 +180,10 @@ Before deploying, test the build locally:
 npm run build
 npm run preview
 
-# Visit http://localhost:4051 (or your WEB_PORT)
+# Visit http://localhost:3000 (or your WEB_PORT)
 ```
 
-If the build works locally, it will work on Vercel!
+The build outputs to `.output/` locally (using `node-server` preset). On Vercel, Nitro switches to the `vercel` preset automatically.
 
 ---
 
@@ -197,9 +197,10 @@ If the build works locally, it will work on Vercel!
 
 ### Routes return 404
 
-- Ensure `outputDirectory` is set to `dist/client`
-- TanStack Start handles routing automatically
-- Vercel should serve the app correctly
+- Ensure `nitro` is installed and `nitro()` is in `vite.config.ts` plugins
+- Do NOT set `framework` or `outputDirectory` in `vercel.json` — Nitro handles this
+- Nitro auto-detects Vercel and outputs to `.vercel/output/` for proper SSR routing
+- TanStack Start handles client-side routing automatically
 
 ### Assets not loading
 

@@ -19,6 +19,14 @@
     {
       "type": "feature",
       "text": "Poll Management UI — Edit, Repost, and Schedule Repost buttons added to creator DMs and /askify list command for easy poll lifecycle management"
+    },
+    {
+      "type": "improvement",
+      "text": "Interactive Landing Page Demos — Replaced static screenshots with fully interactive components: clickable poll creation form, live voting demo, and animated results sharing"
+    },
+    {
+      "type": "improvement",
+      "text": "Consistent Container Widths — Unified all pages (landing, docs, changelog, header, footer) to 1400px max-width for a cohesive layout experience"
     }
   ]
 }

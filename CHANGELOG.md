@@ -23,6 +23,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Optional channel override and close method configuration
   - Scheduled reposts appear in `/askify list` with "Scheduled" status
 
+### Improved
+- **Interactive Landing Page Demos**: Replaced static screenshots with fully interactive components
+  - Clickable poll creation form with live editing
+  - Live voting demo with real-time percentage updates
+  - Animated results sharing with channel selector
+- **Consistent Container Widths**: Unified all pages to 1400px max-width
+  - Landing page sections, docs, changelog, header, and footer all aligned
+  - Professional, cohesive layout across entire site
+- **Real Askify Branding**: All interactive demos feature the actual Askify logo
+- **Uniform Component Sizing**: All three interactive demos have identical dimensions (380px × 600px) for perfect grid alignment
+
 ## [1.2.0] - 2026-02-12
 
 ### Added

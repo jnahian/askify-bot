@@ -22,9 +22,14 @@ export async function getAllChangelogs(): Promise<Changelog[]> {
     }
   }
 
-  // Sort reverse chronological (newest first)
+  // Sort reverse chronological (newest first), then by version if dates are equal
   return changelogs.sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
+    const dateComparison = new Date(b.date).getTime() - new Date(a.date).getTime()
+    if (dateComparison !== 0) {
+      return dateComparison
+    }
+    // If dates are equal, sort by semantic version (newest first)
+    return isNewerVersion(b.version, a.version) ? 1 : -1
   })
 }
 

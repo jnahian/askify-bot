@@ -42,10 +42,13 @@ export function registerEditPollAction(app: App): void {
 
     // Determine close method from existing poll data
     let closeMethod: string | undefined;
-    if (poll.closesAt && poll.scheduledAt) {
-      // If closesAt is set, figure out if it was duration or datetime based
-      // We can't perfectly distinguish, so default to datetime
+    if (poll.closesAt) {
+      // If closesAt is set, assume datetime method
+      // (we can't distinguish between duration and datetime after creation)
       closeMethod = 'datetime';
+    } else {
+      // No closesAt means manual close
+      closeMethod = 'manual';
     }
 
     await client.views.open({
@@ -69,6 +72,8 @@ export function registerEditPollAction(app: App): void {
           allowAddingOptions: settings.allowAddingOptions,
           reminders: settings.reminders,
           includeMaybe: settings.includeMaybe,
+          closesAt: poll.closesAt || undefined,
+          scheduledAt: poll.scheduledAt || undefined,
         },
       }),
     });

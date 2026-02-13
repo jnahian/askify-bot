@@ -27,6 +27,8 @@ export interface ModalOptions {
     allowAddingOptions?: boolean;
     reminders?: boolean;
     includeMaybe?: boolean;
+    closesAt?: Date;
+    scheduledAt?: Date;
   };
 }
 
@@ -297,6 +299,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
 
   // Datetime picker (conditional)
   if (closeMethod === 'datetime') {
+    const initialDateTime = prefill?.closesAt ? Math.floor(prefill.closesAt.getTime() / 1000) : undefined;
     blocks.push({
       type: 'input',
       block_id: 'datetime_block',
@@ -304,6 +307,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       element: {
         type: 'datetimepicker',
         action_id: 'datetime_input',
+        ...(initialDateTime ? { initial_date_time: initialDateTime } : {}),
       },
     });
   }
@@ -334,6 +338,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
 
   // Schedule datetime picker (conditional)
   if (scheduleMethod === 'scheduled') {
+    const initialScheduleTime = prefill?.scheduledAt ? Math.floor(prefill.scheduledAt.getTime() / 1000) : undefined;
     blocks.push({
       type: 'input',
       block_id: 'schedule_datetime_block',
@@ -341,6 +346,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
       element: {
         type: 'datetimepicker',
         action_id: 'schedule_datetime_input',
+        ...(initialScheduleTime ? { initial_date_time: initialScheduleTime } : {}),
       },
     });
   }

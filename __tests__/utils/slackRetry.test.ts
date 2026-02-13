@@ -1,5 +1,8 @@
 /**
  * Tests for slackRetry utility
+ * 
+ * Note: Uses jest.advanceTimersByTimeAsync() which is available in Jest 28+
+ * This allows proper async timer advancement for testing retry logic.
  */
 
 import { withRetry } from '../../src/utils/slackRetry';

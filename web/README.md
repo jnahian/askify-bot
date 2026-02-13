@@ -5,6 +5,10 @@
 
 ---
 
+## Live Site
+
+🚀 **[askify.jnahian.me](https://askify.jnahian.me)** — Deployed on Vercel
+
 ## Quick Start
 
 ```bash

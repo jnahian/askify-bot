@@ -146,12 +146,12 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker deployment instructions.
 
 ## Website
 
-The Askify website is built with TanStack Start and served from the same Express server as the bot.
+The Askify website provides documentation, changelog, and installation instructions.
 
+- **Live site:** [askify.jnahian.me](https://askify.jnahian.me)
 - **Source:** [`web/`](web/)
-- **Live site:** Served at `http://localhost:3000` when running the bot
-- **Build:** `npm run build:web`
-- **Dev:** `npm run dev:web`
+- **Tech:** TanStack Start + React + Tailwind CSS v4
+- **Hosting:** Vercel (with Nitro SSR adapter)
 
 See [web/README.md](web/README.md) for website development details.
 

@@ -165,9 +165,9 @@ After first deployment:
 
 After deployment, your site will be available at:
 
-- **Preview:** `https://askify-web-<hash>.vercel.app`
-- **Production:** `https://askify-web.vercel.app`
-- **Custom Domain:** `https://askify.jnahian.me` (if configured)
+- **Production (Custom Domain):** [askify.jnahian.me](https://askify.jnahian.me) ✅
+- **Vercel URL:** `https://askify-web.vercel.app`
+- **Preview:** `https://askify-web-<hash>.vercel.app` (per branch)
 
 ---
 

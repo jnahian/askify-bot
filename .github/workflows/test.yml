@@ -50,11 +50,3 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
-
-      - name: Comment test coverage on PR
-        uses: romeovs/lcov-reporter-action@v0.3.1
-        if: github.event_name == 'pull_request'
-        with:
-          lcov-file: ./coverage/lcov.info
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          delete-old-comments: true

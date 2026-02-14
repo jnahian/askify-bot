@@ -1,5 +1,7 @@
 # Askify
 
+[![Tests](https://github.com/jnahian/askify-bot/actions/workflows/test.yml/badge.svg)](https://github.com/jnahian/askify-bot/actions/workflows/test.yml)
+
 An internal Slack poll bot for team decisions, engagement, and feedback.
 
 ## Features
@@ -135,6 +137,31 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Docker deployment instructions.
 | ORM | Prisma v7 with `@prisma/adapter-pg` |
 | Scheduler | node-cron |
 | Deployment | Docker |
+| Testing | Jest + ts-jest |
+
+## Testing
+
+Askify uses Jest for unit and integration testing.
+
+```bash
+npm test              # Run all tests
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
+npm run test:ci      # Run tests in CI mode
+```
+
+### Test Structure
+
+```
+__tests__/
+  fixtures/         # Test data factories
+  mocks/           # Mock utilities (Prisma, Slack client)
+  utils/           # Tests for utility functions
+  services/        # Tests for service layer (coming soon)
+  actions/         # Tests for action handlers (coming soon)
+```
+
+For detailed testing guidelines, see [TESTING.md](TESTING.md).
 
 ## Documentation
 

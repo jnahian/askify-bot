@@ -7,6 +7,10 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts --ext ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
     "web:dev": "cd web && npm run dev",
     "web:build": "cd web && npm run build",
     "web:preview": "cd web && npm run preview",
@@ -29,7 +33,6 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
-    "@slack/bolt": "^4.6.0",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "node-cron": "^4.2.1",
@@ -37,11 +40,15 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@slack/bolt": "^4.6.0",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.2.2",
     "@types/node-cron": "^3.0.11",
     "@types/uuid": "^10.0.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

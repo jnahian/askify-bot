@@ -9,7 +9,7 @@ This document summarizes the test coverage infrastructure and initial test imple
 ### 1. Test Infrastructure Setup ✅
 
 **Technologies Installed:**
-- Jest 29.x - Test framework
+- Jest 30.x - Test framework
 - ts-jest - TypeScript support for Jest
 - @types/jest - TypeScript type definitions
 

@@ -378,4 +378,185 @@ describe('poll creation submission', () => {
       });
     });
   });
+
+  describe('additional validation edge cases', () => {
+    it('should validate missing close datetime', async () => {
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        close_method_block: { close_method_select: { selected_option: { value: 'datetime' } } },
+        datetime_block: { datetime_input: { selected_date_time: undefined } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          datetime_block: 'Please select a close date and time.',
+        }),
+      });
+    });
+
+    it('should validate past close datetime', async () => {
+      const pastTimestamp = Math.floor(Date.now() / 1000) - 3600;
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        close_method_block: { close_method_select: { selected_option: { value: 'datetime' } } },
+        datetime_block: { datetime_input: { selected_date_time: pastTimestamp } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          datetime_block: 'Close time must be in the future.',
+        }),
+      });
+    });
+
+    it('should validate missing schedule datetime', async () => {
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: undefined } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          schedule_datetime_block: 'Please select a schedule date and time.',
+        }),
+      });
+    });
+
+    it('should validate past schedule datetime', async () => {
+      const pastTimestamp = Math.floor(Date.now() / 1000) - 3600;
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: pastTimestamp } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          schedule_datetime_block: 'Schedule time must be in the future.',
+        }),
+      });
+    });
+
+    it('should handle channel not found error', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce({
+        data: { error: 'not_in_channel' },
+      });
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C999' } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state, 'U789');
+
+      await viewHandler(payload);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: 'U789',
+          text: expect.stringContaining('<#C999>'),
+        })
+      );
+    });
+
+    it('should include description in settings when provided', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        description_block: { description_input: { value: 'This is a description' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          settings: expect.objectContaining({
+            description: 'This is a description',
+          }),
+        })
+      );
+    });
+
+    it('should adjust closesAt relative to scheduledAt for duration close', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        close_method_block: { close_method_select: { selected_option: { value: 'duration' } } },
+        duration_block: { duration_input: { value: '2' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: futureTimestamp } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      const createCall = (pollService.createPoll as jest.Mock).mock.calls[0][0];
+      expect(createCall.closesAt).toBeInstanceOf(Date);
+      // Should be scheduledAt + 2 hours
+      expect(createCall.closesAt.getTime()).toBeGreaterThan(futureTimestamp * 1000);
+    });
+  });
 });

@@ -178,6 +178,54 @@ describe('askify command', () => {
       });
     });
 
+    it('should show error for invalid day count (0 days)', async () => {
+      const payload = createCommandPayload('list 0d', 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('day range between 1 and 365'),
+      });
+    });
+
+    it('should show error for invalid day count (over 365)', async () => {
+      const payload = createCommandPayload('list 500d', 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('day range between 1 and 365'),
+      });
+    });
+
+    it('should show error for invalid date format', async () => {
+      const payload = createCommandPayload('list 2025-13-01 2025-01-31', 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('Invalid date format'),
+      });
+    });
+
+    it('should show error when start date is after end date', async () => {
+      const payload = createCommandPayload('list 2025-01-31 2025-01-01', 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('Start date must be before end date'),
+      });
+    });
+
     it('should include action buttons for active polls', async () => {
       const polls = [
         createTestPoll({
@@ -473,6 +521,70 @@ describe('askify command', () => {
         user: 'U123',
         text: expect.stringContaining('at least 2 options'),
       });
+    });
+
+    it('should show error for too many options', async () => {
+      const manyOptions = Array.from({ length: 11 }, (_, i) => `"Option ${i + 1}"`).join(' ');
+      const payload = createCommandPayload(`poll "Question?" ${manyOptions}`, 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('Maximum 10 options'),
+      });
+    });
+
+    it('should support --rating flag with custom scale', async () => {
+      const poll = createTestPoll({ pollType: 'rating' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
+        blocks: [],
+        text: 'Poll',
+      });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const payload = createCommandPayload('poll "Rate us" --rating 10', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pollType: 'rating',
+          settings: expect.objectContaining({
+            ratingScale: 10,
+          }),
+        })
+      );
+    });
+
+    it('should default to scale 5 for --rating without number', async () => {
+      const poll = createTestPoll({ pollType: 'rating' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
+        blocks: [],
+        text: 'Poll',
+      });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const payload = createCommandPayload('poll "Rate us" --rating', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          settings: expect.objectContaining({
+            ratingScale: 5,
+          }),
+        })
+      );
     });
   });
 

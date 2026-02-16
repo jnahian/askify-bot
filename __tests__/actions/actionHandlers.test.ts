@@ -601,6 +601,319 @@ describe('action handlers', () => {
         errors: { schedule_repost_datetime_block: 'Schedule time must be in the future.' },
       });
     });
+
+    it('should validate missing schedule datetime', async () => {
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: undefined },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_datetime_block: 'Please select a date and time.' },
+      });
+    });
+
+    it('should validate missing channel', async () => {
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: undefined },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_channel_block: 'Please select a channel.' },
+      });
+    });
+
+    it('should validate invalid duration hours', async () => {
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+              schedule_repost_close_method_block: {
+                schedule_repost_close_method_select: { selected_option: { value: 'duration' } },
+              },
+              schedule_repost_duration_block: {
+                schedule_repost_duration_input: { value: 'invalid' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_duration_block: 'Please enter a valid number of hours.' },
+      });
+    });
+
+    it('should validate zero duration hours', async () => {
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+              schedule_repost_close_method_block: {
+                schedule_repost_close_method_select: { selected_option: { value: 'duration' } },
+              },
+              schedule_repost_duration_block: {
+                schedule_repost_duration_input: { value: '0' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_duration_block: 'Please enter a valid number of hours.' },
+      });
+    });
+
+    it('should calculate closesAt for valid duration', async () => {
+      const newPoll = createTestPoll({
+        id: 'new-poll',
+        status: 'scheduled',
+      });
+
+      jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
+
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+              schedule_repost_close_method_block: {
+                schedule_repost_close_method_select: { selected_option: { value: 'duration' } },
+              },
+              schedule_repost_duration_block: {
+                schedule_repost_duration_input: { value: '2' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(pollService.repostPoll).toHaveBeenCalledWith('poll-123', 'U123', expect.objectContaining({
+        closesAt: expect.any(Date),
+      }));
+    });
+
+    it('should validate missing close datetime', async () => {
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+              schedule_repost_close_method_block: {
+                schedule_repost_close_method_select: { selected_option: { value: 'datetime' } },
+              },
+              schedule_repost_datetime_close_block: {
+                schedule_repost_datetime_close_input: { selected_date_time: undefined },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_datetime_close_block: 'Please select a close date and time.' },
+      });
+    });
+
+    it('should validate close time after schedule time', async () => {
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 7200; // 2 hours from now
+      const closeBeforeSchedule = futureTimestamp - 3600; // 1 hour before schedule
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              schedule_repost_datetime_block: {
+                schedule_repost_datetime: { selected_date_time: futureTimestamp },
+              },
+              schedule_repost_channel_block: {
+                schedule_repost_channel: { selected_conversation: 'C789' },
+              },
+              schedule_repost_close_method_block: {
+                schedule_repost_close_method_select: { selected_option: { value: 'datetime' } },
+              },
+              schedule_repost_datetime_close_block: {
+                schedule_repost_datetime_close_input: { selected_date_time: closeBeforeSchedule },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { schedule_repost_datetime_close_block: 'Close time must be after the scheduled time.' },
+      });
+    });
+
+    it('should handle dynamic modal update when close method changes', async () => {
+      const poll = createTestPoll({
+        id: 'poll-123',
+        question: 'Test?',
+        channelId: 'C123',
+      });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+
+      // Register the action handlers
+      registerScheduleRepostAction(mockApp);
+
+      const actionHandler = mockApp.action.mock.calls.find(
+        (call: any) => call[0] === 'schedule_repost_close_method_select'
+      )?.[1];
+
+      expect(actionHandler).toBeDefined();
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        action: {
+          type: 'static_select',
+          selected_option: { value: 'duration' },
+        },
+        body: {
+          type: 'block_actions',
+          view: {
+            id: 'view-123',
+            private_metadata: 'poll-123',
+          },
+        },
+        client: mockSlackClient,
+      };
+
+      await actionHandler(payload);
+
+      expect(payload.ack).toHaveBeenCalled();
+      expect(mockSlackClient.views.update).toHaveBeenCalled();
+    });
   });
 
   describe('shareResultsAction', () => {

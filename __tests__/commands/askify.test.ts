@@ -268,6 +268,52 @@ describe('askify command', () => {
       expect(blocksText).toContain('repost_poll');
       expect(blocksText).toContain('schedule_repost');
     });
+
+    it('should show closesAt time for polls with close time', async () => {
+      const closesAt = new Date(Date.now() + 86400000);
+      const polls = [
+        createTestPoll({
+          id: 'poll-1',
+          status: 'active',
+          closesAt,
+        }),
+      ];
+
+      jest.spyOn(pollService, 'getUserPolls').mockResolvedValue(polls);
+
+      const payload = createCommandPayload('list', 'U123');
+
+      await commandHandler(payload);
+
+      const ephemeralCall = mockSlackClient.chat.postEphemeral.mock.calls[0][0];
+      const blocksText = JSON.stringify(ephemeralCall.blocks);
+
+      expect(blocksText).toContain('Closes');
+    });
+
+    it('should show edit and cancel buttons for scheduled polls', async () => {
+      const scheduledAt = new Date(Date.now() + 86400000);
+      const polls = [
+        createTestPoll({
+          id: 'poll-1',
+          status: 'scheduled',
+          scheduledAt,
+        }),
+      ];
+
+      jest.spyOn(pollService, 'getUserPolls').mockResolvedValue(polls);
+
+      const payload = createCommandPayload('list', 'U123');
+
+      await commandHandler(payload);
+
+      const ephemeralCall = mockSlackClient.chat.postEphemeral.mock.calls[0][0];
+      const blocksText = JSON.stringify(ephemeralCall.blocks);
+
+      expect(blocksText).toContain('edit_scheduled');
+      expect(blocksText).toContain('list_cancel');
+      expect(blocksText).toContain('Scheduled for');
+    });
   });
 
   describe('templates subcommand', () => {
@@ -583,6 +629,26 @@ describe('askify command', () => {
           settings: expect.objectContaining({
             ratingScale: 5,
           }),
+        })
+      );
+    });
+
+    it('should handle general errors in inline poll creation', async () => {
+      const poll = createTestPoll();
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce(new Error('API failure'));
+
+      const payload = createCommandPayload('poll "Question?" "A" "B"', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: 'U123',
+          text: expect.stringContaining('Failed to create poll'),
         })
       );
     });

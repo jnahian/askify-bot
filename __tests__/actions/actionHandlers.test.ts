@@ -381,6 +381,71 @@ describe('action handlers', () => {
 
       expect(mockSlackClient.views.update).not.toHaveBeenCalled();
     });
+
+    it('should ignore non-block_actions for poll type select', async () => {
+      const handler = findHandler('poll_type_select');
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        body: { type: 'view_submission' },
+        client: mockSlackClient,
+      };
+
+      await handler!(payload);
+
+      expect(mockSlackClient.views.update).not.toHaveBeenCalled();
+    });
+
+    it('should ignore missing view for close method select', async () => {
+      const handler = findHandler('close_method_select');
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        body: { type: 'block_actions', view: null },
+        client: mockSlackClient,
+      };
+
+      await handler!(payload);
+
+      expect(mockSlackClient.views.update).not.toHaveBeenCalled();
+    });
+
+    it('should ignore non-block_actions for schedule method select', async () => {
+      const handler = findHandler('schedule_method_select');
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        body: { type: 'message_action' },
+        client: mockSlackClient,
+      };
+
+      await handler!(payload);
+
+      expect(mockSlackClient.views.update).not.toHaveBeenCalled();
+    });
+
+    it('should ignore non-block_actions for add option', async () => {
+      const handler = findHandler('add_modal_option');
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        body: { type: 'shortcut' },
+        client: mockSlackClient,
+      };
+
+      await handler!(payload);
+
+      expect(mockSlackClient.views.update).not.toHaveBeenCalled();
+    });
+
+    it('should ignore non-block_actions for remove option', async () => {
+      const handler = findHandler('remove_modal_option');
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        body: { type: 'view_closed' },
+        client: mockSlackClient,
+      };
+
+      await handler!(payload);
+
+      expect(mockSlackClient.views.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('repostAction', () => {
@@ -487,6 +552,37 @@ describe('action handlers', () => {
         response_action: 'errors',
         errors: { repost_channel_block: 'Please select a channel.' },
       });
+    });
+
+    it('should rethrow non-channel errors', async () => {
+      const newPoll = createTestPoll({ id: 'new-poll' });
+
+      jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce(new Error('Server error'));
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'repost_poll_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              repost_channel_block: {
+                repost_channel_select: { selected_conversation: 'C789' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await expect(viewHandler(payload)).rejects.toThrow('Server error');
     });
   });
 
@@ -1023,6 +1119,72 @@ describe('action handlers', () => {
         errors: { share_channel_block: 'Please select a channel.' },
       });
     });
+
+    it('should handle poll not found after submission', async () => {
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(null);
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'share_results_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              share_channel_block: {
+                share_channel_select: { selected_conversation: 'C789' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123',
+        text: expect.stringContaining('Could not find the poll'),
+      });
+    });
+
+    it('should rethrow non-channel errors', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
+        blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Results' } }],
+        text: 'Results',
+      });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce(new Error('Server error'));
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'share_results_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              share_channel_block: {
+                share_channel_select: { selected_conversation: 'C789' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await expect(viewHandler(payload)).rejects.toThrow('Server error');
+    });
   });
 
   describe('templateActions', () => {
@@ -1170,5 +1332,37 @@ describe('action handlers', () => {
         errors: { template_name_block: 'Please enter a template name.' },
       });
     });
+
+    it('should handle poll not found when saving template', async () => {
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(null);
+
+      const viewHandler = mockApp.view.mock.calls.find(
+        (call: any) => call[0] === 'save_template_modal'
+      )?.[1];
+
+      const payload = {
+        ack: jest.fn().mockResolvedValue(undefined),
+        view: {
+          private_metadata: 'poll-123',
+          state: {
+            values: {
+              template_name_block: {
+                template_name_input: { value: 'My Template' },
+              },
+            },
+          },
+        },
+        body: { user: { id: 'U123' } },
+        client: mockSlackClient,
+      };
+
+      await viewHandler(payload);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123',
+        text: expect.stringContaining('Could not find the poll'),
+      });
+    });
   });
 });
+

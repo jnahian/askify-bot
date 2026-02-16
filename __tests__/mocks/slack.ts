@@ -14,6 +14,7 @@ export const mockSlackClient = {
     open: jest.fn(),
     update: jest.fn(),
     push: jest.fn(),
+    publish: jest.fn(),
   },
   users: {
     info: jest.fn(),

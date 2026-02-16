@@ -4,7 +4,7 @@
  */
 
 import { mockPrismaClient, resetPrismaMocks } from '../mocks/prisma';
-import { handleSingleVote, handleMultiVote } from '../../src/services/voteService';
+import { handleSingleVote, handleMultiVote, getVotersByOption, countUniqueVoters } from '../../src/services/voteService';
 import { createTestVote } from '../fixtures/testData';
 
 describe('voteService', () => {
@@ -143,6 +143,83 @@ describe('voteService', () => {
         expect(result.message).toContain('not allowed');
         expect(mockPrismaClient.vote.delete).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('getVotersByOption', () => {
+    it('should return map of voters grouped by option', async () => {
+      const votes = [
+        createTestVote({ pollId: 'poll-123', optionId: 'opt-1', voterId: 'U111' }),
+        createTestVote({ pollId: 'poll-123', optionId: 'opt-1', voterId: 'U222' }),
+        createTestVote({ pollId: 'poll-123', optionId: 'opt-2', voterId: 'U333' }),
+      ];
+
+      mockPrismaClient.vote.findMany.mockResolvedValue(votes);
+
+      const result = await getVotersByOption('poll-123');
+
+      expect(result.get('opt-1')).toEqual(['U111', 'U222']);
+      expect(result.get('opt-2')).toEqual(['U333']);
+    });
+
+    it('should return empty map when no votes', async () => {
+      mockPrismaClient.vote.findMany.mockResolvedValue([]);
+
+      const result = await getVotersByOption('poll-123');
+
+      expect(result.size).toBe(0);
+    });
+
+    it('should handle single vote per option', async () => {
+      const votes = [
+        createTestVote({ pollId: 'poll-123', optionId: 'opt-1', voterId: 'U111' }),
+        createTestVote({ pollId: 'poll-123', optionId: 'opt-2', voterId: 'U222' }),
+      ];
+
+      mockPrismaClient.vote.findMany.mockResolvedValue(votes);
+
+      const result = await getVotersByOption('poll-123');
+
+      expect(result.get('opt-1')).toEqual(['U111']);
+      expect(result.get('opt-2')).toEqual(['U222']);
+      expect(result.size).toBe(2);
+    });
+  });
+
+  describe('countUniqueVoters', () => {
+    it('should count unique voters for a poll', async () => {
+      const votes = [
+        { voterId: 'U111' },
+        { voterId: 'U222' },
+        { voterId: 'U333' },
+      ];
+
+      mockPrismaClient.vote.findMany.mockResolvedValue(votes);
+
+      const count = await countUniqueVoters('poll-123');
+
+      expect(count).toBe(3);
+      expect(mockPrismaClient.vote.findMany).toHaveBeenCalledWith({
+        where: { pollId: 'poll-123' },
+        distinct: ['voterId'],
+        select: { voterId: true },
+      });
+    });
+
+    it('should return 0 when no votes', async () => {
+      mockPrismaClient.vote.findMany.mockResolvedValue([]);
+
+      const count = await countUniqueVoters('poll-123');
+
+      expect(count).toBe(0);
+    });
+
+    it('should handle single voter', async () => {
+      mockPrismaClient.vote.findMany.mockResolvedValue([{ voterId: 'U111' }]);
+
+      const count = await countUniqueVoters('poll-123');
+
+      expect(count).toBe(1);
     });
   });
 });

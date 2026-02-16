@@ -558,5 +558,25 @@ describe('poll creation submission', () => {
       // Should be scheduledAt + 2 hours
       expect(createCall.closesAt.getTime()).toBeGreaterThan(futureTimestamp * 1000);
     });
+
+    it('should rethrow non-channel errors', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce(new Error('API error'));
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await expect(viewHandler(payload)).rejects.toThrow('API error');
+    });
   });
 });

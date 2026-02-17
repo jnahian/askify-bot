@@ -14,11 +14,8 @@ process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 jest.setTimeout(10000);
 
 // Silence console logs during tests (optional - comment out for debugging)
-global.console = {
-  ...console,
-  log: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
+jest.spyOn(console, 'log').mockImplementation(() => {});
+jest.spyOn(console, 'debug').mockImplementation(() => {});
+jest.spyOn(console, 'info').mockImplementation(() => {});
+jest.spyOn(console, 'warn').mockImplementation(() => {});
+jest.spyOn(console, 'error').mockImplementation(() => {});

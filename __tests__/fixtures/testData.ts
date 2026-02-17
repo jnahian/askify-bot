@@ -88,8 +88,8 @@ export function createTestVote(overrides: Partial<any> = {}) {
     id: 'vote-123',
     pollId: 'poll-123',
     optionId: 'opt-1',
-    userId: 'U123456',
-    createdAt: new Date('2024-01-01T12:00:00Z'),
+    voterId: 'U123456',
+    votedAt: new Date('2024-01-01T12:00:00Z'),
     ...overrides,
   };
 }

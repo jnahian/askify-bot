@@ -37,8 +37,8 @@ Average:       91.84% ✅ (Near 95% for 3/4 metrics!)
 ### Technologies
 
 **Core Testing Stack:**
-- Jest 30.x - Test framework
-- ts-jest - TypeScript support
+- Jest 29.x - Test framework
+- ts-jest 29.x - TypeScript support
 - @types/jest - TypeScript type definitions
 
 **Configuration:**

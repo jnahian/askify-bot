@@ -157,8 +157,14 @@ __tests__/
   fixtures/         # Test data factories
   mocks/           # Mock utilities (Prisma, Slack client)
   utils/           # Tests for utility functions
-  services/        # Tests for service layer (coming soon)
-  actions/         # Tests for action handlers (coming soon)
+  services/        # Tests for service layer
+  blocks/          # Tests for Block Kit message builders
+  actions/         # Tests for action handlers
+  commands/        # Tests for command handlers
+  views/           # Tests for modal views
+  events/          # Tests for event handlers
+  jobs/            # Tests for background jobs
+  middleware/      # Tests for middleware
 ```
 
 For detailed testing guidelines, see [TESTING.md](TESTING.md).

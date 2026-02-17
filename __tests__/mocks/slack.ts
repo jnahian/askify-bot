@@ -29,12 +29,13 @@ export const mockSlackClient = {
 
 /**
  * Reset all Slack mock functions
+ * Uses mockReset() to clear call history AND reset implementations/return values
  */
 export function resetSlackMocks() {
   Object.values(mockSlackClient).forEach((namespace) => {
     Object.values(namespace).forEach((fn) => {
-      if (typeof fn === 'function' && 'mockClear' in fn) {
-        fn.mockClear();
+      if (typeof fn === 'function' && 'mockReset' in fn) {
+        (fn as jest.Mock).mockReset();
       }
     });
   });

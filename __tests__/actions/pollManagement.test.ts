@@ -6,7 +6,6 @@
 import { registerClosePollAction } from '../../src/actions/closePollAction';
 import { registerAddOptionAction, registerAddOptionSubmission } from '../../src/actions/addOptionAction';
 import { mockSlackClient } from '../mocks/slack';
-import { mockPrismaClient } from '../mocks/prisma';
 import { createTestPoll, createTestOption } from '../fixtures/testData';
 import * as pollService from '../../src/services/pollService';
 import * as voteService from '../../src/services/voteService';

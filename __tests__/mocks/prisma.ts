@@ -41,13 +41,14 @@ export const mockPrismaClient: any = {
 
 /**
  * Reset all Prisma mock functions
+ * Uses mockReset() to clear call history AND reset implementations/return values
  */
 export function resetPrismaMocks() {
   Object.values(mockPrismaClient).forEach((model: any) => {
     if (typeof model === 'object' && model !== null) {
       Object.values(model).forEach((fn: any) => {
-        if (typeof fn === 'function' && typeof fn.mockClear === 'function') {
-          fn.mockClear();
+        if (typeof fn === 'function' && typeof fn.mockReset === 'function') {
+          fn.mockReset();
         }
       });
     }

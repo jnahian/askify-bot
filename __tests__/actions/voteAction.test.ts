@@ -5,7 +5,6 @@
 
 import { registerVoteAction } from '../../src/actions/voteAction';
 import { mockSlackClient } from '../mocks/slack';
-import { mockPrismaClient } from '../mocks/prisma';
 import { createTestPoll, createTestVote } from '../fixtures/testData';
 import * as pollService from '../../src/services/pollService';
 import * as voteService from '../../src/services/voteService';

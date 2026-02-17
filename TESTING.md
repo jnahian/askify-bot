@@ -81,15 +81,15 @@ __tests__/
 ├── mocks/
 │   ├── prisma.ts           # Prisma client mock
 │   └── slack.ts            # Slack client mock
-├── utils/
-│   ├── barChart.test.ts    # Utility function tests
-│   ├── debounce.test.ts
-│   ├── emojiPrefix.test.ts
-│   └── slackRetry.test.ts
-├── services/               # Service layer tests (coming soon)
-├── blocks/                 # Block builder tests (coming soon)
-├── actions/                # Action handler tests (coming soon)
-└── commands/               # Command handler tests (coming soon)
+├── utils/                  # Tests for utility functions
+├── services/               # Tests for service layer
+├── blocks/                 # Tests for Block Kit message builders
+├── actions/                # Tests for action handlers
+├── commands/               # Tests for command handlers
+├── views/                  # Tests for modal views
+├── events/                 # Tests for event handlers
+├── jobs/                   # Tests for background jobs
+└── middleware/             # Tests for middleware
 ```
 
 ## Writing Tests

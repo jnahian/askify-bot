@@ -96,19 +96,22 @@ export function createTestVote(overrides: Partial<any> = {}) {
 
 /**
  * Create a test template
+ * Matches PollTemplate schema: userId, name, config, createdAt
  */
 export function createTestTemplate(overrides: Partial<any> = {}) {
   return {
     id: 'tmpl-123',
-    creatorId: 'U123456',
+    userId: 'U123456',
     name: 'Daily Standup',
-    question: 'What are you working on today?',
-    pollType: 'single_choice' as PollType,
-    options: ['Task A', 'Task B', 'Task C'],
-    settings: {
-      anonymous: false,
-      allowVoteChange: true,
-      liveResults: true,
+    config: {
+      pollType: 'single_choice',
+      options: ['Task A', 'Task B', 'Task C'],
+      settings: {
+        anonymous: false,
+        allowVoteChange: true,
+        liveResults: true,
+      },
+      closeMethod: 'manual',
     },
     createdAt: new Date('2024-01-01T12:00:00Z'),
     ...overrides,

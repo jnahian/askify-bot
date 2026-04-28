@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.1] - 2026-04-28
+
+### Changed
+- **Refreshed Brand Mark**: Updated logo and favicons across the website and PWA
+  - New 1254×1254 source image regenerated into `logo.jpeg`, `apple-touch-icon.png`, `favicon-16x16.png`, `favicon-32x32.png`, and a multi-resolution `favicon.ico` (16/32/48/64)
+  - Added logo to the top of the README
+  - No code references changed — assets are drop-in replacements
+
 ## [1.3.0] - 2026-02-13
 
 ### Added

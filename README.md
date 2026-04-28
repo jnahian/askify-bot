@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/public/logo.jpeg" alt="Askify logo" width="128" height="128" />
+</p>
+
 # Askify
 
 An internal Slack poll bot for team decisions, engagement, and feedback.

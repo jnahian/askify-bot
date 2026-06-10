@@ -2,6 +2,7 @@ import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
+import { truncate } from '../utils/truncate';
 
 interface PollSettings {
   anonymous?: boolean;
@@ -24,7 +25,7 @@ export function buildResultsDMBlocks(
 
   blocks.push({
     type: 'header',
-    text: { type: 'plain_text', text: `Poll Results: ${poll.question}`, emoji: true },
+    text: { type: 'plain_text', text: truncate(`Poll Results: ${poll.question}`), emoji: true },
   });
 
   if (settings.description) {

@@ -88,6 +88,12 @@ export async function closePoll(pollId: string) {
   });
 }
 
+export async function deletePoll(pollId: string) {
+  return prisma.poll.delete({
+    where: { id: pollId },
+  });
+}
+
 export async function updatePollMessageTs(pollId: string, messageTs: string) {
   return prisma.poll.update({
     where: { id: pollId },

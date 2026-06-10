@@ -8,10 +8,14 @@ import {
   createPoll,
   getPoll,
   closePoll,
+  deletePoll,
   updatePollMessageTs,
   getExpiredPolls,
   getScheduledPolls,
   activatePoll,
+  claimScheduledPoll,
+  claimPollClose,
+  getStrandedActivePolls,
   getUserPolls,
   updatePoll,
   repostPoll,
@@ -186,6 +190,20 @@ describe('pollService', () => {
     });
   });
 
+  describe('deletePoll', () => {
+    it('should delete the poll by id', async () => {
+      const mockPoll = createTestPoll({ id: 'poll-123' });
+      mockPrismaClient.poll.delete.mockResolvedValue(mockPoll as any);
+
+      const result = await deletePoll('poll-123');
+
+      expect(mockPrismaClient.poll.delete).toHaveBeenCalledWith({
+        where: { id: 'poll-123' },
+      });
+      expect(result).toEqual(mockPoll);
+    });
+  });
+
   describe('updatePollMessageTs', () => {
     it('should update poll with message timestamp', async () => {
       const mockPoll = createTestPoll({ messageTs: '1234567890.123456' });
@@ -291,6 +309,88 @@ describe('pollService', () => {
         data: { status: 'active' },
       });
       expect(result).toEqual(mockPoll);
+    });
+  });
+
+  describe('claimScheduledPoll', () => {
+    it('should flip scheduled poll to active and return true', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await claimScheduledPoll('poll-123');
+
+      expect(mockPrismaClient.poll.updateMany).toHaveBeenCalledWith({
+        where: { id: 'poll-123', status: 'scheduled' },
+        data: { status: 'active' },
+      });
+      expect(result).toBe(true);
+    });
+
+    it('should return false when poll was already claimed (not scheduled)', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await claimScheduledPoll('poll-123');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('claimPollClose', () => {
+    it('should flip active poll to closed and return true', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await claimPollClose('poll-123');
+
+      expect(mockPrismaClient.poll.updateMany).toHaveBeenCalledWith({
+        where: { id: 'poll-123', status: 'active' },
+        data: { status: 'closed' },
+      });
+      expect(result).toBe(true);
+    });
+
+    it('should return false when poll was already closed by another claimer', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await claimPollClose('poll-123');
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('getStrandedActivePolls', () => {
+    it('should fetch active polls with no messageTs that were scheduled', async () => {
+      const strandedPoll = createTestPoll({
+        status: 'active',
+        messageTs: null,
+        scheduledAt: new Date('2026-02-16T12:00:00Z'),
+      });
+
+      mockPrismaClient.poll.findMany.mockResolvedValue([strandedPoll] as any);
+
+      const result = await getStrandedActivePolls();
+
+      expect(mockPrismaClient.poll.findMany).toHaveBeenCalledWith({
+        where: {
+          status: 'active',
+          messageTs: null,
+          scheduledAt: { not: null },
+        },
+        include: {
+          options: {
+            orderBy: { position: 'asc' },
+            include: { _count: { select: { votes: true } } },
+          },
+          _count: { select: { votes: true } },
+        },
+      });
+      expect(result).toHaveLength(1);
+    });
+
+    it('should return empty array when nothing is stranded', async () => {
+      mockPrismaClient.poll.findMany.mockResolvedValue([]);
+
+      const result = await getStrandedActivePolls();
+
+      expect(result).toEqual([]);
     });
   });
 
@@ -706,6 +806,23 @@ describe('pollService', () => {
       });
 
       mockPrismaClient.poll.findMany.mockResolvedValue([pollClosed] as any);
+
+      const result = await getPollsNeedingReminders();
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should defensively filter out polls with null closesAt', async () => {
+      const now = new Date('2026-02-16T12:00:00Z');
+      jest.setSystemTime(now);
+
+      const pollNoClose = createTestPoll({
+        status: 'active',
+        closesAt: null,
+        reminderSentAt: null,
+      });
+
+      mockPrismaClient.poll.findMany.mockResolvedValue([pollNoClose] as any);
 
       const result = await getPollsNeedingReminders();
 

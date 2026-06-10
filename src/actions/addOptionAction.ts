@@ -1,7 +1,7 @@
 import { App } from '@slack/bolt';
 import prisma from '../lib/prisma';
 import { getPoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 
 const ADD_OPTION_MODAL_ID = 'add_option_modal';
@@ -108,7 +108,8 @@ export function registerAddOptionSubmission(app: App): void {
       voterNames = await getVotersByOption(pollId);
     }
 
-    const message = buildPollMessage(updatedPoll, settings, voterNames);
+    const uniqueVoters = await getUniqueVoterCount(updatedPoll);
+    const message = buildPollMessage(updatedPoll, settings, voterNames, uniqueVoters);
     await client.chat.update({
       channel: updatedPoll.channelId,
       ts: updatedPoll.messageTs,

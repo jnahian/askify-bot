@@ -4,10 +4,10 @@ import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import {
   cancelScheduledPoll,
-  closePoll,
+  claimPollClose,
   getPoll,
 } from "../services/pollService";
-import { getVotersByOption } from "../services/voteService";
+import { getVotersByOption, getUniqueVoterCount } from "../services/voteService";
 
 export function registerListActions(app: App): void {
   // Close poll from /askify list
@@ -16,7 +16,18 @@ export function registerListActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
-    await closePoll(pollId);
+
+    // Atomically claim the close — only the claimer sends the results
+    // side-effects, so a race with auto-close can't double-send DMs
+    const claimed = await claimPollClose(pollId);
+    if (!claimed) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || '',
+        user: body.user.id,
+        text: ':information_source: This poll is already closed.',
+      });
+      return;
+    }
 
     const closedPoll = await getPoll(pollId);
     if (!closedPoll) return;
@@ -34,7 +45,9 @@ export function registerListActions(app: App): void {
         voterNames = await getVotersByOption(pollId);
       }
 
-      const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames);
+      const uniqueVoters = await getUniqueVoterCount(closedPoll);
+
+      const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames, uniqueVoters);
       await client.chat.update({
         channel: closedPoll.channelId,
         ts: closedPoll.messageTs,
@@ -42,7 +55,7 @@ export function registerListActions(app: App): void {
       });
 
       // DM results to creator with "Share Results" button
-      const dm = buildResultsDMBlocks(closedPoll, settings, voterNames);
+      const dm = buildResultsDMBlocks(closedPoll, settings, voterNames, uniqueVoters);
       await client.chat.postMessage({
         channel: closedPoll.creatorId,
         ...dm,
@@ -63,7 +76,8 @@ export function registerListActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
-    await cancelScheduledPoll(pollId);
+    // Conditional cancel — only succeeds if the poll is still scheduled
+    const cancelled = await cancelScheduledPoll(pollId);
 
     const poll = await getPoll(pollId);
     const question = poll?.question || 'Unknown poll';
@@ -71,7 +85,9 @@ export function registerListActions(app: App): void {
     await client.chat.postEphemeral({
       channel: body.channel?.id || '',
       user: body.user.id,
-      text: `:white_check_mark: Scheduled poll *"${question}"* has been cancelled.`,
+      text: cancelled
+        ? `:white_check_mark: Scheduled poll *"${question}"* has been cancelled.`
+        : `:warning: Poll *"${question}"* could not be cancelled — it has already been posted.`,
     });
   });
 
@@ -90,14 +106,14 @@ export function registerListActions(app: App): void {
       description?: string;
     };
 
-    const totalVoters = poll._count.votes;
+    const totalVoters = await getUniqueVoterCount(poll);
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {
       voterNames = await getVotersByOption(pollId);
     }
 
     // Reuse buildResultsDMBlocks and adapt for modal
-    const { blocks: dmBlocks } = buildResultsDMBlocks(poll, settings, voterNames);
+    const { blocks: dmBlocks } = buildResultsDMBlocks(poll, settings, voterNames, totalVoters);
 
     // Remove the header (first block - modal has its own title)
     const blocks = dmBlocks.slice(1);

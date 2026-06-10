@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.1] - 2026-04-28
+
+### Changed
+- **Refreshed Logo & Favicons**: Regenerated the brand mark and full favicon set from the new source artwork
+  - Updated `logo.jpeg`, `apple-touch-icon.png`, `favicon-16x16.png`, `favicon-32x32.png`, and multi-resolution `favicon.ico`
+  - No code references changed — existing `/logo.jpeg` references continue to work (hard-refresh to clear cached favicons)
+
 ## [1.3.0] - 2026-02-13
 
 ### Added

@@ -86,8 +86,9 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
         text: 'Poll Closed',
@@ -103,7 +104,7 @@ describe('poll management actions', () => {
       await handler(payload);
 
       expect(mockAck).toHaveBeenCalled();
-      expect(pollService.closePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimPollClose).toHaveBeenCalledWith('poll-123');
       expect(mockSlackClient.chat.update).toHaveBeenCalled();
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
         channel: 'U123',
@@ -121,7 +122,7 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      const closePollSpy = jest.spyOn(pollService, 'closePoll');
+      const claimCloseSpy = jest.spyOn(pollService, 'claimPollClose');
 
       const handler = registeredActions.get('close_poll')!;
       const payload = createClosePayload('poll-123', 'U456'); // Different user
@@ -133,7 +134,7 @@ describe('poll management actions', () => {
         user: 'U456',
         text: ':x: Only the poll creator can close this poll.',
       });
-      expect(closePollSpy).not.toHaveBeenCalled();
+      expect(claimCloseSpy).not.toHaveBeenCalled();
     });
 
     it('should return early if poll already closed', async () => {
@@ -144,26 +145,28 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      const closePollSpy = jest.spyOn(pollService, 'closePoll');
+      // Atomic close claim fails for an already-closed poll
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(false);
 
       const handler = registeredActions.get('close_poll')!;
       const payload = createClosePayload('poll-123', 'U123');
 
       await handler(payload);
 
-      expect(closePollSpy).not.toHaveBeenCalled();
+      expect(mockSlackClient.chat.update).not.toHaveBeenCalled();
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
     });
 
     it('should return early if poll not found', async () => {
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(null);
-      const closePollSpy = jest.spyOn(pollService, 'closePoll');
+      const claimCloseSpy = jest.spyOn(pollService, 'claimPollClose');
 
       const handler = registeredActions.get('close_poll')!;
       const payload = createClosePayload('nonexistent', 'U123');
 
       await handler(payload);
 
-      expect(closePollSpy).not.toHaveBeenCalled();
+      expect(claimCloseSpy).not.toHaveBeenCalled();
     });
 
     it('should update channel message with final results', async () => {
@@ -176,8 +179,9 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
         text: 'Final Results',
@@ -210,8 +214,9 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       const buildMessageSpy = jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
         text: 'Results',
@@ -230,6 +235,7 @@ describe('poll management actions', () => {
       expect(buildMessageSpy).toHaveBeenCalledWith(
         poll,
         expect.objectContaining({ liveResults: true }),
+        expect.anything(),
         expect.anything()
       );
     });
@@ -246,7 +252,8 @@ describe('poll management actions', () => {
       const voterNames = new Map([['opt-1', ['U111', 'U222']]]);
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(2);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(voterNames);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
@@ -266,7 +273,8 @@ describe('poll management actions', () => {
       expect(pollMessage.buildPollMessage).toHaveBeenCalledWith(
         poll,
         expect.anything(),
-        voterNames
+        voterNames,
+        2
       );
     });
 
@@ -280,7 +288,8 @@ describe('poll management actions', () => {
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       const getVotersSpy = jest.spyOn(voteService, 'getVotersByOption');
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
@@ -380,6 +389,7 @@ describe('poll management actions', () => {
         status: 'active',
         messageTs: '1234567890.123456',
         channelId: 'C123',
+        settings: { allowAddingOptions: true },
         options: [
           createTestOption({ label: 'Red', position: 0 }),
           createTestOption({ label: 'Blue', position: 1 }),
@@ -463,6 +473,7 @@ describe('poll management actions', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         status: 'active',
+        settings: { allowAddingOptions: true },
         options: [
           createTestOption({ label: 'Red' }),
           createTestOption({ label: 'Blue' }),
@@ -488,6 +499,7 @@ describe('poll management actions', () => {
         status: 'active',
         messageTs: '1234567890.123456',
         channelId: 'C123',
+        settings: { allowAddingOptions: true },
         options: [createTestOption({ position: 0 })],
       });
 
@@ -518,7 +530,8 @@ describe('poll management actions', () => {
         id: 'poll-123',
         status: 'active',
         messageTs: '1234567890.123456',
-        options: [],
+        settings: { allowAddingOptions: true },
+        options: [createTestOption({ position: 0 })],
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);

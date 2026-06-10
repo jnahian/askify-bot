@@ -10,7 +10,7 @@ import { registerRepostAction, registerRepostSubmission } from '../../src/action
 import { registerScheduleRepostAction, registerScheduleRepostSubmission } from '../../src/actions/scheduleRepostAction';
 import { registerShareResultsAction, registerShareResultsSubmission } from '../../src/actions/shareResultsAction';
 import { registerTemplateActions, registerSaveTemplateSubmission } from '../../src/actions/templateActions';
-import { mockSlackClient } from '../mocks/slack';
+import { mockSlackClient, resetSlackMocks } from '../mocks/slack';
 import { createTestPoll } from '../fixtures/testData';
 import * as pollService from '../../src/services/pollService';
 import * as voteService from '../../src/services/voteService';
@@ -33,6 +33,7 @@ describe('action handlers', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    resetSlackMocks();
     actionHandlers = new Map();
 
     mockApp = {
@@ -84,6 +85,7 @@ describe('action handlers', () => {
         id: 'poll-123',
         status: 'scheduled',
         question: 'Test Poll?',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -120,6 +122,7 @@ describe('action handlers', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         status: 'active',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -154,11 +157,13 @@ describe('action handlers', () => {
         messageTs: '1234567890.123456',
         channelId: 'C123',
         question: 'Test?',
+        creatorId: 'U123',
       });
 
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
@@ -167,7 +172,7 @@ describe('action handlers', () => {
 
       await handler!(payload);
 
-      expect(pollService.closePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimPollClose).toHaveBeenCalledWith('poll-123');
       expect(mockSlackClient.chat.update).toHaveBeenCalled();
       expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
         channel: 'C123',
@@ -180,10 +185,11 @@ describe('action handlers', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         question: 'Test?',
-        status: 'closed',
+        status: 'scheduled',
+        creatorId: 'U123',
       });
 
-      jest.spyOn(pollService, 'cancelScheduledPoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollService, 'cancelScheduledPoll').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
 
       const handler = findHandler('list_cancel_poll-123');
@@ -203,11 +209,13 @@ describe('action handlers', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         channelId: 'C456',
+        creatorId: 'U123',
         _count: { votes: 5 },
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(5);
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
         blocks: [
           { type: 'header', text: { type: 'plain_text', text: 'Results' } },
@@ -463,6 +471,7 @@ describe('action handlers', () => {
         id: 'poll-123',
         question: 'Test?',
         channelId: 'C456',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -482,11 +491,13 @@ describe('action handlers', () => {
     });
 
     it('should handle repost submission', async () => {
+      const sourcePoll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
       const newPoll = createTestPoll({
         id: 'new-poll',
         question: 'Reposted?',
       });
 
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(sourcePoll);
       jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(newPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
@@ -555,8 +566,10 @@ describe('action handlers', () => {
     });
 
     it('should rethrow non-channel errors', async () => {
+      const sourcePoll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
       const newPoll = createTestPoll({ id: 'new-poll' });
 
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(sourcePoll);
       jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
 
@@ -601,6 +614,7 @@ describe('action handlers', () => {
         id: 'poll-123',
         question: 'Test?',
         channelId: 'C456',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -620,12 +634,14 @@ describe('action handlers', () => {
     });
 
     it('should handle schedule repost submission', async () => {
+      const sourcePoll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
       const newPoll = createTestPoll({
         id: 'new-poll',
         question: 'Scheduled?',
         status: 'scheduled',
       });
 
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(sourcePoll);
       jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
 
       const futureTimestamp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
@@ -845,11 +861,13 @@ describe('action handlers', () => {
     });
 
     it('should calculate closesAt for valid duration', async () => {
+      const sourcePoll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
       const newPoll = createTestPoll({
         id: 'new-poll',
         status: 'scheduled',
       });
 
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(sourcePoll);
       jest.spyOn(pollService, 'repostPoll').mockResolvedValue(newPoll as any);
 
       const futureTimestamp = Math.floor(Date.now() / 1000) + 3600;
@@ -976,6 +994,7 @@ describe('action handlers', () => {
         id: 'poll-123',
         question: 'Test?',
         channelId: 'C123',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -997,6 +1016,7 @@ describe('action handlers', () => {
         },
         body: {
           type: 'block_actions',
+          user: { id: 'U123' },
           view: {
             id: 'view-123',
             private_metadata: 'poll-123',
@@ -1023,6 +1043,9 @@ describe('action handlers', () => {
     });
 
     it('should open share results modal', async () => {
+      const poll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+
       const handler = findHandler('share_results');
       const payload = createActionPayload('share_results', 'poll-123');
 
@@ -1041,10 +1064,12 @@ describe('action handlers', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         question: 'Test?',
+        creatorId: 'U123',
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
         blocks: [
           { type: 'section', text: { type: 'mrkdwn', text: 'Results' } },
@@ -1145,17 +1170,20 @@ describe('action handlers', () => {
 
       await viewHandler(payload);
 
-      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
-        channel: 'U123',
-        text: expect.stringContaining('Could not find the poll'),
+      // Poll-not-found is now surfaced as a modal validation error
+      expect(payload.ack).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { share_channel_block: 'Could not find the poll.' },
       });
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
     });
 
     it('should rethrow non-channel errors', async () => {
-      const poll = createTestPoll({ id: 'poll-123' });
+      const poll = createTestPoll({ id: 'poll-123', creatorId: 'U123' });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
         blocks: [{ type: 'section', text: { type: 'mrkdwn', text: 'Results' } }],
         text: 'Results',

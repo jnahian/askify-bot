@@ -35,7 +35,9 @@ describe('poll edit submission', () => {
     registerPollEditSubmission(mockApp);
   });
 
-  const createEditPayload = (state: any, pollId: string = 'poll-123', userId: string = 'U123') => ({
+  // Default userId matches the fixture poll's creatorId — the handler rejects
+  // submissions from anyone other than the poll creator.
+  const createEditPayload = (state: any, pollId: string = 'poll-123', userId: string = 'U123456') => ({
     ack: mockAck,
     view: {
       private_metadata: pollId,
@@ -298,7 +300,7 @@ describe('poll edit submission', () => {
     });
 
     it('should send confirmation DM for scheduled poll update', async () => {
-      const poll = createTestPoll({ status: 'scheduled' });
+      const poll = createTestPoll({ status: 'scheduled', creatorId: 'U789' });
       const updatedPoll = createTestPoll({
         id: 'poll-123',
         question: 'Updated?',
@@ -336,6 +338,7 @@ describe('poll edit submission', () => {
       const poll = createTestPoll({
         id: 'poll-123',
         status: 'scheduled',
+        creatorId: 'U789',
       });
 
       const updatedPoll = createTestPoll({
@@ -402,7 +405,7 @@ describe('poll edit submission', () => {
     });
 
     it('should send creator notification DM when posted', async () => {
-      const poll = createTestPoll({ status: 'scheduled' });
+      const poll = createTestPoll({ status: 'scheduled', creatorId: 'U789' });
       const updatedPoll = createTestPoll({ id: 'poll-123', status: 'active' });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
@@ -436,7 +439,7 @@ describe('poll edit submission', () => {
     });
 
     it('should handle channel not found error', async () => {
-      const poll = createTestPoll({ status: 'scheduled' });
+      const poll = createTestPoll({ status: 'scheduled', creatorId: 'U789' });
       const updatedPoll = createTestPoll({ id: 'poll-123', status: 'active' });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);

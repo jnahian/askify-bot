@@ -184,6 +184,7 @@ describe('voteAction integration', () => {
         action: 'cast',
       });
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(voterNames);
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(2);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
         text: 'Test',
@@ -201,7 +202,8 @@ describe('voteAction integration', () => {
       expect(pollMessage.buildPollMessage).toHaveBeenCalledWith(
         poll,
         poll.settings,
-        voterNames
+        voterNames,
+        2
       );
     });
 
@@ -250,7 +252,7 @@ describe('voteAction integration', () => {
       expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
         channel: 'C123',
         user: 'U123',
-        text: ':no_entry_sign: This poll is closed.',
+        text: ':no_entry_sign: This poll is not accepting votes.',
       });
     });
 
@@ -488,6 +490,24 @@ describe('voteAction integration', () => {
         id: 'poll-abc-123',
         status: 'active',
         messageTs: '1234567890.123456',
+        options: [
+          {
+            id: 'opt-xyz-456',
+            pollId: 'poll-abc-123',
+            label: 'Option X',
+            position: 0,
+            addedBy: null,
+            _count: { votes: 0 },
+          },
+          {
+            id: 'opt-other',
+            pollId: 'poll-abc-123',
+            label: 'Option Y',
+            position: 1,
+            addedBy: null,
+            _count: { votes: 0 },
+          },
+        ],
       });
 
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);

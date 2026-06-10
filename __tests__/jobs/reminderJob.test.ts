@@ -470,4 +470,139 @@ describe('reminderJob', () => {
     expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
     expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
+
+  it('should continue with remaining polls when one poll fails', async () => {
+    const polls = [
+      createTestPoll({
+        id: 'poll-1',
+        channelId: 'C111',
+        messageTs: '111.111',
+        closesAt: new Date(Date.now() + 3600000),
+        settings: { reminders: true },
+      }),
+      createTestPoll({
+        id: 'poll-2',
+        channelId: 'C222',
+        messageTs: '222.222',
+        closesAt: new Date(Date.now() + 3600000),
+        settings: { reminders: true },
+      }),
+    ];
+
+    jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue(polls);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
+
+    mockSlackClient.conversations.members.mockResolvedValue({
+      members: ['U111'],
+    });
+
+    // First poll's vote lookup blows up — caught per-poll, batch continues
+    (prisma.vote.findMany as jest.Mock)
+      .mockRejectedValueOnce(new Error('db error'))
+      .mockResolvedValueOnce([]);
+
+    startReminderJob(mockSlackClient as any);
+
+    await expect(cronCallbacks[0]()).resolves.not.toThrow();
+
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-1');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-2');
+    // Only the second poll's reminder was sent
+    expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(1);
+    expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+      channel: 'U111',
+      text: expect.any(String),
+    });
+  });
+
+  it('should not throw when fetching polls needing reminders fails', async () => {
+    jest.spyOn(pollService, 'getPollsNeedingReminders').mockRejectedValue(new Error('db down'));
+
+    startReminderJob(mockSlackClient as any);
+
+    await expect(cronCallbacks[0]()).resolves.not.toThrow();
+    expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('should continue without bot filter when auth.test fails', async () => {
+    const poll = createTestPoll({
+      id: 'poll-123',
+      channelId: 'C123',
+      messageTs: '1234567890.123456',
+      closesAt: new Date(Date.now() + 3600000),
+      settings: { reminders: true },
+    });
+
+    jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
+
+    mockAuthTest.mockRejectedValue(new Error('auth failed'));
+
+    // Bot's own user id is in the member list but can't be filtered out
+    mockSlackClient.conversations.members.mockResolvedValue({
+      members: ['UBOT', 'U111'],
+    });
+
+    (prisma.vote.findMany as jest.Mock).mockResolvedValue([]);
+
+    startReminderJob(mockSlackClient as any);
+    await cronCallbacks[0]();
+
+    // Both members get DMs since the bot id is unknown
+    expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(2);
+  });
+
+  it('should paginate through channel members', async () => {
+    const poll = createTestPoll({
+      id: 'poll-123',
+      channelId: 'C123',
+      messageTs: '1234567890.123456',
+      closesAt: new Date(Date.now() + 3600000),
+      settings: { reminders: true },
+    });
+
+    jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
+
+    mockSlackClient.conversations.members
+      .mockResolvedValueOnce({
+        members: ['U111'],
+        response_metadata: { next_cursor: 'cursor-2' },
+      })
+      .mockResolvedValueOnce({
+        members: ['U222'],
+        response_metadata: { next_cursor: '' },
+      });
+
+    (prisma.vote.findMany as jest.Mock).mockResolvedValue([]);
+
+    startReminderJob(mockSlackClient as any);
+    await cronCallbacks[0]();
+
+    expect(mockSlackClient.conversations.members).toHaveBeenCalledTimes(2);
+    expect(mockSlackClient.conversations.members).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: 'cursor-2' })
+    );
+    expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(2);
+  });
+
+  it('should skip a tick while the previous tick is still running', async () => {
+    let resolvePolls!: (polls: any[]) => void;
+    const pending = new Promise<any[]>((resolve) => {
+      resolvePolls = resolve;
+    });
+
+    jest.spyOn(pollService, 'getPollsNeedingReminders').mockReturnValue(pending as any);
+
+    startReminderJob(mockSlackClient as any);
+
+    const firstTick = cronCallbacks[0]();
+    const secondTick = cronCallbacks[0](); // re-entrant tick — should bail out
+
+    resolvePolls([]);
+    await firstTick;
+    await secondTick;
+
+    expect(pollService.getPollsNeedingReminders).toHaveBeenCalledTimes(1);
+  });
 });

@@ -46,6 +46,37 @@ describe('event handlers', () => {
       expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
     });
 
+    it('should ignore message subtypes (edits, deletes, etc.)', async () => {
+      const handler = eventHandlers.get('message');
+      const event = {
+        type: 'message',
+        subtype: 'message_changed',
+        channel: 'D123',
+        channel_type: 'im',
+        user: 'U123',
+        text: 'hello',
+      };
+
+      await handler!({ event, client: mockSlackClient });
+
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('should ignore bot messages to avoid replying to itself', async () => {
+      const handler = eventHandlers.get('message');
+      const event = {
+        type: 'message',
+        channel: 'D123',
+        channel_type: 'im',
+        bot_id: 'B123456',
+        text: 'hi',
+      };
+
+      await handler!({ event, client: mockSlackClient });
+
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    });
+
     it('should respond with default message when text is missing', async () => {
       const handler = eventHandlers.get('message');
       const event = {

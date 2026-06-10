@@ -618,4 +618,191 @@ describe('poll edit submission', () => {
       expect(updateCall.closesAt.getTime()).toBeGreaterThan(futureTimestamp * 1000);
     });
   });
+
+  describe('authorization', () => {
+    it('should reject edits from anyone other than the poll creator', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled', creatorId: 'U123456' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      const updateSpy = jest.spyOn(pollService, 'updatePoll');
+
+      const state = {
+        question_block: { question_input: { value: 'Hijacked?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+      };
+
+      // Submitted by a different user than the creator
+      const payload = createEditPayload(state, 'poll-123', 'U999999');
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: { question_block: 'Only the poll creator can do this.' },
+      });
+      expect(updateSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('missing datetime validation', () => {
+    it('should reject when close datetime is not selected', async () => {
+      const poll = createTestPoll({ status: 'scheduled' });
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        close_method_block: { close_method_select: { selected_option: { value: 'datetime' } } },
+        // datetime_block intentionally missing
+      };
+
+      const payload = createEditPayload(state);
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          datetime_block: 'Please select a close date and time.',
+        }),
+      });
+    });
+
+    it('should reject when schedule datetime is not selected', async () => {
+      const poll = createTestPoll({ status: 'scheduled' });
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        // schedule_datetime_block intentionally missing
+      };
+
+      const payload = createEditPayload(state);
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          schedule_datetime_block: 'Please select a schedule date and time.',
+        }),
+      });
+    });
+  });
+
+  describe('update conflicts and errors', () => {
+    it('should DM the creator when the poll was posted while editing', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled', creatorId: 'U123456' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      // The handler checks `err instanceof PollNotEditableError` against the
+      // same (auto-mocked) class it imports, so construct via that class
+      const notEditable = new (pollService as any).PollNotEditableError('poll-123');
+      jest.spyOn(pollService, 'updatePoll').mockRejectedValue(notEditable);
+
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 86400;
+
+      const state = {
+        question_block: { question_input: { value: 'Too late?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: futureTimestamp } },
+      };
+
+      const payload = createEditPayload(state);
+
+      await expect(viewHandler(payload)).resolves.not.toThrow();
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123456',
+        text: expect.stringContaining('could not be saved'),
+      });
+    });
+
+    it('should rethrow non-PollNotEditableError update failures', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePoll').mockRejectedValue(new Error('db error'));
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'now' } } },
+      };
+
+      const payload = createEditPayload(state);
+
+      await expect(viewHandler(payload)).rejects.toThrow('db error');
+    });
+
+    it('should rethrow non-channel errors when posting immediately', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+      const updatedPoll = createTestPoll({ id: 'poll-123', status: 'active' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePoll').mockResolvedValue(updatedPoll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockRejectedValueOnce(new Error('API error'));
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'now' } } },
+      };
+
+      const payload = createEditPayload(state);
+
+      await expect(viewHandler(payload)).rejects.toThrow('API error');
+    });
+  });
+
+  describe('settings extraction', () => {
+    it('should extract selected settings checkboxes into poll settings', async () => {
+      const poll = createTestPoll({ status: 'scheduled' });
+      const updatedPoll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePoll').mockResolvedValue(updatedPoll as any);
+
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 86400;
+
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        settings_block: {
+          settings_checkboxes: {
+            selected_options: [
+              { value: 'anonymous' },
+              { value: 'live_results' },
+              { value: 'reminders' },
+            ],
+          },
+        },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: futureTimestamp } },
+      };
+
+      const payload = createEditPayload(state);
+      await viewHandler(payload);
+
+      expect(pollService.updatePoll).toHaveBeenCalledWith('poll-123', expect.objectContaining({
+        settings: expect.objectContaining({
+          anonymous: true,
+          liveResults: true,
+          reminders: true,
+          allowVoteChange: false,
+          allowAddingOptions: false,
+        }),
+      }));
+    });
+  });
 });

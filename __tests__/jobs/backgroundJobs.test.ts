@@ -335,4 +335,195 @@ describe('background jobs', () => {
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(4); // 2 polls + 2 DMs
     });
   });
+
+  describe('auto-close job error handling', () => {
+    it('should continue with remaining polls when one poll fails', async () => {
+      const polls = [
+        createTestPoll({ id: 'poll-1', messageTs: '111.111' }),
+        createTestPoll({ id: 'poll-2', messageTs: '222.222' }),
+      ];
+
+      jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue(polls);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        polls.find((p) => p.id === id) || null
+      );
+      jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
+
+      // First poll's channel update fails with a non-retryable error
+      mockSlackClient.chat.update
+        .mockRejectedValueOnce(new Error('slack_unavailable'))
+        .mockResolvedValueOnce({ ok: true });
+
+      startAutoCloseJob(mockSlackClient as any);
+
+      await expect(cronCallbacks[0]()).resolves.not.toThrow();
+
+      // Both polls were attempted; results DM only sent for the second poll
+      expect(pollService.claimPollClose).toHaveBeenCalledTimes(2);
+      expect(mockSlackClient.chat.update).toHaveBeenCalledTimes(2);
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not throw when fetching expired polls fails', async () => {
+      jest.spyOn(pollService, 'getExpiredPolls').mockRejectedValue(new Error('db down'));
+
+      startAutoCloseJob(mockSlackClient as any);
+
+      await expect(cronCallbacks[0]()).resolves.not.toThrow();
+      expect(mockSlackClient.chat.update).not.toHaveBeenCalled();
+    });
+
+    it('should skip polls already claimed by another worker', async () => {
+      const expiredPoll = createTestPoll({ id: 'poll-123', messageTs: '111.111' });
+
+      jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(false);
+      const getPollSpy = jest.spyOn(pollService, 'getPoll');
+
+      startAutoCloseJob(mockSlackClient as any);
+
+      await cronCallbacks[0]();
+
+      expect(getPollSpy).not.toHaveBeenCalled();
+      expect(mockSlackClient.chat.update).not.toHaveBeenCalled();
+    });
+
+    it('should skip a tick while the previous tick is still running', async () => {
+      let resolvePolls!: (polls: any[]) => void;
+      const pending = new Promise<any[]>((resolve) => {
+        resolvePolls = resolve;
+      });
+
+      jest.spyOn(pollService, 'getExpiredPolls').mockReturnValue(pending as any);
+
+      startAutoCloseJob(mockSlackClient as any);
+
+      const firstTick = cronCallbacks[0]();
+      const secondTick = cronCallbacks[0](); // re-entrant tick — should bail out
+
+      resolvePolls([]);
+      await firstTick;
+      await secondTick;
+
+      expect(pollService.getExpiredPolls).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('scheduled poll job error handling', () => {
+    it('should continue with remaining polls when posting one fails with a generic error', async () => {
+      const polls = [
+        createTestPoll({ id: 'poll-1', status: 'scheduled', channelId: 'C111' }),
+        createTestPoll({ id: 'poll-2', status: 'scheduled', channelId: 'C222' }),
+      ];
+
+      jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue(polls);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        polls.find((p) => p.id === id) || null
+      );
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue({} as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      // First poll post fails with a generic (non-channel) error — rethrown
+      // inside the inner catch and swallowed by the per-poll catch
+      mockSlackClient.chat.postMessage
+        .mockRejectedValueOnce(new Error('internal_error'))
+        .mockResolvedValue({ ts: '2222.2222' });
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      await expect(cronCallbacks[0]()).resolves.not.toThrow();
+
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledTimes(2);
+      // 1 failed post + second poll's post + second poll's creator DM
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(3);
+      // Only the second poll got its message ts stored
+      expect(pollService.updatePollMessageTs).toHaveBeenCalledTimes(1);
+      expect(pollService.updatePollMessageTs).toHaveBeenCalledWith('poll-2', '2222.2222');
+    });
+
+    it('should not throw when fetching scheduled polls fails', async () => {
+      jest.spyOn(pollService, 'getScheduledPolls').mockRejectedValue(new Error('db down'));
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      await expect(cronCallbacks[0]()).resolves.not.toThrow();
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('should skip polls already claimed by another worker', async () => {
+      const scheduledPoll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(false);
+      const getPollSpy = jest.spyOn(pollService, 'getPoll');
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      await cronCallbacks[0]();
+
+      expect(getPollSpy).not.toHaveBeenCalled();
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('should skip claimed polls that no longer exist on re-fetch', async () => {
+      const scheduledPoll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(null);
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      await cronCallbacks[0]();
+
+      expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not store message ts when the post response has no ts', async () => {
+      const scheduledPoll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
+      const updateTsSpy = jest.spyOn(pollService, 'updatePollMessageTs');
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ok: true }); // no ts
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      await cronCallbacks[0]();
+
+      expect(updateTsSpy).not.toHaveBeenCalled();
+      // Channel post + creator DM still happen
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(2);
+    });
+
+    it('should skip a tick while the previous tick is still running', async () => {
+      let resolvePolls!: (polls: any[]) => void;
+      const pending = new Promise<any[]>((resolve) => {
+        resolvePolls = resolve;
+      });
+
+      jest.spyOn(pollService, 'getScheduledPolls').mockReturnValue(pending as any);
+
+      startScheduledPollJob(mockSlackClient as any);
+
+      const firstTick = cronCallbacks[0]();
+      const secondTick = cronCallbacks[0](); // re-entrant tick — should bail out
+
+      resolvePolls([]);
+      await firstTick;
+      await secondTick;
+
+      expect(pollService.getScheduledPolls).toHaveBeenCalledTimes(1);
+    });
+  });
 });

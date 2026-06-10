@@ -677,4 +677,172 @@ describe('askify command', () => {
       expect(mockSlackClient.views.open).toHaveBeenCalled();
     });
   });
+
+  describe('templates pagination', () => {
+    it('should cap the template list at 15 and show a count context block', async () => {
+      const templates = Array.from({ length: 20 }, (_, i) => createTestTemplate({
+        id: `tmpl-${i}`,
+        userId: 'U123',
+        name: `Template ${i}`,
+      }));
+
+      jest.spyOn(templateService, 'getTemplates').mockResolvedValue(templates as any);
+
+      const payload = createCommandPayload('templates', 'U123');
+
+      await commandHandler(payload);
+
+      const callArgs = mockSlackClient.chat.postEphemeral.mock.calls[0][0];
+      const blocksText = JSON.stringify(callArgs.blocks);
+
+      expect(blocksText).toContain('Showing 15 of 20 templates');
+      // 16th template and beyond are not rendered
+      expect(blocksText).toContain('use_template_tmpl-14');
+      expect(blocksText).not.toContain('use_template_tmpl-15');
+      expect(callArgs.text).toContain('20 template(s)');
+    });
+  });
+
+  describe('inline poll edge cases', () => {
+    it('should reject questions longer than 150 characters', async () => {
+      const longQuestion = 'a'.repeat(151);
+      const payload = createCommandPayload(`poll "${longQuestion}" "A" "B"`, 'U123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postEphemeral).toHaveBeenCalledWith({
+        channel: 'C123',
+        user: 'U123',
+        text: expect.stringContaining('151 characters'),
+      });
+      expect(pollService.createPoll).not.toHaveBeenCalled();
+    });
+
+    it('should support --no-maybe flag for yes/no polls', async () => {
+      const poll = createTestPoll({ pollType: 'yes_no' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const payload = createCommandPayload('poll "Approve?" --yesno --no-maybe', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pollType: 'yes_no',
+          options: ['Yes', 'No'],
+          settings: expect.objectContaining({ includeMaybe: false }),
+        })
+      );
+    });
+
+    it('should support --close flag with minutes', async () => {
+      const poll = createTestPoll();
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const before = Date.now();
+      const payload = createCommandPayload('poll "Quick?" "A" "B" --close 30m', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      const createCall = (pollService.createPoll as jest.Mock).mock.calls[0][0];
+      expect(createCall.closesAt).toBeInstanceOf(Date);
+      // 30 minutes ≈ 1800000ms from now (allow some slack for test execution)
+      const expectedMs = before + 30 * 60 * 1000;
+      expect(Math.abs(createCall.closesAt.getTime() - expectedMs)).toBeLessThan(5000);
+    });
+
+    it('should keep the poll when saving the message ts fails', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockRejectedValue(new Error('db error'));
+      const deleteSpy = jest.spyOn(pollService, 'deletePoll');
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const payload = createCommandPayload('poll "Question?" "A" "B"', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      // The poll is live — no cleanup and no failure DM
+      expect(deleteSpy).not.toHaveBeenCalled();
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('should delete the orphaned poll when Slack definitively rejects the post', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      const deleteSpy = jest.spyOn(pollService, 'deletePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage
+        .mockRejectedValueOnce({ data: { error: 'msg_too_long' } })
+        .mockResolvedValueOnce({ ok: true });
+
+      const payload = createCommandPayload('poll "Question?" "A" "B"', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(deleteSpy).toHaveBeenCalledWith('poll-123');
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123',
+        text: expect.stringContaining('Failed to create poll'),
+      });
+    });
+
+    it('should still DM the creator when orphan cleanup fails', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      const deleteSpy = jest.spyOn(pollService, 'deletePoll').mockRejectedValue(new Error('db error'));
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage
+        .mockRejectedValueOnce({ data: { error: 'msg_too_long' } })
+        .mockResolvedValueOnce({ ok: true });
+
+      const payload = createCommandPayload('poll "Question?" "A" "B"', 'U123', 'C123');
+
+      await expect(commandHandler(payload)).resolves.not.toThrow();
+
+      expect(deleteSpy).toHaveBeenCalledWith('poll-123');
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123',
+        text: expect.stringContaining('Failed to create poll'),
+      });
+    });
+
+    it('should DM not-in-channel guidance when the bot is not in the channel', async () => {
+      const poll = createTestPoll({ id: 'poll-123' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollService, 'deletePoll').mockResolvedValue(poll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+
+      mockSlackClient.chat.postMessage
+        .mockRejectedValueOnce({ data: { error: 'not_in_channel' } })
+        .mockResolvedValueOnce({ ok: true });
+
+      const payload = createCommandPayload('poll "Question?" "A" "B"', 'U123', 'C123');
+
+      await commandHandler(payload);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith({
+        channel: 'U123',
+        text: expect.stringContaining('<#C123>'),
+      });
+    });
+  });
 });

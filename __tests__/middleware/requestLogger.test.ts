@@ -121,6 +121,19 @@ describe('requestLogger', () => {
 
       expect(consoleLogSpy).toHaveBeenCalledWith('--> [view] unknown');
     });
+
+    it('should handle view_closed without callback_id', async () => {
+      const body = {
+        type: 'view_closed',
+        view: {},
+      };
+
+      const next = jest.fn().mockResolvedValue(undefined);
+
+      await middlewareHandler({ body, next });
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('--> [view_closed] unknown');
+    });
   });
 
   describe('event logging', () => {
@@ -176,6 +189,18 @@ describe('requestLogger', () => {
       await middlewareHandler({ body, next });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('--> [shortcut] create_poll_from_message');
+    });
+
+    it('should handle shortcut without callback_id', async () => {
+      const body = {
+        type: 'shortcut',
+      };
+
+      const next = jest.fn().mockResolvedValue(undefined);
+
+      await middlewareHandler({ body, next });
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('--> [shortcut] unknown');
     });
   });
 

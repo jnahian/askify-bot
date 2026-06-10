@@ -578,5 +578,164 @@ describe('poll creation submission', () => {
 
       await expect(viewHandler(payload)).rejects.toThrow('API error');
     });
+
+    it('should default rating scale to 5 when no scale is selected', async () => {
+      const poll = createTestPoll({ pollType: 'rating' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const state = {
+        question_block: { question_input: { value: 'Rate it' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'rating' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        // rating_scale_block intentionally missing
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: ['1', '2', '3', '4', '5'],
+          settings: expect.objectContaining({ ratingScale: 5 }),
+        })
+      );
+    });
+
+    it('should fall back to a 5-point scale when the rating scale value is not numeric', async () => {
+      const poll = createTestPoll({ pollType: 'rating' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const state = {
+        question_block: { question_input: { value: 'Rate it' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'rating' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        rating_scale_block: { rating_scale_select: { selected_option: { value: 'invalid' } } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      // parseInt('invalid') is NaN — option generation falls back to 5
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: ['1', '2', '3', '4', '5'],
+        })
+      );
+    });
+
+    it('should reject duration close when the duration input is missing entirely', async () => {
+      const state = {
+        question_block: { question_input: { value: 'Question?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        close_method_block: { close_method_select: { selected_option: { value: 'duration' } } },
+        // duration_block intentionally missing
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(mockAck).toHaveBeenCalledWith({
+        response_action: 'errors',
+        errors: expect.objectContaining({
+          duration_block: 'Please enter a valid number of hours.',
+        }),
+      });
+    });
+
+    it('should include Maybe option when the include_maybe toggle is selected', async () => {
+      const poll = createTestPoll({ pollType: 'yes_no' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '1234567890.123456' });
+
+      const state = {
+        question_block: { question_input: { value: 'Approve?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        include_maybe_block: {
+          include_maybe_toggle: { selected_options: [{ value: 'include_maybe' }] },
+        },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state);
+
+      await viewHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: ['Yes', 'No', 'Maybe'],
+          settings: expect.objectContaining({ includeMaybe: true }),
+        })
+      );
+    });
+
+    it('should schedule a poll with manual close and DM the creator twice', async () => {
+      const poll = createTestPoll({ id: 'poll-123', status: 'scheduled' });
+
+      jest.spyOn(pollService, 'createPoll').mockResolvedValue(poll);
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ok: true });
+
+      const futureTimestamp = Math.floor(Date.now() / 1000) + 86400;
+
+      const state = {
+        question_block: { question_input: { value: 'Later?' } },
+        poll_type_block: { poll_type_select: { selected_option: { value: 'yes_no' } } },
+        channel_block: { channel_select: { selected_conversation: 'C123' } },
+        schedule_method_block: { schedule_method_select: { selected_option: { value: 'scheduled' } } },
+        schedule_datetime_block: { schedule_datetime_input: { selected_date_time: futureTimestamp } },
+        settings_block: { settings_checkboxes: { selected_options: [] } },
+      };
+
+      const payload = createSubmissionPayload(state, 'U789');
+
+      await viewHandler(payload);
+
+      expect(pollService.createPoll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'scheduled',
+          closesAt: null,
+          scheduledAt: expect.any(Date),
+        })
+      );
+
+      // No channel post; two DMs: schedule confirmation + save-as-template offer
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(2);
+      expect(mockSlackClient.chat.postMessage).toHaveBeenNthCalledWith(1,
+        expect.objectContaining({
+          channel: 'U789',
+          text: expect.stringContaining('has been scheduled'),
+        })
+      );
+      expect(mockSlackClient.chat.postMessage).toHaveBeenNthCalledWith(2,
+        expect.objectContaining({
+          channel: 'U789',
+          text: expect.stringContaining('has been scheduled'),
+        })
+      );
+
+      const secondDM = mockSlackClient.chat.postMessage.mock.calls[1][0];
+      expect(JSON.stringify(secondDM.blocks)).toContain('save_as_template');
+    });
   });
 });

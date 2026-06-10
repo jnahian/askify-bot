@@ -1,15 +1,29 @@
 import prisma from '../lib/prisma';
+import { Prisma } from '../generated/prisma/client';
 
 export interface VoteResult {
   action: 'cast' | 'retracted' | 'switched' | 'rejected';
   message?: string;
 }
 
+function isUniqueViolation(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
+}
+
+const POLL_NOT_ACTIVE: VoteResult = {
+  action: 'rejected',
+  message: 'This poll is no longer accepting votes.',
+};
+
 /**
  * Handle a vote for single-choice, yes/no, and rating polls.
  * - Same option clicked again → retract
  * - Different option → switch (if vote change allowed)
  * - No existing vote → cast
+ *
+ * Runs in a transaction so concurrent clicks can't produce double votes:
+ * cast/switch atomically deletes any existing votes before creating the new
+ * one, and the poll status is re-checked so votes can't land after close.
  */
 export async function handleSingleVote(
   pollId: string,
@@ -17,32 +31,50 @@ export async function handleSingleVote(
   voterId: string,
   allowVoteChange: boolean,
 ): Promise<VoteResult> {
-  const existingVote = await prisma.vote.findFirst({
-    where: { pollId, voterId },
-  });
+  return prisma.$transaction(async (tx) => {
+    // Re-check poll status inside the transaction (guards vote-after-close race)
+    const poll = await tx.poll.findUnique({
+      where: { id: pollId },
+      select: { status: true },
+    });
+    if (!poll || poll.status !== 'active') return POLL_NOT_ACTIVE;
 
-  if (existingVote) {
-    if (existingVote.optionId === optionId) {
-      // Retract vote
+    const existingVote = await tx.vote.findFirst({
+      where: { pollId, voterId },
+    });
+
+    if (existingVote) {
       if (!allowVoteChange) return { action: 'rejected', message: 'Vote changes are not allowed.' };
-      await prisma.vote.delete({ where: { id: existingVote.id } });
-      return { action: 'retracted' };
-    } else {
-      // Switch vote
-      if (!allowVoteChange) return { action: 'rejected', message: 'Vote changes are not allowed.' };
-      await prisma.vote.update({
-        where: { id: existingVote.id },
-        data: { optionId, votedAt: new Date() },
-      });
+
+      if (existingVote.optionId === optionId) {
+        // Retract vote — conditional delete in case it was removed concurrently
+        await tx.vote.deleteMany({ where: { id: existingVote.id } });
+        return { action: 'retracted' };
+      }
+
+      // Switch vote — atomically clear all of this voter's votes, then create
+      await tx.vote.deleteMany({ where: { pollId, voterId } });
+      try {
+        await tx.vote.create({ data: { pollId, optionId, voterId } });
+      } catch (err) {
+        // Concurrent click already created this exact vote — treat as idempotent
+        if (isUniqueViolation(err)) return { action: 'cast' };
+        throw err;
+      }
       return { action: 'switched' };
     }
-  }
 
-  // New vote
-  await prisma.vote.create({
-    data: { pollId, optionId, voterId },
+    // New vote — clear any vote a concurrent request may have created, then create
+    await tx.vote.deleteMany({ where: { pollId, voterId } });
+    try {
+      await tx.vote.create({ data: { pollId, optionId, voterId } });
+    } catch (err) {
+      // Same-option double-click raced us — treat as idempotent cast
+      if (isUniqueViolation(err)) return { action: 'cast' };
+      throw err;
+    }
+    return { action: 'cast' };
   });
-  return { action: 'cast' };
 }
 
 /**
@@ -56,20 +88,33 @@ export async function handleMultiVote(
   voterId: string,
   allowVoteChange: boolean,
 ): Promise<VoteResult> {
-  const existingVote = await prisma.vote.findFirst({
-    where: { pollId, optionId, voterId },
-  });
+  return prisma.$transaction(async (tx) => {
+    // Re-check poll status inside the transaction (guards vote-after-close race)
+    const poll = await tx.poll.findUnique({
+      where: { id: pollId },
+      select: { status: true },
+    });
+    if (!poll || poll.status !== 'active') return POLL_NOT_ACTIVE;
 
-  if (existingVote) {
-    if (!allowVoteChange) return { action: 'rejected', message: 'Vote changes are not allowed.' };
-    await prisma.vote.delete({ where: { id: existingVote.id } });
-    return { action: 'retracted' };
-  }
+    const existingVote = await tx.vote.findFirst({
+      where: { pollId, optionId, voterId },
+    });
 
-  await prisma.vote.create({
-    data: { pollId, optionId, voterId },
+    if (existingVote) {
+      if (!allowVoteChange) return { action: 'rejected', message: 'Vote changes are not allowed.' };
+      await tx.vote.deleteMany({ where: { id: existingVote.id } });
+      return { action: 'retracted' };
+    }
+
+    try {
+      await tx.vote.create({ data: { pollId, optionId, voterId } });
+    } catch (err) {
+      // Concurrent double-click already created this vote — treat as idempotent
+      if (isUniqueViolation(err)) return { action: 'cast' };
+      throw err;
+    }
+    return { action: 'cast' };
   });
-  return { action: 'cast' };
 }
 
 /**
@@ -100,4 +145,19 @@ export async function countUniqueVoters(pollId: string): Promise<number> {
     select: { voterId: true },
   });
   return result.length;
+}
+
+/**
+ * Resolve the unique-voter count for a poll. For multi-select polls a voter
+ * can hold multiple vote rows, so the poll-level `_count.votes` overcounts;
+ * query the distinct voter count instead. Other poll types have one vote
+ * per voter, so `_count.votes` is already correct.
+ */
+export async function getUniqueVoterCount(poll: {
+  id: string;
+  pollType: string;
+  _count: { votes: number };
+}): Promise<number> {
+  if (poll.pollType !== 'multi_select') return poll._count.votes;
+  return countUniqueVoters(poll.id);
 }

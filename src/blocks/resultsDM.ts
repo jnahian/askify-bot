@@ -18,8 +18,11 @@ export function buildResultsDMBlocks(
   poll: PollWithOptions,
   settings: PollSettings,
   voterNames?: Map<string, string[]>,
+  uniqueVoters?: number,
 ) {
-  const totalVoters = poll._count.votes;
+  // For multi_select polls callers should pass the real unique-voter count
+  // (poll._count.votes counts vote rows, not voters)
+  const totalVoters = uniqueVoters ?? poll._count.votes;
   const blocks: KnownBlock[] = [];
 
   blocks.push({

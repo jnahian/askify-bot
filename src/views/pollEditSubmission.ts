@@ -1,6 +1,6 @@
 import type { App } from '@slack/bolt';
 import { EDIT_MODAL_CALLBACK_ID } from './pollCreationModal';
-import { getPoll, updatePoll, updatePollMessageTs } from '../services/pollService';
+import { getPoll, updatePoll, updatePollMessageTs, PollNotEditableError } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
@@ -149,17 +149,30 @@ export function registerPollEditSubmission(app: App): void {
     // Calculate status based on schedule method
     const status: 'active' | 'scheduled' = isScheduled ? 'scheduled' : 'active';
 
-    // Update poll
-    const updatedPoll = await updatePoll(pollId, {
-      question: question!,
-      pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
-      channelId: channelId!,
-      options: pollOptions,
-      settings: JSON.parse(JSON.stringify(settings)),
-      closesAt,
-      scheduledAt: isScheduled ? scheduledAt : null,
-      status,
-    });
+    // Update poll — conditional on it still being scheduled, so an edit
+    // can't clobber a poll the cron just posted
+    let updatedPoll;
+    try {
+      updatedPoll = await updatePoll(pollId, {
+        question: question!,
+        pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
+        channelId: channelId!,
+        options: pollOptions,
+        settings: JSON.parse(JSON.stringify(settings)),
+        closesAt,
+        scheduledAt: isScheduled ? scheduledAt : null,
+        status,
+      });
+    } catch (err) {
+      if (err instanceof PollNotEditableError) {
+        await client.chat.postMessage({
+          channel: creatorId,
+          text: `:warning: Your edits to *"${question}"* could not be saved — the poll was already posted while you were editing.`,
+        });
+        return;
+      }
+      throw err;
+    }
 
     // If poll was changed to "Post Immediately", post it now
     if (status === 'active') {

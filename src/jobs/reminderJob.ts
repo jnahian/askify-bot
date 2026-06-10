@@ -1,73 +1,85 @@
 import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
-import { getPollsNeedingReminders, markReminderSent } from '../services/pollService';
+import { getPollsNeedingReminders, claimReminderSend } from '../services/pollService';
 import prisma from '../lib/prisma';
 
 export function startReminderJob(client: WebClient): void {
+  let isRunning = false;
+
   // Run every 15 minutes
   cron.schedule('*/15 * * * *', async () => {
+    if (isRunning) return; // previous tick still in progress
+    isRunning = true;
     try {
       const polls = await getPollsNeedingReminders();
 
       for (const poll of polls) {
-        const settings = poll.settings as { reminders?: boolean };
-        if (!settings.reminders) continue;
-        if (!poll.closesAt || !poll.messageTs) continue;
-
-        // Get channel members
-        let members: string[] = [];
         try {
-          const result = await client.conversations.members({
-            channel: poll.channelId,
-            limit: 1000,
-          });
-          members = result.members || [];
-        } catch {
-          // Bot may not have access — skip this poll
-          continue;
-        }
+          const settings = poll.settings as { reminders?: boolean };
+          if (!settings.reminders) continue;
+          if (!poll.closesAt || !poll.messageTs) continue;
 
-        // Get voters
-        const votes = await prisma.vote.findMany({
-          where: { pollId: poll.id },
-          select: { voterId: true },
-          distinct: ['voterId'],
-        });
-        const voterSet = new Set(votes.map((v) => v.voterId));
+          // Atomically claim the reminder before sending so concurrent
+          // workers/ticks can't double-DM
+          const claimed = await claimReminderSend(poll.id);
+          if (!claimed) continue;
 
-        // Non-voters (exclude bots by checking if they voted — simple heuristic)
-        const nonVoters = members.filter((m) => !voterSet.has(m));
-
-        if (nonVoters.length === 0) {
-          await markReminderSent(poll.id);
-          continue;
-        }
-
-        const hoursLeft = Math.round(
-          (poll.closesAt.getTime() - Date.now()) / (1000 * 60 * 60),
-        );
-        const timeLabel = hoursLeft <= 1 ? 'less than an hour' : `~${hoursLeft} hours`;
-
-        // Build deep link to poll message
-        const messageLink = `https://slack.com/archives/${poll.channelId}/p${poll.messageTs.replace('.', '')}`;
-
-        // DM each non-voter
-        for (const userId of nonVoters) {
+          // Get channel members
+          let members: string[] = [];
           try {
-            await client.chat.postMessage({
-              channel: userId,
-              text: `:bell: Reminder: The poll *"${poll.question}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
+            const result = await client.conversations.members({
+              channel: poll.channelId,
+              limit: 1000,
             });
+            members = result.members || [];
           } catch {
-            // User may have DMs disabled — skip
+            // Bot may not have access — skip this poll
+            continue;
           }
-        }
 
-        await markReminderSent(poll.id);
-        console.log(`Sent reminders for poll ${poll.id}: "${poll.question}" to ${nonVoters.length} user(s)`);
+          // Get voters
+          const votes = await prisma.vote.findMany({
+            where: { pollId: poll.id },
+            select: { voterId: true },
+            distinct: ['voterId'],
+          });
+          const voterSet = new Set(votes.map((v) => v.voterId));
+
+          // Non-voters (exclude bots by checking if they voted — simple heuristic)
+          const nonVoters = members.filter((m) => !voterSet.has(m));
+
+          if (nonVoters.length === 0) continue;
+
+          const hoursLeft = Math.round(
+            (poll.closesAt.getTime() - Date.now()) / (1000 * 60 * 60),
+          );
+          const timeLabel = hoursLeft <= 1 ? 'less than an hour' : `~${hoursLeft} hours`;
+
+          // Build deep link to poll message
+          const messageLink = `https://slack.com/archives/${poll.channelId}/p${poll.messageTs.replace('.', '')}`;
+
+          // DM each non-voter
+          for (const userId of nonVoters) {
+            try {
+              await client.chat.postMessage({
+                channel: userId,
+                text: `:bell: Reminder: The poll *"${poll.question}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
+              });
+            } catch {
+              // User may have DMs disabled — skip
+            }
+          }
+
+          console.log(`Sent reminders for poll ${poll.id}: "${poll.question}" to ${nonVoters.length} user(s)`);
+        } catch (error) {
+          // Don't let one poll's failure abort the rest of the batch
+          console.error(`Reminder job error for poll ${poll.id}:`, error);
+        }
       }
     } catch (error) {
       console.error('Reminder job error:', error);
+    } finally {
+      isRunning = false;
     }
   });
 }

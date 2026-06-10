@@ -2,7 +2,7 @@
  * Tests for emojiPrefix utility functions
  */
 
-import { getNumberEmoji, getStarEmoji, getOptionEmoji, getButtonEmoji } from '../../src/utils/emojiPrefix';
+import { getNumberEmoji, getStarEmoji, getOptionEmoji } from '../../src/utils/emojiPrefix';
 
 describe('emojiPrefix utilities', () => {
   describe('getNumberEmoji', () => {
@@ -69,15 +69,6 @@ describe('emojiPrefix utilities', () => {
     it('should return number emojis for multi_select poll type', () => {
       expect(getOptionEmoji('multi_select', 0, 'Feature A')).toBe('1️⃣');
       expect(getOptionEmoji('multi_select', 1, 'Feature B')).toBe('2️⃣');
-    });
-  });
-
-  describe('getButtonEmoji', () => {
-    it('should delegate to getOptionEmoji', () => {
-      // Test a few cases to ensure it works the same
-      expect(getButtonEmoji('yes_no', 0, 'Yes')).toBe('✅');
-      expect(getButtonEmoji('rating', 2, '3')).toBe('⭐⭐⭐');
-      expect(getButtonEmoji('single_choice', 0, 'Option A')).toBe('1️⃣');
     });
   });
 });

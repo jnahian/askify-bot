@@ -161,6 +161,16 @@ describe('healthServer', () => {
   });
 
   describe('health endpoint - failures', () => {
+    let consoleErrorSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.mockRestore();
+    });
+
     it('should return 503 when database check fails', async () => {
       startHealthServer(mockSlackClient);
 
@@ -179,7 +189,6 @@ describe('healthServer', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
         timestamp: expect.any(String),
-        error: 'Database connection failed',
       });
     });
 
@@ -201,7 +210,6 @@ describe('healthServer', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
         timestamp: expect.any(String),
-        error: 'Slack auth failed',
       });
     });
 
@@ -222,7 +230,6 @@ describe('healthServer', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'error',
         timestamp: expect.any(String),
-        error: 'Unknown error',
       });
     });
   });

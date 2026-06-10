@@ -5,6 +5,7 @@
  * This allows proper async timer advancement for testing retry logic.
  */
 
+import { ErrorCode } from '@slack/web-api';
 import { withRetry } from '../../src/utils/slackRetry';
 
 describe('withRetry', () => {
@@ -120,9 +121,9 @@ describe('withRetry', () => {
     jest.useFakeTimers();
   });
 
-  it('should handle slack_webapi_rate_limited error code', async () => {
+  it('should handle the Slack rate-limited error code', async () => {
     const rateLimitError = {
-      code: 'slack_webapi_rate_limited',
+      code: ErrorCode.RateLimitedError,
       retryAfter: 3,
     };
     

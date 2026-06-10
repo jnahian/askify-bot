@@ -57,8 +57,9 @@ src/lib/         → Shared singletons (Prisma client)
 
 ### Action ID Conventions
 - **Vote buttons:** `vote_{optionId}` with value `{pollId}:{optionId}` — matched via `app.action(/^vote_.+$/)`
-- **List actions:** `list_close_{pollId}`, `list_cancel_{pollId}` — matched via regex
+- **List actions:** `list_close_{pollId}`, `list_cancel_{pollId}`, `list_results_{pollId}` — matched via regex
 - **Template actions:** `use_template_{id}`, `delete_template_{id}` — matched via regex
+- **Edit/repost actions:** `edit_scheduled_{pollId}`, `repost_poll_{pollId}`, `schedule_repost_{pollId}` — matched via regex
 - **Static actions:** `close_poll`, `add_option`, `save_as_template`, `share_results`
 - **Modal selects (dispatch_action):** `poll_type_select`, `close_method_select`, `schedule_method_select`, `add_modal_option`, `remove_modal_option`
 
@@ -95,10 +96,10 @@ Rapid votes are debounced per poll ID (500ms) via `src/utils/debounce.ts`. The d
 Import `KnownBlock`, `Button`, `View` from `@slack/types` (not `@slack/bolt`). The `@slack/bolt` package re-exports some but not all types.
 
 ### Key Types
-`PollWithOptions` (in `pollService.ts`) is the primary interface used across blocks, actions, and jobs. It includes nested `options` with `_count.votes` and poll-level `_count.votes`. Cast from Prisma results via `as unknown as PollWithOptions`.
+`PollWithOptions` (in `pollService.ts`) is the primary type used across blocks, actions, and jobs. It is derived from the shared `pollInclude` constant via `Prisma.PollGetPayload` and includes nested `options` with `_count.votes` and poll-level `_count.votes`. Read the `settings` JSON column via `getSettings()` from `src/types/pollSettings.ts`, which applies defaults.
 
 ### Block Builders
-- `blocks/pollMessage.ts` — `buildPollMessage()` for the channel message, `buildResultsDM()` for plain-text DM results
+- `blocks/pollMessage.ts` — `buildPollMessage()` for the channel message
 - `blocks/resultsDM.ts` — `buildResultsDMBlocks()` for rich Block Kit DM results with "Share Results" button
 
 ### Message Updates

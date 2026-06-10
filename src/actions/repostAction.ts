@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll, repostPoll, updatePollMessageTs } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { escapeMrkdwn } from '../utils/escapeMrkdwn';
@@ -85,13 +86,7 @@ export function registerRepostSubmission(app: App): void {
     try {
       const newPoll = await repostPoll(sourcePollId, creatorId, { channelId });
 
-      const settings = newPoll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-        allowAddingOptions?: boolean;
-        description?: string;
-      };
+      const settings = getSettings(newPoll);
 
       const message = buildPollMessage(newPoll, settings);
       const result = await client.chat.postMessage({

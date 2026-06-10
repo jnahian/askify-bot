@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { handleSingleVote, handleMultiVote, getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { withRetry } from '../utils/slackRetry';
@@ -38,11 +39,7 @@ export function registerVoteAction(app: App): void {
         return;
       }
 
-      const settings = poll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-      };
+      const settings = getSettings(poll);
       const allowVoteChange = settings.allowVoteChange !== false;
 
       // Handle vote based on poll type

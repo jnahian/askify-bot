@@ -1,6 +1,7 @@
 import cron, { type ScheduledTask } from 'node-cron';
 import { WebClient } from '@slack/web-api';
-import { getScheduledPolls, claimScheduledPoll, getPoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
+import { getScheduledPolls, claimScheduledPoll, getPoll, updatePollMessageTs } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
@@ -16,8 +17,7 @@ export function startScheduledPollJob(client: WebClient): ScheduledTask {
     try {
       const polls = await getScheduledPolls();
 
-      for (const rawPoll of polls) {
-        const poll = rawPoll as unknown as PollWithOptions;
+      for (const poll of polls) {
         try {
           // Atomically claim the poll (scheduled → active); skip if another
           // worker/tick already claimed it
@@ -29,11 +29,7 @@ export function startScheduledPollJob(client: WebClient): ScheduledTask {
           const freshPoll = await getPoll(poll.id);
           if (!freshPoll) continue;
 
-          const settings = freshPoll.settings as {
-            anonymous?: boolean;
-            allowVoteChange?: boolean;
-            liveResults?: boolean;
-          };
+          const settings = getSettings(freshPoll);
 
           // Post to channel
           const message = buildPollMessage(freshPoll, settings);

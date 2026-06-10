@@ -7,6 +7,7 @@ import {
   claimPollClose,
   getPoll,
 } from "../services/pollService";
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption, getUniqueVoterCount } from "../services/voteService";
 import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
@@ -45,11 +46,7 @@ export function registerListActions(app: App): void {
     const closedPoll = await getPoll(pollId);
     if (!closedPoll) return;
 
-    const settings = closedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    const settings = getSettings(closedPoll);
 
     // Update channel message if it exists
     if (closedPoll.messageTs) {
@@ -134,11 +131,7 @@ export function registerListActions(app: App): void {
       return;
     }
 
-    const settings = poll.settings as {
-      anonymous?: boolean;
-      liveResults?: boolean;
-      description?: string;
-    };
+    const settings = getSettings(poll);
 
     const totalVoters = await getUniqueVoterCount(poll);
     let voterNames: Map<string, string[]> | undefined;

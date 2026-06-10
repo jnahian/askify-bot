@@ -9,6 +9,7 @@ import {
   updatePollMessageTs,
 } from '../services/pollService';
 import type { PollWithOptions } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
@@ -23,11 +24,7 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
   try {
     // Helper: post a poll's message and notify the creator
     const postPoll = async (poll: PollWithOptions): Promise<void> => {
-      const settings = poll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-      };
+      const settings = getSettings(poll);
 
       const message = buildPollMessage(poll, settings);
       try {
@@ -101,11 +98,7 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
         const closedPoll = await getPoll(poll.id);
         if (!closedPoll || !closedPoll.messageTs) continue;
 
-        const settings = closedPoll.settings as {
-          anonymous?: boolean;
-          allowVoteChange?: boolean;
-          liveResults?: boolean;
-        };
+        const settings = getSettings(closedPoll);
 
         let voterNames: Map<string, string[]> | undefined;
         if (!settings.anonymous) {

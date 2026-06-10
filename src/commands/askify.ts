@@ -5,6 +5,7 @@ import { createPoll, deletePoll, updatePollMessageTs, getUserPolls, type GetUser
 import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { POLL_TYPE_LABELS } from '../constants';
 import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 import { truncate } from '../utils/truncate';
 
@@ -225,13 +226,6 @@ export function registerAskifyCommand(app: App): void {
         return;
       }
 
-      const POLL_TYPE_LABELS: Record<string, string> = {
-        single_choice: 'Single Choice',
-        multi_select: 'Multi-Select',
-        yes_no: 'Yes / No / Maybe',
-        rating: 'Rating Scale',
-      };
-
       const STATUS_META: Record<string, { emoji: string; label: string }> = {
         active: { emoji: ':large_green_circle:', label: 'Active' },
         scheduled: { emoji: ':clock3:', label: 'Scheduled' },
@@ -394,19 +388,13 @@ export function registerAskifyCommand(app: App): void {
 
       for (const template of shownTemplates) {
         const config = template.config;
-        const pollTypeLabel: Record<string, string> = {
-          single_choice: 'Single Choice',
-          multi_select: 'Multi-Select',
-          yes_no: 'Yes / No / Maybe',
-          rating: 'Rating Scale',
-        };
 
         blocks.push({ type: 'divider' });
         blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*${escapeMrkdwn(template.name)}*\nType: ${pollTypeLabel[config.pollType] || config.pollType}` +
+            text: `*${escapeMrkdwn(template.name)}*\nType: ${POLL_TYPE_LABELS[config.pollType] || config.pollType}` +
               (config.options.length > 0 ? `\nOptions: ${config.options.map(escapeMrkdwn).join(', ')}` : ''),
           },
         });

@@ -4,6 +4,33 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.2] - 2026-06-11
+
+### Fixed
+- **Race-Free Voting & Jobs**: Made vote, close, and claim operations atomic to eliminate race conditions
+  - Concurrent votes no longer clobber each other; manual close paths claim atomically
+  - Cron jobs (auto-close, scheduled posts, reminders) claim work atomically to avoid double-processing
+  - Re-fetch poll state after claiming so updates reflect the latest data
+- **Resilient Slack API Handling**: Working rate-limit retries with exponential backoff and graceful shutdown
+  - Block Kit size caps prevent oversized-message failures (header/field truncation)
+  - Tolerate `message_ts` save failures after posting instead of crashing
+- **Modal State Preservation**: Keep typed question and options when switching poll type, and preserve modal context on rebuild
+- **Safer Cleanup**: More conservative orphan-poll cleanup and corrected text truncation lengths
+
+### Security
+- **Ownership Enforcement**: Action handlers verify the actor is the poll creator before privileged operations
+- **Input Escaping**: Escape user-provided text in Slack mrkdwn to prevent formatting injection
+- **Hardened Automation**: Guard the DM bot-reply loop and apply least-privilege permissions to GitHub Actions workflows
+
+### Changed
+- Consolidated `PollSettings`/`PollWithOptions` types and removed dead code
+- Extracted a `MAX_OPTIONS` constant and made debounce flush + job stop deterministic (sequential)
+
+### Added
+- **Test Suite**: Comprehensive Jest coverage (~488 tests, ~92%) with shared mocks and fixtures
+- **CI/CD**: GitHub Actions workflows for build and test
+- **Release Tooling**: `create-release` skill for versioned releases
+
 ## [1.3.1] - 2026-04-28
 
 ### Changed

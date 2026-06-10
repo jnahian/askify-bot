@@ -1,0 +1,13 @@
+{
+  "version": "1.3.2",
+  "date": "2026-06-11",
+  "type": "fix",
+  "title": "Reliability & Security Hardening",
+  "items": [
+    { "type": "fix", "text": "Race-Free Voting & Polls — Vote, close, and claim operations are now atomic, eliminating race conditions when many people vote at once or when background jobs run simultaneously" },
+    { "type": "fix", "text": "Rock-Solid Slack Integration — Smarter rate-limit retries, graceful shutdown, and message size guards keep polls posting and updating reliably even under heavy load" },
+    { "type": "fix", "text": "No More Lost Input — Switching poll type in the creation modal now preserves your typed question and options" },
+    { "type": "improvement", "text": "Stronger Security — Ownership checks on poll actions, escaping of user text in Slack messages, and least-privilege automation permissions" },
+    { "type": "improvement", "text": "Quality Foundation — A comprehensive automated test suite (~92% coverage) and CI pipeline now guard every change" }
+  ]
+}

@@ -20,6 +20,11 @@ jest.mock('../../src/lib/prisma', () => ({
   },
 }));
 
+// The reminder job calls client.auth.test() once per run to learn the bot's
+// own user id; the shared Slack mock has no `auth` namespace, so extend it here.
+const mockAuthTest = jest.fn();
+(mockSlackClient as any).auth = { test: mockAuthTest };
+
 // Mock node-cron to capture and execute callbacks
 let cronCallbacks: Function[] = [];
 jest.mock('node-cron', () => ({
@@ -32,6 +37,7 @@ describe('reminderJob', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     cronCallbacks = [];
+    mockAuthTest.mockResolvedValue({ ok: true, user_id: 'UBOT' });
   });
 
   it('should schedule cron job with 15 minute interval', () => {
@@ -52,7 +58,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111', 'U222', 'U333'],
@@ -88,7 +94,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -115,7 +121,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -142,7 +148,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -168,7 +174,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -195,7 +201,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -212,7 +218,7 @@ describe('reminderJob', () => {
     });
   });
 
-  it('should mark reminder as sent after sending', async () => {
+  it('should claim the reminder before sending', async () => {
     const poll = createTestPoll({
       id: 'poll-123',
       channelId: 'C123',
@@ -222,7 +228,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -233,7 +239,7 @@ describe('reminderJob', () => {
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
 
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-123');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
 
   it('should skip polls without reminders enabled', async () => {
@@ -246,13 +252,14 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
 
     expect(mockSlackClient.conversations.members).not.toHaveBeenCalled();
     expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
+    expect(pollService.claimReminderSend).not.toHaveBeenCalled();
   });
 
   it('should skip polls without closesAt', async () => {
@@ -265,7 +272,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
@@ -283,7 +290,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
@@ -301,7 +308,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockRejectedValue(new Error('not_in_channel'));
 
@@ -309,7 +316,8 @@ describe('reminderJob', () => {
     await cronCallbacks[0]();
 
     expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
-    expect(pollService.markReminderSent).not.toHaveBeenCalled();
+    // The claim happens before the members fetch, so it is still recorded
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
 
   it('should handle DM send failures gracefully', async () => {
@@ -322,7 +330,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111', 'U222'],
@@ -337,11 +345,11 @@ describe('reminderJob', () => {
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
 
-    // Should still mark as sent even if some DMs fail
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-123');
+    // Should still have claimed the reminder even if some DMs fail
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
 
-  it('should mark reminder as sent when all users have voted', async () => {
+  it('should claim the reminder even when all users have voted', async () => {
     const poll = createTestPoll({
       id: 'poll-123',
       channelId: 'C123',
@@ -351,7 +359,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111', 'U222'],
@@ -366,7 +374,7 @@ describe('reminderJob', () => {
     await cronCallbacks[0]();
 
     expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-123');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
 
   it('should handle multiple polls needing reminders', async () => {
@@ -390,7 +398,7 @@ describe('reminderJob', () => {
     ];
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue(polls);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111'],
@@ -401,8 +409,8 @@ describe('reminderJob', () => {
     startReminderJob(mockSlackClient as any);
     await cronCallbacks[0]();
 
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-1');
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-2');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-1');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-2');
     expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(2);
   });
 
@@ -416,7 +424,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: ['U111', 'U222', 'U333'],
@@ -448,7 +456,7 @@ describe('reminderJob', () => {
     });
 
     jest.spyOn(pollService, 'getPollsNeedingReminders').mockResolvedValue([poll]);
-    jest.spyOn(pollService, 'markReminderSent').mockResolvedValue(undefined as any);
+    jest.spyOn(pollService, 'claimReminderSend').mockResolvedValue(true);
 
     mockSlackClient.conversations.members.mockResolvedValue({
       members: [],
@@ -460,6 +468,6 @@ describe('reminderJob', () => {
     await cronCallbacks[0]();
 
     expect(mockSlackClient.chat.postMessage).not.toHaveBeenCalled();
-    expect(pollService.markReminderSent).toHaveBeenCalledWith('poll-123');
+    expect(pollService.claimReminderSend).toHaveBeenCalledWith('poll-123');
   });
 });

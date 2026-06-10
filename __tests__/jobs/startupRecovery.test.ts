@@ -1,6 +1,6 @@
 /**
  * Tests for startup recovery job
- * Covers recovery of scheduled and expired polls on bot startup
+ * Covers recovery of scheduled, stranded, and expired polls on bot startup
  */
 
 import { runStartupRecovery } from '../../src/jobs/startupRecovery';
@@ -22,6 +22,8 @@ jest.mock('../../src/blocks/creatorNotifyDM');
 describe('startupRecovery', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // No stranded polls by default — individual tests can override
+    jest.spyOn(pollService, 'getStrandedActivePolls').mockResolvedValue([]);
   });
 
   describe('scheduled poll recovery', () => {
@@ -37,7 +39,8 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -46,7 +49,7 @@ describe('startupRecovery', () => {
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.activatePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledWith('poll-123');
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           channel: 'C123',
@@ -62,7 +65,8 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -83,7 +87,8 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({
@@ -118,7 +123,8 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
 
       mockSlackClient.chat.postMessage
@@ -145,7 +151,10 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue(polls);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue({} as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        polls.find((p) => p.id === id) || null
+      );
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue({} as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -154,8 +163,36 @@ describe('startupRecovery', () => {
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.activatePoll).toHaveBeenCalledTimes(2);
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledTimes(2);
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(4); // 2 polls + 2 DMs
+    });
+  });
+
+  describe('stranded poll recovery', () => {
+    it('should re-post stranded active polls that never reached Slack', async () => {
+      const strandedPoll = createTestPoll({
+        id: 'poll-stranded',
+        status: 'active',
+        messageTs: null,
+        channelId: 'C123',
+        creatorId: 'U123',
+      });
+
+      jest.spyOn(pollService, 'getStrandedActivePolls').mockResolvedValue([strandedPoll] as any);
+      jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
+      jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
+      jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(strandedPoll as any);
+      jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
+      jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
+
+      mockSlackClient.chat.postMessage.mockResolvedValue({ ts: '5555.5555' });
+
+      await runStartupRecovery(mockSlackClient as any);
+
+      expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ channel: 'C123' })
+      );
+      expect(pollService.updatePollMessageTs).toHaveBeenCalledWith('poll-stranded', '5555.5555');
     });
   });
 
@@ -171,15 +208,16 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Closed' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.closePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimPollClose).toHaveBeenCalledWith('poll-123');
       expect(mockSlackClient.chat.update).toHaveBeenCalledWith({
         channel: 'C123',
         ts: '1234567890.123456',
@@ -197,9 +235,10 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
         blocks: [{ type: 'section' }],
@@ -225,9 +264,10 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
@@ -244,7 +284,7 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
 
       await runStartupRecovery(mockSlackClient as any);
@@ -260,17 +300,18 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue(polls);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue({} as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
         polls.find((p) => p.id === id) || null
       );
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.closePoll).toHaveBeenCalledTimes(2);
+      expect(pollService.claimPollClose).toHaveBeenCalledTimes(2);
       expect(mockSlackClient.chat.update).toHaveBeenCalledTimes(2);
     });
   });
@@ -288,11 +329,14 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
-      jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        id === 'scheduled-1' ? scheduledPoll : expiredPoll
+      );
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -301,8 +345,8 @@ describe('startupRecovery', () => {
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.activatePoll).toHaveBeenCalledWith('scheduled-1');
-      expect(pollService.closePoll).toHaveBeenCalledWith('expired-1');
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledWith('scheduled-1');
+      expect(pollService.claimPollClose).toHaveBeenCalledWith('expired-1');
     });
 
     it('should handle empty recovery (no polls)', async () => {
@@ -332,7 +376,10 @@ describe('startupRecovery', () => {
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue(polls);
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue({} as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        polls.find((p) => p.id === id) || null
+      );
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue({} as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -347,7 +394,7 @@ describe('startupRecovery', () => {
 
       await runStartupRecovery(mockSlackClient as any);
 
-      expect(pollService.activatePoll).toHaveBeenCalledTimes(2);
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -3,9 +3,8 @@
  * Comprehensive coverage of Block Kit message generation
  */
 
-import { buildPollMessage, buildResultsDM } from '../../src/blocks/pollMessage';
+import { buildPollMessage } from '../../src/blocks/pollMessage';
 import { createTestPoll, createTestOption } from '../fixtures/testData';
-import type { PollWithOptions } from '../../src/services/pollService';
 
 describe('pollMessage blocks', () => {
   describe('buildPollMessage', () => {
@@ -338,127 +337,6 @@ describe('pollMessage blocks', () => {
         expect((buttonBlocks[1] as any).accessory.action_id).toBe('vote_opt-2');
         expect((buttonBlocks[1] as any).accessory.value).toBe('poll-123:opt-2');
       });
-    });
-  });
-
-  describe('buildResultsDM', () => {
-    it('should build plain text results with header', () => {
-      const poll = createTestPoll({ question: 'Favorite Color?' });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).toContain(':bar_chart:');
-      expect(result).toContain('Favorite Color?');
-    });
-
-    it('should include description when provided', () => {
-      const poll = createTestPoll();
-
-      const result = buildResultsDM(poll, {
-        description: 'Select your preference',
-        liveResults: true,
-      });
-
-      expect(result).toContain('Select your preference');
-    });
-
-    it('should show options with bar charts', () => {
-      const poll = createTestPoll({
-        _count: { votes: 10 },
-        options: [
-          createTestOption({ label: 'Red', _count: { votes: 7 } }),
-          createTestOption({ label: 'Blue', _count: { votes: 3 } }),
-        ],
-      });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).toContain('Red');
-      expect(result).toContain('Blue');
-      expect(result).toContain('%');
-    });
-
-    it('should show voter names when not anonymous', () => {
-      const poll = createTestPoll();
-      const voterNames = new Map<string, string[]>();
-      voterNames.set('opt-1', ['U123', 'U456']);
-
-      const result = buildResultsDM(poll, { liveResults: true }, voterNames);
-
-      expect(result).toContain('Voters:');
-      expect(result).toContain('<@U123>');
-      expect(result).toContain('<@U456>');
-    });
-
-    it('should not show voter names when anonymous', () => {
-      const poll = createTestPoll();
-      const voterNames = new Map<string, string[]>();
-      voterNames.set('opt-1', ['U123', 'U456']);
-
-      const result = buildResultsDM(poll, { anonymous: true }, voterNames);
-
-      expect(result).not.toContain('Voters:');
-      expect(result).not.toContain('<@U123>');
-    });
-
-    it('should show average rating for rating polls', () => {
-      const poll = createTestPoll({
-        pollType: 'rating',
-        _count: { votes: 10 },
-        options: [
-          createTestOption({ label: '1', _count: { votes: 2 } }),
-          createTestOption({ label: '2', _count: { votes: 3 } }),
-          createTestOption({ label: '3', _count: { votes: 5 } }),
-        ],
-      });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).toContain('Average Rating');
-      expect(result).toContain('2.3');
-    });
-
-    it('should not show average rating for non-rating polls', () => {
-      const poll = createTestPoll({ pollType: 'single_choice', _count: { votes: 10 } });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).not.toContain('Average Rating');
-    });
-
-    it('should show total vote count', () => {
-      const poll = createTestPoll({ _count: { votes: 15 } });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).toContain('Total votes: 15');
-    });
-
-    it('should handle polls with zero votes', () => {
-      const poll = createTestPoll({ _count: { votes: 0 } });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      expect(result).toContain('Total votes: 0');
-      expect(result).toContain('0%');
-    });
-
-    it('should format all options with emojis', () => {
-      const poll = createTestPoll({
-        pollType: 'yes_no',
-        options: [
-          createTestOption({ label: 'Yes', position: 0 }),
-          createTestOption({ label: 'No', position: 1 }),
-          createTestOption({ label: 'Maybe', position: 2 }),
-        ],
-      });
-
-      const result = buildResultsDM(poll, { liveResults: true });
-
-      // Yes/No polls use specific emojis
-      expect(result).toContain('Yes');
-      expect(result).toContain('No');
-      expect(result).toContain('Maybe');
     });
   });
 });

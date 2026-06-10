@@ -52,9 +52,10 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Closed' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
@@ -64,7 +65,7 @@ describe('background jobs', () => {
       await cronCallbacks[0]();
 
       expect(pollService.getExpiredPolls).toHaveBeenCalled();
-      expect(pollService.closePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimPollClose).toHaveBeenCalledWith('poll-123');
     });
 
     it('should update channel message with final results', async () => {
@@ -75,9 +76,10 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({
         blocks: [],
         text: 'Final Results',
@@ -104,9 +106,10 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({
         blocks: [{ type: 'section' }],
@@ -134,9 +137,10 @@ describe('background jobs', () => {
       const voterNames = new Map([['opt-1', ['U111', 'U222']]]);
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(voterNames);
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(2);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
@@ -154,7 +158,7 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue([expiredPoll]);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue(expiredPoll as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockResolvedValue(expiredPoll);
 
       startAutoCloseJob(mockSlackClient as any);
@@ -171,11 +175,12 @@ describe('background jobs', () => {
       ];
 
       jest.spyOn(pollService, 'getExpiredPolls').mockResolvedValue(polls);
-      jest.spyOn(pollService, 'closePoll').mockResolvedValue({} as any);
+      jest.spyOn(pollService, 'claimPollClose').mockResolvedValue(true);
       jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
         polls.find((p) => p.id === id) || null
       );
       jest.spyOn(voteService, 'getVotersByOption').mockResolvedValue(new Map());
+      jest.spyOn(voteService, 'getUniqueVoterCount').mockResolvedValue(0);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(resultsDM, 'buildResultsDMBlocks').mockReturnValue({ blocks: [], text: 'Results' });
 
@@ -183,7 +188,7 @@ describe('background jobs', () => {
 
       await cronCallbacks[0]();
 
-      expect(pollService.closePoll).toHaveBeenCalledTimes(2);
+      expect(pollService.claimPollClose).toHaveBeenCalledTimes(2);
       expect(mockSlackClient.chat.update).toHaveBeenCalledTimes(2);
     });
   });
@@ -205,7 +210,8 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -216,7 +222,7 @@ describe('background jobs', () => {
 
       await cronCallbacks[0]();
 
-      expect(pollService.activatePoll).toHaveBeenCalledWith('poll-123');
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledWith('poll-123');
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           channel: 'C123',
@@ -228,7 +234,8 @@ describe('background jobs', () => {
       const scheduledPoll = createTestPoll({ id: 'poll-123' });
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -249,7 +256,8 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue(scheduledPoll as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({
@@ -279,7 +287,8 @@ describe('background jobs', () => {
       });
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue([scheduledPoll]);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue(scheduledPoll as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockResolvedValue(scheduledPoll);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
 
       mockSlackClient.chat.postMessage
@@ -308,7 +317,10 @@ describe('background jobs', () => {
       ];
 
       jest.spyOn(pollService, 'getScheduledPolls').mockResolvedValue(polls);
-      jest.spyOn(pollService, 'activatePoll').mockResolvedValue({} as any);
+      jest.spyOn(pollService, 'claimScheduledPoll').mockResolvedValue(true);
+      jest.spyOn(pollService, 'getPoll').mockImplementation(async (id) =>
+        polls.find((p) => p.id === id) || null
+      );
       jest.spyOn(pollService, 'updatePollMessageTs').mockResolvedValue({} as any);
       jest.spyOn(pollMessage, 'buildPollMessage').mockReturnValue({ blocks: [], text: 'Poll' });
       jest.spyOn(creatorNotifyDM, 'buildCreatorNotifyDM').mockReturnValue({ blocks: [], text: 'Notify' });
@@ -319,7 +331,7 @@ describe('background jobs', () => {
 
       await cronCallbacks[0]();
 
-      expect(pollService.activatePoll).toHaveBeenCalledTimes(2);
+      expect(pollService.claimScheduledPoll).toHaveBeenCalledTimes(2);
       expect(mockSlackClient.chat.postMessage).toHaveBeenCalledTimes(4); // 2 polls + 2 DMs
     });
   });

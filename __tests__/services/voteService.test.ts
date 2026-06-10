@@ -10,6 +10,11 @@ import { createTestVote } from '../fixtures/testData';
 describe('voteService', () => {
   beforeEach(() => {
     resetPrismaMocks();
+    // Vote handlers run in a transaction; the shared mock's $transaction
+    // passes mockPrismaClient as the tx, but is reset alongside the rest.
+    mockPrismaClient.$transaction.mockImplementation((fn: any) => fn(mockPrismaClient));
+    // Handlers re-check poll status inside the transaction; default to active.
+    mockPrismaClient.poll.findUnique.mockResolvedValue({ status: 'active' });
   });
 
   describe('handleSingleVote', () => {
@@ -17,9 +22,21 @@ describe('voteService', () => {
     const optionId = 'opt-1';
     const voterId = 'U123';
 
+    it('should reject when poll is not active', async () => {
+      mockPrismaClient.poll.findUnique.mockResolvedValue({ status: 'closed' });
+
+      const result = await handleSingleVote(pollId, optionId, voterId, true);
+
+      expect(result.action).toBe('rejected');
+      expect(result.message).toContain('no longer accepting votes');
+      expect(mockPrismaClient.vote.create).not.toHaveBeenCalled();
+      expect(mockPrismaClient.vote.deleteMany).not.toHaveBeenCalled();
+    });
+
     describe('when no existing vote', () => {
       it('should cast a new vote', async () => {
         mockPrismaClient.vote.findFirst.mockResolvedValue(null);
+        mockPrismaClient.vote.deleteMany.mockResolvedValue({ count: 0 });
         mockPrismaClient.vote.create.mockResolvedValue(
           createTestVote({ pollId, optionId, voterId })
         );
@@ -40,14 +57,15 @@ describe('voteService', () => {
       it('should retract vote when vote change is allowed', async () => {
         const existingVote = createTestVote({ pollId, optionId, voterId });
         mockPrismaClient.vote.findFirst.mockResolvedValue(existingVote);
-        mockPrismaClient.vote.delete.mockResolvedValue(existingVote);
+        mockPrismaClient.vote.deleteMany.mockResolvedValue({ count: 1 });
 
         const result = await handleSingleVote(pollId, optionId, voterId, true);
 
         expect(result.action).toBe('retracted');
-        expect(mockPrismaClient.vote.delete).toHaveBeenCalledWith({
-          where: { id: existingVote.id },
+        expect(mockPrismaClient.vote.deleteMany).toHaveBeenCalledWith({
+          where: { pollId, voterId },
         });
+        expect(mockPrismaClient.vote.create).not.toHaveBeenCalled();
       });
 
       it('should reject when vote change is not allowed', async () => {
@@ -58,7 +76,7 @@ describe('voteService', () => {
 
         expect(result.action).toBe('rejected');
         expect(result.message).toContain('not allowed');
-        expect(mockPrismaClient.vote.delete).not.toHaveBeenCalled();
+        expect(mockPrismaClient.vote.deleteMany).not.toHaveBeenCalled();
       });
     });
 
@@ -67,17 +85,19 @@ describe('voteService', () => {
         const existingVote = createTestVote({ pollId, optionId: 'opt-1', voterId });
         const newOptionId = 'opt-2';
         mockPrismaClient.vote.findFirst.mockResolvedValue(existingVote);
-        mockPrismaClient.vote.update.mockResolvedValue({
-          ...existingVote,
-          optionId: newOptionId,
-        });
+        mockPrismaClient.vote.deleteMany.mockResolvedValue({ count: 1 });
+        mockPrismaClient.vote.create.mockResolvedValue(
+          createTestVote({ pollId, optionId: newOptionId, voterId })
+        );
 
         const result = await handleSingleVote(pollId, newOptionId, voterId, true);
 
         expect(result.action).toBe('switched');
-        expect(mockPrismaClient.vote.update).toHaveBeenCalledWith({
-          where: { id: existingVote.id },
-          data: { optionId: newOptionId, votedAt: expect.any(Date) },
+        expect(mockPrismaClient.vote.deleteMany).toHaveBeenCalledWith({
+          where: { pollId, voterId },
+        });
+        expect(mockPrismaClient.vote.create).toHaveBeenCalledWith({
+          data: { pollId, optionId: newOptionId, voterId },
         });
       });
 
@@ -90,7 +110,8 @@ describe('voteService', () => {
 
         expect(result.action).toBe('rejected');
         expect(result.message).toContain('not allowed');
-        expect(mockPrismaClient.vote.update).not.toHaveBeenCalled();
+        expect(mockPrismaClient.vote.create).not.toHaveBeenCalled();
+        expect(mockPrismaClient.vote.deleteMany).not.toHaveBeenCalled();
       });
     });
   });
@@ -99,6 +120,16 @@ describe('voteService', () => {
     const pollId = 'poll-123';
     const optionId = 'opt-1';
     const voterId = 'U123';
+
+    it('should reject when poll is not active', async () => {
+      mockPrismaClient.poll.findUnique.mockResolvedValue({ status: 'closed' });
+
+      const result = await handleMultiVote(pollId, optionId, voterId, true);
+
+      expect(result.action).toBe('rejected');
+      expect(result.message).toContain('no longer accepting votes');
+      expect(mockPrismaClient.vote.create).not.toHaveBeenCalled();
+    });
 
     describe('when option not yet voted', () => {
       it('should cast a new vote', async () => {
@@ -123,12 +154,12 @@ describe('voteService', () => {
       it('should retract vote (toggle off) when vote change is allowed', async () => {
         const existingVote = createTestVote({ pollId, optionId, voterId });
         mockPrismaClient.vote.findFirst.mockResolvedValue(existingVote);
-        mockPrismaClient.vote.delete.mockResolvedValue(existingVote);
+        mockPrismaClient.vote.deleteMany.mockResolvedValue({ count: 1 });
 
         const result = await handleMultiVote(pollId, optionId, voterId, true);
 
         expect(result.action).toBe('retracted');
-        expect(mockPrismaClient.vote.delete).toHaveBeenCalledWith({
+        expect(mockPrismaClient.vote.deleteMany).toHaveBeenCalledWith({
           where: { id: existingVote.id },
         });
       });
@@ -141,7 +172,7 @@ describe('voteService', () => {
 
         expect(result.action).toBe('rejected');
         expect(result.message).toContain('not allowed');
-        expect(mockPrismaClient.vote.delete).not.toHaveBeenCalled();
+        expect(mockPrismaClient.vote.deleteMany).not.toHaveBeenCalled();
       });
     });
   });

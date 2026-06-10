@@ -17,9 +17,13 @@ import {
   repostPoll,
   cancelScheduledPoll,
   getPollsNeedingReminders,
-  markReminderSent,
+  claimReminderSend,
+  PollNotEditableError,
 } from '../../src/services/pollService';
 import { createTestPoll, createTestOption } from '../fixtures/testData';
+
+// The shared mock doesn't define updateMany on poll; add it here.
+mockPrismaClient.poll.updateMany = jest.fn();
 
 describe('pollService', () => {
   beforeEach(() => {
@@ -391,6 +395,7 @@ describe('pollService', () => {
           deleteMany: jest.fn().mockResolvedValue({ count: 3 }),
         },
         poll: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           update: jest.fn().mockResolvedValue(updatedPoll),
         },
       };
@@ -408,6 +413,11 @@ describe('pollService', () => {
         closesAt: null,
         scheduledAt: null,
         status: 'active',
+      });
+
+      expect(mockTransaction.poll.updateMany).toHaveBeenCalledWith({
+        where: { id: 'poll-123', status: 'scheduled' },
+        data: { status: 'scheduled' },
       });
 
       expect(mockTransaction.pollOption.deleteMany).toHaveBeenCalledWith({
@@ -443,6 +453,38 @@ describe('pollService', () => {
       });
 
       expect(result).toEqual(updatedPoll);
+    });
+
+    it('should throw PollNotEditableError when poll is no longer scheduled', async () => {
+      const mockTransaction = {
+        pollOption: {
+          deleteMany: jest.fn(),
+        },
+        poll: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          update: jest.fn(),
+        },
+      };
+
+      mockPrismaClient.$transaction.mockImplementation(async (fn: any) => {
+        return fn(mockTransaction);
+      });
+
+      await expect(
+        updatePoll('poll-123', {
+          question: 'Updated Question?',
+          pollType: 'multi_select',
+          channelId: 'C456',
+          options: ['New A', 'New B'],
+          settings: { allowVoteChange: false },
+          closesAt: null,
+          scheduledAt: null,
+          status: 'active',
+        })
+      ).rejects.toThrow(PollNotEditableError);
+
+      expect(mockTransaction.pollOption.deleteMany).not.toHaveBeenCalled();
+      expect(mockTransaction.poll.update).not.toHaveBeenCalled();
     });
   });
 
@@ -544,17 +586,24 @@ describe('pollService', () => {
   });
 
   describe('cancelScheduledPoll', () => {
-    it('should update scheduled poll status to closed', async () => {
-      const mockPoll = createTestPoll({ status: 'closed' });
-      mockPrismaClient.poll.update.mockResolvedValue(mockPoll as any);
+    it('should update scheduled poll status to closed and return true', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await cancelScheduledPoll('poll-123');
 
-      expect(mockPrismaClient.poll.update).toHaveBeenCalledWith({
-        where: { id: 'poll-123' },
+      expect(mockPrismaClient.poll.updateMany).toHaveBeenCalledWith({
+        where: { id: 'poll-123', status: 'scheduled' },
         data: { status: 'closed' },
       });
-      expect(result).toEqual(mockPoll);
+      expect(result).toBe(true);
+    });
+
+    it('should return false when poll is no longer scheduled', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await cancelScheduledPoll('poll-123');
+
+      expect(result).toBe(false);
     });
   });
 
@@ -664,21 +713,25 @@ describe('pollService', () => {
     });
   });
 
-  describe('markReminderSent', () => {
-    it('should update reminderSentAt to current timestamp', async () => {
-      const mockPoll = createTestPoll({
-        reminderSentAt: new Date(),
-      });
+  describe('claimReminderSend', () => {
+    it('should set reminderSentAt and return true when claim succeeds', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 1 });
 
-      mockPrismaClient.poll.update.mockResolvedValue(mockPoll as any);
+      const result = await claimReminderSend('poll-123');
 
-      const result = await markReminderSent('poll-123');
-
-      expect(mockPrismaClient.poll.update).toHaveBeenCalledWith({
-        where: { id: 'poll-123' },
+      expect(mockPrismaClient.poll.updateMany).toHaveBeenCalledWith({
+        where: { id: 'poll-123', reminderSentAt: null },
         data: { reminderSentAt: expect.any(Date) },
       });
-      expect(result).toEqual(mockPoll);
+      expect(result).toBe(true);
+    });
+
+    it('should return false when reminder was already claimed', async () => {
+      mockPrismaClient.poll.updateMany.mockResolvedValue({ count: 0 });
+
+      const result = await claimReminderSend('poll-123');
+
+      expect(result).toBe(false);
     });
   });
 });

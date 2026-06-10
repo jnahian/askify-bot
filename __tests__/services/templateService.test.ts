@@ -13,6 +13,9 @@ import {
 } from '../../src/services/templateService';
 import { createTestTemplate } from '../fixtures/testData';
 
+// The shared mock doesn't define findFirst on pollTemplate; add it here.
+mockPrismaClient.pollTemplate.findFirst = jest.fn();
+
 describe('templateService', () => {
   beforeEach(() => {
     resetPrismaMocks();
@@ -200,32 +203,32 @@ describe('templateService', () => {
   });
 
   describe('getTemplate', () => {
-    it('should fetch a single template by ID', async () => {
+    it('should fetch a single template by ID scoped to the user', async () => {
       const mockTemplate = createTestTemplate({
         id: 'template-123',
         userId: 'U123',
         name: 'My Template',
       });
 
-      mockPrismaClient.pollTemplate.findUnique.mockResolvedValue(mockTemplate as any);
+      mockPrismaClient.pollTemplate.findFirst.mockResolvedValue(mockTemplate as any);
 
-      const result = await getTemplate('template-123');
+      const result = await getTemplate('template-123', 'U123');
 
-      expect(mockPrismaClient.pollTemplate.findUnique).toHaveBeenCalledWith({
-        where: { id: 'template-123' },
+      expect(mockPrismaClient.pollTemplate.findFirst).toHaveBeenCalledWith({
+        where: { id: 'template-123', userId: 'U123' },
       });
       expect(result).toEqual(mockTemplate);
       expect(result?.id).toBe('template-123');
     });
 
     it('should return null when template not found', async () => {
-      mockPrismaClient.pollTemplate.findUnique.mockResolvedValue(null);
+      mockPrismaClient.pollTemplate.findFirst.mockResolvedValue(null);
 
-      const result = await getTemplate('nonexistent-id');
+      const result = await getTemplate('nonexistent-id', 'U123');
 
       expect(result).toBeNull();
-      expect(mockPrismaClient.pollTemplate.findUnique).toHaveBeenCalledWith({
-        where: { id: 'nonexistent-id' },
+      expect(mockPrismaClient.pollTemplate.findFirst).toHaveBeenCalledWith({
+        where: { id: 'nonexistent-id', userId: 'U123' },
       });
     });
 
@@ -247,9 +250,9 @@ describe('templateService', () => {
         },
       });
 
-      mockPrismaClient.pollTemplate.findUnique.mockResolvedValue(mockTemplate as any);
+      mockPrismaClient.pollTemplate.findFirst.mockResolvedValue(mockTemplate as any);
 
-      const result = await getTemplate('template-456');
+      const result = await getTemplate('template-456', 'U123456');
 
       expect(result?.config.pollType).toBe('rating');
       expect(result?.config.options).toHaveLength(5);

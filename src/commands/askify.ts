@@ -374,6 +374,9 @@ export function registerAskifyCommand(app: App): void {
         return;
       }
 
+      const MAX_TEMPLATES_SHOWN = 15;
+      const shownTemplates = templates.slice(0, MAX_TEMPLATES_SHOWN);
+
       const blocks: KnownBlock[] = [
         {
           type: 'header',
@@ -381,7 +384,7 @@ export function registerAskifyCommand(app: App): void {
         },
       ];
 
-      for (const template of templates) {
+      for (const template of shownTemplates) {
         const config = template.config;
         const pollTypeLabel: Record<string, string> = {
           single_choice: 'Single Choice',
@@ -423,6 +426,14 @@ export function registerAskifyCommand(app: App): void {
               },
             } as Button,
           ],
+        });
+      }
+
+      if (templates.length > MAX_TEMPLATES_SHOWN) {
+        blocks.push({ type: 'divider' });
+        blocks.push({
+          type: 'context',
+          elements: [{ type: 'mrkdwn', text: `Showing ${MAX_TEMPLATES_SHOWN} of ${templates.length} templates` }],
         });
       }
 

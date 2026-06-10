@@ -2,6 +2,7 @@ import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
+import { formatMentions } from '../utils/mentions';
 
 interface PollSettings {
   anonymous?: boolean;
@@ -50,7 +51,7 @@ export function buildResultsDMBlocks(
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;
       if (names.length > 0) {
-        text += `\nVoters: ${names.map((n) => `<@${n}>`).join(', ')}`;
+        text += `\nVoters: ${formatMentions(names)}`;
       }
     }
 

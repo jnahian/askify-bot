@@ -1,30 +1,50 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getPollsNeedingReminders, markReminderSent } from '../services/pollService';
 import prisma from '../lib/prisma';
+import { withRetry } from '../utils/slackRetry';
 
-export function startReminderJob(client: WebClient): void {
+export function startReminderJob(client: WebClient): ScheduledTask {
   // Run every 15 minutes
-  cron.schedule('*/15 * * * *', async () => {
+  return cron.schedule('*/15 * * * *', async () => {
     try {
       const polls = await getPollsNeedingReminders();
+      if (polls.length === 0) return;
+
+      // Fetch the bot's own user ID once per run so we never DM ourselves
+      let botUserId: string | undefined;
+      try {
+        const auth = await withRetry(() => client.auth.test());
+        botUserId = auth.user_id;
+      } catch {
+        // Non-fatal — continue without the filter
+      }
 
       for (const poll of polls) {
         const settings = poll.settings as { reminders?: boolean };
         if (!settings.reminders) continue;
         if (!poll.closesAt || !poll.messageTs) continue;
 
-        // Get channel members
+        // Get channel members (paginated)
         let members: string[] = [];
         try {
-          const result = await client.conversations.members({
-            channel: poll.channelId,
-            limit: 1000,
-          });
-          members = result.members || [];
+          let cursor: string | undefined;
+          do {
+            const result = await withRetry(() => client.conversations.members({
+              channel: poll.channelId,
+              limit: 1000,
+              cursor,
+            }));
+            members = members.concat(result.members || []);
+            cursor = result.response_metadata?.next_cursor || undefined;
+          } while (cursor);
         } catch {
           // Bot may not have access — skip this poll
           continue;
+        }
+
+        if (botUserId) {
+          members = members.filter((m) => m !== botUserId);
         }
 
         // Get voters
@@ -54,10 +74,10 @@ export function startReminderJob(client: WebClient): void {
         // DM each non-voter
         for (const userId of nonVoters) {
           try {
-            await client.chat.postMessage({
+            await withRetry(() => client.chat.postMessage({
               channel: userId,
               text: `:bell: Reminder: The poll *"${poll.question}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
-            });
+            }));
           } catch {
             // User may have DMs disabled — skip
           }

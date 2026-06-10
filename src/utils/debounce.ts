@@ -4,6 +4,7 @@
  * rapid voting.
  */
 const timers = new Map<string, NodeJS.Timeout>();
+const callbacks = new Map<string, () => Promise<void>>();
 
 export function debouncedUpdate(
   key: string,
@@ -15,6 +16,7 @@ export function debouncedUpdate(
 
   const timer = setTimeout(async () => {
     timers.delete(key);
+    callbacks.delete(key);
     try {
       await fn();
     } catch (error) {
@@ -23,4 +25,27 @@ export function debouncedUpdate(
   }, delayMs);
 
   timers.set(key, timer);
+  callbacks.set(key, fn);
+}
+
+/**
+ * Immediately fire and clear all pending debounced callbacks.
+ * Used during graceful shutdown so in-flight updates aren't lost.
+ */
+export async function flushAll(): Promise<void> {
+  const pending = [...callbacks.entries()];
+
+  for (const timer of timers.values()) clearTimeout(timer);
+  timers.clear();
+  callbacks.clear();
+
+  await Promise.all(
+    pending.map(async ([key, fn]) => {
+      try {
+        await fn();
+      } catch (error) {
+        console.error(`Flush error for ${key}:`, error);
+      }
+    }),
+  );
 }

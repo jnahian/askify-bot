@@ -1,13 +1,14 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getScheduledPolls, activatePoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
+import { withRetry } from '../utils/slackRetry';
 
-export function startScheduledPollJob(client: WebClient): void {
+export function startScheduledPollJob(client: WebClient): ScheduledTask {
   // Run every minute
-  cron.schedule('* * * * *', async () => {
+  return cron.schedule('* * * * *', async () => {
     try {
       const polls = await getScheduledPolls();
 
@@ -25,10 +26,10 @@ export function startScheduledPollJob(client: WebClient): void {
         // Post to channel
         const message = buildPollMessage(poll, settings);
         try {
-          const result = await client.chat.postMessage({
+          const result = await withRetry(() => client.chat.postMessage({
             channel: poll.channelId,
             ...message,
-          });
+          }));
 
           // Store message_ts
           if (result.ts) {
@@ -37,15 +38,15 @@ export function startScheduledPollJob(client: WebClient): void {
 
           // Notify creator with action buttons
           const dm = buildCreatorNotifyDM(poll, { isScheduled: true });
-          await client.chat.postMessage({ channel: poll.creatorId, ...dm });
+          await withRetry(() => client.chat.postMessage({ channel: poll.creatorId, ...dm }));
 
           console.log(`Posted scheduled poll ${poll.id}: "${poll.question}"`);
         } catch (err) {
           if (isNotInChannelError(err)) {
-            await client.chat.postMessage({
+            await withRetry(() => client.chat.postMessage({
               channel: poll.creatorId,
               text: notInChannelText(poll.channelId),
-            });
+            }));
             console.warn(`Scheduled poll ${poll.id}: bot not in channel ${poll.channelId}`);
           } else {
             throw err;

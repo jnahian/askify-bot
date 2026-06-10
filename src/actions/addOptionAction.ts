@@ -62,6 +62,11 @@ export function registerAddOptionSubmission(app: App): void {
       return;
     }
 
+    if (poll.options.length >= 10) {
+      await ack({ response_action: 'errors', errors: { new_option_block: 'This poll already has the maximum of 10 options.' } });
+      return;
+    }
+
     // Check for duplicate
     const isDuplicate = poll.options.some(
       (o) => o.label.toLowerCase() === newOptionText.toLowerCase(),

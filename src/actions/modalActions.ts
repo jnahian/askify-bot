@@ -9,6 +9,29 @@ import {
   type ModalOptions,
 } from '../views/pollCreationModal';
 
+/**
+ * Modal private_metadata carries the edit-flow poll ID and, across rebuilds,
+ * the last-known option texts (option inputs vanish from view state when the
+ * poll type switches to yes_no/rating, so they must be persisted out-of-band).
+ * Supports the legacy plain-pollId form used when the edit modal first opens.
+ */
+export interface ModalMetadata {
+  pollId?: string;
+  savedOptions?: string[];
+}
+
+export function parseModalMetadata(raw: string | undefined): ModalMetadata {
+  if (!raw) return {};
+  if (raw.startsWith('{')) {
+    try {
+      return JSON.parse(raw) as ModalMetadata;
+    } catch {
+      return {};
+    }
+  }
+  return { pollId: raw };
+}
+
 function extractModalState(values: Record<string, any>) {
   const pollType = values.poll_type_block?.poll_type_select?.selected_option?.value;
   const closeMethod = values.close_method_block?.close_method_select?.selected_option?.value;
@@ -60,8 +83,20 @@ function rebuildModal(body: any, client: any, optionCountOverride?: number) {
     extractModalState(body.view.state.values);
   const finalCount = optionCountOverride ?? optionCount;
 
-  // When removing an option, drop its typed value too so the builder doesn't re-add it
-  prefill.options = (prefill.options || []).slice(0, finalCount);
+  const metadata = parseModalMetadata(body.view.private_metadata);
+  const optionsVisible = Object.keys(body.view.state.values || {}).some((key) =>
+    key.startsWith('option_block_'),
+  );
+  if (optionsVisible) {
+    // When removing an option, drop its typed value too so the builder doesn't re-add it
+    prefill.options = (prefill.options || []).slice(0, finalCount);
+    metadata.savedOptions = prefill.options;
+  } else if (metadata.savedOptions?.length) {
+    // Option inputs were hidden (yes_no/rating); restore the previously typed options
+    prefill.options = metadata.savedOptions;
+  }
+  const newMetadata =
+    metadata.pollId || metadata.savedOptions?.length ? JSON.stringify(metadata) : undefined;
 
   return client.views.update({
     view_id: body.view.id,
@@ -70,7 +105,7 @@ function rebuildModal(body: any, client: any, optionCountOverride?: number) {
       // Preserve edit/template context so a select interaction doesn't
       // convert the edit modal back into a creation modal
       callbackId: body.view.callback_id,
-      privateMetadata: body.view.private_metadata || undefined,
+      privateMetadata: newMetadata,
       initialOptions: finalCount,
       pollType,
       closeMethod,

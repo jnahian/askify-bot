@@ -522,13 +522,17 @@ export function registerAskifyCommand(app: App): void {
           }
         }
       } catch (err) {
-        // Clean up the orphaned poll row if posting failed after creation
-        if (pollId && !posted) {
+        // Clean up the orphaned poll row only when Slack definitively rejected the post;
+        // on ambiguous network/timeout errors the message may exist, so keep the row
+        const slackError = (err as { data?: { error?: string } })?.data?.error;
+        if (pollId && !posted && slackError) {
           try {
             await deletePoll(pollId);
           } catch (cleanupErr) {
             console.error('Failed to clean up orphaned poll', pollId, cleanupErr);
           }
+        } else if (pollId && !posted) {
+          console.error('Poll post failed with non-Slack error; keeping poll row', pollId, err);
         }
         const errorText = isNotInChannelError(err)
           ? notInChannelText(command.channel_id)

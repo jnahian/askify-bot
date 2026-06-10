@@ -4,6 +4,7 @@ import { getPoll, updatePoll, updatePollMessageTs } from '../services/pollServic
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
+import { parseModalMetadata } from '../actions/modalActions';
 
 interface PollSettings {
   anonymous: boolean;
@@ -18,7 +19,8 @@ interface PollSettings {
 
 export function registerPollEditSubmission(app: App): void {
   app.view(EDIT_MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {
-    const pollId = view.private_metadata;
+    // Metadata may be the plain pollId (initial open) or JSON after a modal rebuild
+    const pollId = parseModalMetadata(view.private_metadata).pollId ?? '';
     const values = view.state.values;
     const creatorId = body.user.id;
 

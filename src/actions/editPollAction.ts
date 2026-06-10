@@ -20,6 +20,16 @@ export function registerEditPollAction(app: App): void {
       return;
     }
 
+    // Only creator can edit the poll
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
+
     // Validate poll is still scheduled
     if (poll.status !== 'scheduled') {
       await client.chat.postEphemeral({

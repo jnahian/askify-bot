@@ -3,6 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { getPollsNeedingReminders, claimReminderSend } from '../services/pollService';
 import { getSettings } from '../types/pollSettings';
 import prisma from '../lib/prisma';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export function startReminderJob(client: WebClient): void {
   let isRunning = false;
@@ -64,7 +65,7 @@ export function startReminderJob(client: WebClient): void {
             try {
               await client.chat.postMessage({
                 channel: userId,
-                text: `:bell: Reminder: The poll *"${poll.question}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
+                text: `:bell: Reminder: The poll *"${escapeMrkdwn(poll.question)}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
               });
             } catch {
               // User may have DMs disabled — skip

@@ -63,6 +63,13 @@ export function registerAddOptionSubmission(app: App): void {
       return;
     }
 
+    // Re-check that this poll allows voter-added options
+    const pollSettings = poll.settings as { allowAddingOptions?: boolean };
+    if (!pollSettings.allowAddingOptions) {
+      await ack({ response_action: 'errors', errors: { new_option_block: 'This poll does not allow adding options.' } });
+      return;
+    }
+
     // Check for duplicate
     const isDuplicate = poll.options.some(
       (o) => o.label.toLowerCase() === newOptionText.toLowerCase(),

@@ -29,6 +29,16 @@ export function registerVoteAction(app: App): void {
         return;
       }
 
+      // Validate the option belongs to this poll
+      if (!poll.options.some((o) => o.id === optionId)) {
+        await client.chat.postEphemeral({
+          channel: poll.channelId,
+          user: voterId,
+          text: ':x: That option does not belong to this poll.',
+        });
+        return;
+      }
+
       const settings = getSettings(poll);
       const allowVoteChange = settings.allowVoteChange !== false;
 

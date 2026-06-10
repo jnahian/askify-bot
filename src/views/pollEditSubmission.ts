@@ -5,6 +5,7 @@ import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 import type { PollSettings } from '../types/pollSettings';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 import { parseModalMetadata } from '../actions/modalActions';
 
 export function registerPollEditSubmission(app: App): void {
@@ -20,6 +21,15 @@ export function registerPollEditSubmission(app: App): void {
       await ack({
         response_action: 'errors',
         errors: { question_block: 'This poll has already been posted and can no longer be edited.' },
+      });
+      return;
+    }
+
+    // Only creator can edit the poll (private_metadata is the only binding)
+    if (existingPoll.creatorId !== creatorId) {
+      await ack({
+        response_action: 'errors',
+        errors: { question_block: 'Only the poll creator can do this.' },
       });
       return;
     }
@@ -201,13 +211,13 @@ export function registerPollEditSubmission(app: App): void {
       const scheduleTs = Math.floor(scheduledAt.getTime() / 1000);
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+        text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+              text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
             },
           },
           {
@@ -239,7 +249,7 @@ export function registerPollEditSubmission(app: App): void {
     } else {
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:pencil2: Your poll *"${question}"* has been updated.`,
+        text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.`,
       });
     }
   });

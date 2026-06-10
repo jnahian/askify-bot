@@ -4,6 +4,7 @@ import { POLL_TYPE_LABELS } from "../constants";
 import type { PollSettings } from "../types/pollSettings";
 import { renderBar } from "../utils/barChart";
 import { getOptionEmoji } from "../utils/emojiPrefix";
+import { escapeMrkdwn } from "../utils/escapeMrkdwn";
 import { truncate } from "../utils/truncate";
 
 export function buildPollMessage(
@@ -30,7 +31,7 @@ export function buildPollMessage(
   if (settings.description) {
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: settings.description },
+      text: { type: "mrkdwn", text: escapeMrkdwn(settings.description) },
     });
   }
 
@@ -55,7 +56,7 @@ export function buildPollMessage(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    const labelWithEmoji = `${emoji} ${option.label}`;
+    const labelWithEmoji = `${emoji} ${escapeMrkdwn(option.label)}`;
 
     if (showResults) {
       // Show bar chart with color coding by position
@@ -140,5 +141,5 @@ export function buildPollMessage(
     }
   }
 
-  return { blocks, text: poll.question };
+  return { blocks, text: escapeMrkdwn(poll.question) };
 }

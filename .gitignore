@@ -26,6 +26,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
+# Test coverage
+coverage/
+*.lcov
+
 /src/generated/prisma
 
 # Github action ssh key

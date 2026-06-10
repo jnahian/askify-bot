@@ -1,5 +1,6 @@
 import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 interface CreatorNotifyOptions {
   isScheduled?: boolean;
@@ -16,7 +17,7 @@ export function buildCreatorNotifyDM(
 ) {
   const { isRecovery } = options;
 
-  let text = `:white_check_mark: Your poll *"${poll.question}"* is now live in <#${poll.channelId}>!`;
+  let text = `:white_check_mark: Your poll *"${escapeMrkdwn(poll.question)}"* is now live in <#${poll.channelId}>!`;
   if (isRecovery) {
     text += ' _(posted on startup recovery)_';
   }
@@ -55,6 +56,6 @@ export function buildCreatorNotifyDM(
 
   return {
     blocks,
-    text: `Your poll "${poll.question}" is now live!`,
+    text: `Your poll "${escapeMrkdwn(poll.question)}" is now live!`,
   };
 }

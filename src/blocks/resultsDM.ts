@@ -2,6 +2,7 @@ import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 interface PollSettings {
   anonymous?: boolean;
@@ -30,7 +31,7 @@ export function buildResultsDMBlocks(
   if (settings.description) {
     blocks.push({
       type: 'section',
-      text: { type: 'mrkdwn', text: settings.description },
+      text: { type: 'mrkdwn', text: escapeMrkdwn(settings.description) },
     });
   }
 
@@ -45,7 +46,7 @@ export function buildResultsDMBlocks(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    let text = `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
+    let text = `*${emoji} ${escapeMrkdwn(option.label)}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;
@@ -101,6 +102,6 @@ export function buildResultsDMBlocks(
 
   return {
     blocks,
-    text: `Poll Results: ${poll.question}`,
+    text: `Poll Results: ${escapeMrkdwn(poll.question)}`,
   };
 }

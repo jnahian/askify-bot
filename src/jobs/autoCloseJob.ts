@@ -1,16 +1,17 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getExpiredPolls, claimPollClose, getPoll } from '../services/pollService';
 import { getSettings } from '../types/pollSettings';
 import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
+import { withRetry } from '../utils/slackRetry';
 
-export function startAutoCloseJob(client: WebClient): void {
+export function startAutoCloseJob(client: WebClient): ScheduledTask {
   let isRunning = false;
 
   // Run every minute
-  cron.schedule('* * * * *', async () => {
+  return cron.schedule('* * * * *', async () => {
     if (isRunning) return; // previous tick still in progress
     isRunning = true;
     try {
@@ -37,18 +38,18 @@ export function startAutoCloseJob(client: WebClient): void {
 
           // Update channel message
           const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames, uniqueVoters);
-          await client.chat.update({
+          await withRetry(() => client.chat.update({
             channel: closedPoll.channelId,
-            ts: closedPoll.messageTs,
+            ts: closedPoll.messageTs!,
             ...message,
-          });
+          }));
 
           // DM results to creator with "Share Results" button
           const dm = buildResultsDMBlocks(closedPoll, settings, voterNames, uniqueVoters);
-          await client.chat.postMessage({
+          await withRetry(() => client.chat.postMessage({
             channel: closedPoll.creatorId,
             ...dm,
-          });
+          }));
 
           console.log(`Auto-closed poll ${poll.id}: "${poll.question}"`);
         } catch (error) {

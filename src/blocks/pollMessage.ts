@@ -5,6 +5,7 @@ import type { PollSettings } from "../types/pollSettings";
 import { renderBar } from "../utils/barChart";
 import { getOptionEmoji } from "../utils/emojiPrefix";
 import { escapeMrkdwn } from "../utils/escapeMrkdwn";
+import { formatMentions } from "../utils/mentions";
 import { truncate } from "../utils/truncate";
 
 export function buildPollMessage(
@@ -66,7 +67,7 @@ export function buildPollMessage(
       if (!settings.anonymous && voterNames?.has(option.id)) {
         const names = voterNames.get(option.id)!;
         if (names.length > 0) {
-          text += `\n${names.map((n) => `<@${n}>`).join(", ")}`;
+          text += `\n${formatMentions(names)}`;
         }
       }
 

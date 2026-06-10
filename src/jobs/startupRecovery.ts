@@ -15,6 +15,7 @@ import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
+import { withRetry } from '../utils/slackRetry';
 
 /**
  * Run once on startup to handle anything missed while the bot was down.
@@ -27,23 +28,23 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
 
       const message = buildPollMessage(poll, settings);
       try {
-        const result = await client.chat.postMessage({
+        const result = await withRetry(() => client.chat.postMessage({
           channel: poll.channelId,
           ...message,
-        });
+        }));
 
         if (result.ts) {
           await updatePollMessageTs(poll.id, result.ts);
         }
 
         const dm = buildCreatorNotifyDM(poll, { isScheduled: true, isRecovery: true });
-        await client.chat.postMessage({ channel: poll.creatorId, ...dm });
+        await withRetry(() => client.chat.postMessage({ channel: poll.creatorId, ...dm }));
       } catch (err) {
         if (isNotInChannelError(err)) {
-          await client.chat.postMessage({
+          await withRetry(() => client.chat.postMessage({
             channel: poll.creatorId,
             text: notInChannelText(poll.channelId),
-          });
+          }));
           console.warn(`[Recovery] Poll ${poll.id}: bot not in channel ${poll.channelId}`);
         } else {
           throw err;
@@ -107,17 +108,17 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
         const uniqueVoters = await getUniqueVoterCount(closedPoll);
 
         const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames, uniqueVoters);
-        await client.chat.update({
+        await withRetry(() => client.chat.update({
           channel: closedPoll.channelId,
-          ts: closedPoll.messageTs,
+          ts: closedPoll.messageTs!,
           ...message,
-        });
+        }));
 
         const dm = buildResultsDMBlocks(closedPoll, settings, voterNames, uniqueVoters);
-        await client.chat.postMessage({
+        await withRetry(() => client.chat.postMessage({
           channel: closedPoll.creatorId,
           ...dm,
-        });
+        }));
 
         console.log(`[Recovery] Auto-closed overdue poll ${poll.id}: "${poll.question}"`);
       } catch (error) {

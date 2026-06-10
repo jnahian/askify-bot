@@ -39,13 +39,12 @@ export async function flushAll(): Promise<void> {
   timers.clear();
   callbacks.clear();
 
-  await Promise.all(
-    pending.map(async ([key, fn]) => {
-      try {
-        await fn();
-      } catch (error) {
-        console.error(`Flush error for ${key}:`, error);
-      }
-    }),
-  );
+  // Sequential to avoid a burst of Slack API calls (and rate-limit retries) during shutdown
+  for (const [key, fn] of pending) {
+    try {
+      await fn();
+    } catch (error) {
+      console.error(`Flush error for ${key}:`, error);
+    }
+  }
 }

@@ -6,6 +6,9 @@ import { buildPollMessage } from '../blocks/pollMessage';
 
 const ADD_OPTION_MODAL_ID = 'add_option_modal';
 
+// Matches the creation modal's option cap; keeps messages under Slack's 50-block limit
+const MAX_OPTIONS = 10;
+
 export function registerAddOptionAction(app: App): void {
   // "Add Option" button clicked on poll message
   app.action('add_option', async ({ ack, action, body, client }) => {
@@ -62,8 +65,8 @@ export function registerAddOptionSubmission(app: App): void {
       return;
     }
 
-    if (poll.options.length >= 10) {
-      await ack({ response_action: 'errors', errors: { new_option_block: 'This poll already has the maximum of 10 options.' } });
+    if (poll.options.length >= MAX_OPTIONS) {
+      await ack({ response_action: 'errors', errors: { new_option_block: `This poll already has the maximum of ${MAX_OPTIONS} options.` } });
       return;
     }
 

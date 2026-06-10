@@ -16,7 +16,9 @@ export function startJobs(client?: WebClient): void {
 }
 
 export async function stopJobs(): Promise<void> {
-  await Promise.all(tasks.map((task) => task.stop()));
+  for (const task of tasks) {
+    await task.stop();
+  }
   tasks.length = 0;
   console.log("💼 Background jobs stopped");
 }

@@ -176,7 +176,16 @@ describe('withRetry', () => {
     
     await expect(withRetry(mockFn, 1)).rejects.toEqual(rateLimitError);
     expect(mockFn).toHaveBeenCalledTimes(2); // initial + 1 retry
-    
+
     jest.useFakeTimers();
+  });
+
+  it('should throw "Max retries exceeded" when the retry loop never runs', async () => {
+    const mockFn = jest.fn().mockResolvedValue({ ok: true });
+
+    // A negative maxRetries means the for-loop body never executes,
+    // falling through to the defensive throw at the end of withRetry.
+    await expect(withRetry(mockFn, -1)).rejects.toThrow('Max retries exceeded');
+    expect(mockFn).not.toHaveBeenCalled();
   });
 });

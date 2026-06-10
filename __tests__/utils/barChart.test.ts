@@ -55,5 +55,20 @@ describe('barChart utilities', () => {
       const result = renderBar(1, 3, 0);
       expect(result).toContain('33%'); // 1/3 = 33.33% rounds to 33%
     });
+
+    it('should default colorIndex to 0 (green) when omitted', () => {
+      const result = renderBar(10, 10);
+      expect(result).toContain(':large_green_square:');
+      expect(result).toContain('100%');
+      expect(result).toContain('(10)');
+    });
+
+    it('should render exactly 14 segments', () => {
+      const result = renderBar(5, 10, 0);
+      const filled = (result.match(/:large_green_square:/g) || []).length;
+      const empty = (result.match(/:white_large_square:/g) || []).length;
+      expect(filled + empty).toBe(14);
+      expect(filled).toBe(7); // 50% of 14
+    });
   });
 });

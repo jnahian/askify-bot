@@ -13,31 +13,18 @@ interface CreatePollInput {
   status?: 'active' | 'scheduled';
 }
 
-export interface PollWithOptions {
-  id: string;
-  creatorId: string;
-  channelId: string;
-  messageTs: string | null;
-  question: string;
-  pollType: PollType;
-  settings: Record<string, unknown>;
-  status: PollStatus;
-  scheduledAt: Date | null;
-  closesAt: Date | null;
-  reminderSentAt: Date | null;
-  createdAt: Date;
+const pollInclude = {
   options: {
-    id: string;
-    label: string;
-    position: number;
-    addedBy: string | null;
-    _count: { votes: number };
-  }[];
-  _count: { votes: number };
-}
+    orderBy: { position: 'asc' },
+    include: { _count: { select: { votes: true } } },
+  },
+  _count: { select: { votes: true } },
+} satisfies Prisma.PollInclude;
 
-export async function createPoll(input: CreatePollInput) {
-  const poll = await prisma.poll.create({
+export type PollWithOptions = Prisma.PollGetPayload<{ include: typeof pollInclude }>;
+
+export async function createPoll(input: CreatePollInput): Promise<PollWithOptions> {
+  return prisma.poll.create({
     data: {
       creatorId: input.creatorId,
       channelId: input.channelId,
@@ -54,31 +41,15 @@ export async function createPoll(input: CreatePollInput) {
         })),
       },
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
-
-  return poll as unknown as PollWithOptions;
 }
 
 export async function getPoll(pollId: string): Promise<PollWithOptions | null> {
-  const poll = await prisma.poll.findUnique({
+  return prisma.poll.findUnique({
     where: { id: pollId },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
-
-  return poll as unknown as PollWithOptions | null;
 }
 
 export async function closePoll(pollId: string) {
@@ -95,35 +66,23 @@ export async function updatePollMessageTs(pollId: string, messageTs: string) {
   });
 }
 
-export async function getExpiredPolls() {
+export async function getExpiredPolls(): Promise<PollWithOptions[]> {
   return prisma.poll.findMany({
     where: {
       status: 'active',
       closesAt: { lte: new Date() },
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
 }
 
-export async function getScheduledPolls() {
+export async function getScheduledPolls(): Promise<PollWithOptions[]> {
   return prisma.poll.findMany({
     where: {
       status: 'scheduled',
       scheduledAt: { lte: new Date() },
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
 }
 
@@ -140,29 +99,22 @@ export interface GetUserPollsOptions {
   limit?: number;
 }
 
-export async function getUserPolls(userId: string, opts: GetUserPollsOptions = {}) {
+export async function getUserPolls(userId: string, opts: GetUserPollsOptions = {}): Promise<PollWithOptions[]> {
   const { from, to, limit = 10 } = opts;
 
   const createdAtFilter: Record<string, Date> = {};
   if (from) createdAtFilter.gte = from;
   if (to) createdAtFilter.lte = to;
 
-  const polls = await prisma.poll.findMany({
+  return prisma.poll.findMany({
     where: {
       creatorId: userId,
       ...(Object.keys(createdAtFilter).length > 0 ? { createdAt: createdAtFilter } : {}),
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
-  return polls as unknown as PollWithOptions[];
 }
 
 interface UpdatePollInput {
@@ -176,8 +128,8 @@ interface UpdatePollInput {
   status: 'active' | 'scheduled';
 }
 
-export async function updatePoll(pollId: string, input: UpdatePollInput) {
-  const poll = await prisma.$transaction(async (tx) => {
+export async function updatePoll(pollId: string, input: UpdatePollInput): Promise<PollWithOptions> {
+  return prisma.$transaction(async (tx) => {
     // Delete existing options (cascade deletes votes too)
     await tx.pollOption.deleteMany({ where: { pollId } });
 
@@ -198,17 +150,9 @@ export async function updatePoll(pollId: string, input: UpdatePollInput) {
           })),
         },
       },
-      include: {
-        options: {
-          orderBy: { position: 'asc' },
-          include: { _count: { select: { votes: true } } },
-        },
-        _count: { select: { votes: true } },
-      },
+      include: pollInclude,
     });
   });
-
-  return poll as unknown as PollWithOptions;
 }
 
 interface RepostPollInput {
@@ -217,20 +161,19 @@ interface RepostPollInput {
   closesAt?: Date | null;
 }
 
-export async function repostPoll(sourcePollId: string, creatorId: string, opts: RepostPollInput = {}) {
+export async function repostPoll(sourcePollId: string, creatorId: string, opts: RepostPollInput = {}): Promise<PollWithOptions> {
   const source = await getPoll(sourcePollId);
   if (!source) throw new Error('Source poll not found');
 
-  const settings = source.settings as Record<string, unknown>;
   const isScheduled = !!opts.scheduledAt;
 
-  const poll = await prisma.poll.create({
+  return prisma.poll.create({
     data: {
       creatorId,
       channelId: opts.channelId || source.channelId,
       question: source.question,
       pollType: source.pollType,
-      settings: JSON.parse(JSON.stringify(settings)),
+      settings: JSON.parse(JSON.stringify(source.settings)),
       status: (isScheduled ? 'scheduled' : 'active') as PollStatus,
       closesAt: opts.closesAt || null,
       scheduledAt: opts.scheduledAt || null,
@@ -241,16 +184,8 @@ export async function repostPoll(sourcePollId: string, creatorId: string, opts: 
         })),
       },
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
-
-  return poll as unknown as PollWithOptions;
 }
 
 export async function cancelScheduledPoll(pollId: string) {
@@ -260,7 +195,7 @@ export async function cancelScheduledPoll(pollId: string) {
   });
 }
 
-export async function getPollsNeedingReminders() {
+export async function getPollsNeedingReminders(): Promise<PollWithOptions[]> {
   const now = new Date();
   // Find active polls with closesAt set, reminders not yet sent
   const polls = await prisma.poll.findMany({
@@ -269,19 +204,13 @@ export async function getPollsNeedingReminders() {
       closesAt: { not: null },
       reminderSentAt: null,
     },
-    include: {
-      options: {
-        orderBy: { position: 'asc' },
-        include: { _count: { select: { votes: true } } },
-      },
-      _count: { select: { votes: true } },
-    },
+    include: pollInclude,
   });
 
   // Filter by smart timing:
   // - Closes within 2 hours → remind now (1 hour before)
   // - Closes within 1-3 days → remind 24 hours before
-  return (polls as unknown as PollWithOptions[]).filter((poll) => {
+  return polls.filter((poll) => {
     if (!poll.closesAt) return false;
     const msUntilClose = poll.closesAt.getTime() - now.getTime();
     const hoursUntilClose = msUntilClose / (1000 * 60 * 60);

@@ -1,15 +1,8 @@
 import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
+import type { PollSettings } from '../types/pollSettings';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
-
-interface PollSettings {
-  anonymous?: boolean;
-  allowVoteChange?: boolean;
-  liveResults?: boolean;
-  ratingScale?: number;
-  description?: string;
-}
 
 /**
  * Build DM blocks for poll results with a "Share Results" button.

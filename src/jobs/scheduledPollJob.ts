@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
-import { getScheduledPolls, activatePoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
+import { getScheduledPolls, activatePoll, updatePollMessageTs } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
@@ -11,16 +12,11 @@ export function startScheduledPollJob(client: WebClient): void {
     try {
       const polls = await getScheduledPolls();
 
-      for (const rawPoll of polls) {
-        const poll = rawPoll as unknown as PollWithOptions;
+      for (const poll of polls) {
         // Activate the poll
         await activatePoll(poll.id);
 
-        const settings = poll.settings as {
-          anonymous?: boolean;
-          allowVoteChange?: boolean;
-          liveResults?: boolean;
-        };
+        const settings = getSettings(poll);
 
         // Post to channel
         const message = buildPollMessage(poll, settings);

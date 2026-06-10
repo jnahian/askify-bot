@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { buildPollCreationModal, EDIT_MODAL_CALLBACK_ID } from '../views/pollCreationModal';
 
 export function registerEditPollAction(app: App): void {
@@ -29,16 +30,7 @@ export function registerEditPollAction(app: App): void {
       return;
     }
 
-    const settings = poll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-      ratingScale?: number;
-      allowAddingOptions?: boolean;
-      reminders?: boolean;
-      description?: string;
-      includeMaybe?: boolean;
-    };
+    const settings = getSettings(poll);
 
     // Determine close method from existing poll data
     let closeMethod: string | undefined;

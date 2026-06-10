@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from '../services/voteService';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
@@ -62,11 +63,7 @@ export function registerShareResultsSubmission(app: App): void {
       return;
     }
 
-    const settings = poll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    const settings = getSettings(poll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {

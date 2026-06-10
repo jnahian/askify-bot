@@ -7,6 +7,7 @@ import {
   closePoll,
   getPoll,
 } from "../services/pollService";
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from "../services/voteService";
 
 export function registerListActions(app: App): void {
@@ -21,11 +22,7 @@ export function registerListActions(app: App): void {
     const closedPoll = await getPoll(pollId);
     if (!closedPoll) return;
 
-    const settings = closedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    const settings = getSettings(closedPoll);
 
     // Update channel message if it exists
     if (closedPoll.messageTs) {
@@ -84,11 +81,7 @@ export function registerListActions(app: App): void {
     const poll = await getPoll(pollId);
     if (!poll) return;
 
-    const settings = poll.settings as {
-      anonymous?: boolean;
-      liveResults?: boolean;
-      description?: string;
-    };
+    const settings = getSettings(poll);
 
     const totalVoters = poll._count.votes;
     let voterNames: Map<string, string[]> | undefined;

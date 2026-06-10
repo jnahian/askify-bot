@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getPollsNeedingReminders, markReminderSent } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import prisma from '../lib/prisma';
 
 export function startReminderJob(client: WebClient): void {
@@ -10,7 +11,7 @@ export function startReminderJob(client: WebClient): void {
       const polls = await getPollsNeedingReminders();
 
       for (const poll of polls) {
-        const settings = poll.settings as { reminders?: boolean };
+        const settings = getSettings(poll);
         if (!settings.reminders) continue;
         if (!poll.closesAt || !poll.messageTs) continue;
 

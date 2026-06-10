@@ -1,6 +1,6 @@
 import { WebClient } from '@slack/web-api';
 import { getExpiredPolls, getScheduledPolls, closePoll, activatePoll, getPoll, updatePollMessageTs } from '../services/pollService';
-import type { PollWithOptions } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
@@ -14,15 +14,10 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
   try {
     // 1. Post any overdue scheduled polls
     const scheduledPolls = await getScheduledPolls();
-    for (const rawPoll of scheduledPolls) {
-      const poll = rawPoll as unknown as PollWithOptions;
+    for (const poll of scheduledPolls) {
       await activatePoll(poll.id);
 
-      const settings = poll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-      };
+      const settings = getSettings(poll);
 
       const message = buildPollMessage(poll, settings);
       try {
@@ -60,11 +55,7 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
       const closedPoll = await getPoll(poll.id);
       if (!closedPoll || !closedPoll.messageTs) continue;
 
-      const settings = closedPoll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-      };
+      const settings = getSettings(closedPoll);
 
       let voterNames: Map<string, string[]> | undefined;
       if (!settings.anonymous) {

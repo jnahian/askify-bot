@@ -1,4 +1,5 @@
 import type { View, KnownBlock } from '@slack/types';
+import { POLL_TYPE_LABELS } from '../constants';
 
 export const MODAL_CALLBACK_ID = 'poll_creation_modal';
 export const EDIT_MODAL_CALLBACK_ID = 'poll_edit_modal';
@@ -370,13 +371,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
 }
 
 function getPollTypeOption(value: string) {
-  const map: Record<string, string> = {
-    single_choice: 'Single Choice',
-    multi_select: 'Multi-Select',
-    yes_no: 'Yes / No / Maybe',
-    rating: 'Rating Scale',
-  };
-  return { text: { type: 'plain_text' as const, text: map[value] || value }, value };
+  return { text: { type: 'plain_text' as const, text: POLL_TYPE_LABELS[value] || value }, value };
 }
 
 function getCloseMethodOption(value: string) {

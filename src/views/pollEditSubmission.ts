@@ -4,17 +4,7 @@ import { getPoll, updatePoll, updatePollMessageTs } from '../services/pollServic
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
-
-interface PollSettings {
-  anonymous: boolean;
-  allowVoteChange: boolean;
-  liveResults: boolean;
-  ratingScale?: number;
-  allowAddingOptions?: boolean;
-  reminders?: boolean;
-  description?: string;
-  includeMaybe?: boolean;
-}
+import type { PollSettings } from '../types/pollSettings';
 
 export function registerPollEditSubmission(app: App): void {
   app.view(EDIT_MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {

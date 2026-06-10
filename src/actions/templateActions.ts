@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { saveTemplate, getTemplate, deleteTemplate, type TemplateConfig } from '../services/templateService';
 import { buildPollCreationModal } from '../views/pollCreationModal';
 
@@ -107,13 +108,12 @@ export function registerSaveTemplateSubmission(app: App): void {
       return;
     }
 
-    const pollSettings = poll.settings as TemplateConfig['settings'] & { description?: string };
-    const { description, ...settings } = { description: undefined, ...pollSettings };
+    const { description, ...settings } = getSettings(poll);
     const config: TemplateConfig = {
       pollType: poll.pollType,
       options: poll.options.map((o) => o.label),
       ...(description ? { description } : {}),
-      settings,
+      settings: settings as TemplateConfig['settings'],
       closeMethod: 'manual',
     };
 

@@ -1,5 +1,6 @@
 import { App } from '@slack/bolt';
 import { getPoll, closePoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
@@ -35,11 +36,7 @@ export function registerClosePollAction(app: App): void {
     const closedPoll = await getPoll(pollId);
     if (!closedPoll || !closedPoll.messageTs) return;
 
-    const settings = closedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    const settings = getSettings(closedPoll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {

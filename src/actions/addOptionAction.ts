@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import prisma from '../lib/prisma';
 import { getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 
@@ -88,12 +89,7 @@ export function registerAddOptionSubmission(app: App): void {
     const updatedPoll = await getPoll(pollId);
     if (!updatedPoll || !updatedPoll.messageTs) return;
 
-    const settings = updatedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-      allowAddingOptions?: boolean;
-    };
+    const settings = getSettings(updatedPoll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {

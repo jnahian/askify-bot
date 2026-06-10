@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
 import { getExpiredPolls, closePoll, getPoll } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { getVotersByOption } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
@@ -17,11 +18,7 @@ export function startAutoCloseJob(client: WebClient): void {
         const closedPoll = await getPoll(poll.id);
         if (!closedPoll || !closedPoll.messageTs) continue;
 
-        const settings = closedPoll.settings as {
-          anonymous?: boolean;
-          allowVoteChange?: boolean;
-          liveResults?: boolean;
-        };
+        const settings = getSettings(closedPoll);
 
         let voterNames: Map<string, string[]> | undefined;
         if (!settings.anonymous) {

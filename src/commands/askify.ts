@@ -1,10 +1,13 @@
 import { App } from '@slack/bolt';
 import type { KnownBlock, Button } from '@slack/types';
 import { buildPollCreationModal } from '../views/pollCreationModal';
-import { createPoll, updatePollMessageTs, getUserPolls, type GetUserPollsOptions } from '../services/pollService';
+import { createPoll, deletePoll, updatePollMessageTs, getUserPolls, type GetUserPollsOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { truncate } from '../utils/truncate';
+
+const MAX_QUESTION_LENGTH = 150;
 
 interface InlinePollArgs {
   question: string;
@@ -29,6 +32,10 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
 
   const question = quoted[0];
   const options = quoted.slice(1);
+
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return { error: `Your question is ${question.length} characters — the maximum is ${MAX_QUESTION_LENGTH}. Please shorten it and try again.` };
+  }
 
   const flags = withoutQuoted.toLowerCase().trim();
   let pollType: InlinePollArgs['pollType'] = 'single_choice';
@@ -237,7 +244,7 @@ export function registerAskifyCommand(app: App): void {
       const blocks: KnownBlock[] = [
         {
           type: 'header',
-          text: { type: 'plain_text', text: headerText },
+          text: { type: 'plain_text', text: truncate(headerText) },
         },
         {
           type: 'context',
@@ -485,6 +492,8 @@ export function registerAskifyCommand(app: App): void {
         ? new Date(Date.now() + parsed.closeDuration * 60 * 60 * 1000)
         : null;
 
+      let pollId: string | null = null;
+      let posted = false;
       try {
         const poll = await createPoll({
           creatorId: command.user_id,
@@ -495,17 +504,27 @@ export function registerAskifyCommand(app: App): void {
           settings: JSON.parse(JSON.stringify(settings)),
           closesAt,
         });
+        pollId = poll.id;
 
         const message = buildPollMessage(poll, settings);
         const result = await client.chat.postMessage({
           channel: command.channel_id,
           ...message,
         });
+        posted = true;
 
         if (result.ts) {
           await updatePollMessageTs(poll.id, result.ts);
         }
       } catch (err) {
+        // Clean up the orphaned poll row if posting failed after creation
+        if (pollId && !posted) {
+          try {
+            await deletePoll(pollId);
+          } catch (cleanupErr) {
+            console.error('Failed to clean up orphaned poll', pollId, cleanupErr);
+          }
+        }
         const errorText = isNotInChannelError(err)
           ? notInChannelText(command.channel_id)
           : `:warning: Failed to create poll: ${err instanceof Error ? err.message : 'Unknown error'}`;

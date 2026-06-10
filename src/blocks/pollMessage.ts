@@ -2,6 +2,7 @@ import type { Button, KnownBlock } from "@slack/types";
 import type { PollWithOptions } from "../services/pollService";
 import { renderBar } from "../utils/barChart";
 import { getButtonEmoji, getOptionEmoji } from "../utils/emojiPrefix";
+import { truncate } from "../utils/truncate";
 
 interface PollSettings {
   anonymous?: boolean;
@@ -33,7 +34,7 @@ export function buildPollMessage(
   // Header
   blocks.push({
     type: "header",
-    text: { type: "plain_text", text: poll.question, emoji: true },
+    text: { type: "plain_text", text: truncate(poll.question), emoji: true },
   });
 
   // Description (optional)

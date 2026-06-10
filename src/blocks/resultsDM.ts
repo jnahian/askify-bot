@@ -3,6 +3,7 @@ import type { PollWithOptions } from '../services/pollService';
 import type { PollSettings } from '../types/pollSettings';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
+import { truncate } from '../utils/truncate';
 
 /**
  * Build DM blocks for poll results with a "Share Results" button.
@@ -11,13 +12,16 @@ export function buildResultsDMBlocks(
   poll: PollWithOptions,
   settings: PollSettings,
   voterNames?: Map<string, string[]>,
+  uniqueVoters?: number,
 ) {
-  const totalVoters = poll._count.votes;
+  // For multi_select polls callers should pass the real unique-voter count
+  // (poll._count.votes counts vote rows, not voters)
+  const totalVoters = uniqueVoters ?? poll._count.votes;
   const blocks: KnownBlock[] = [];
 
   blocks.push({
     type: 'header',
-    text: { type: 'plain_text', text: `Poll Results: ${poll.question}`, emoji: true },
+    text: { type: 'plain_text', text: truncate(`Poll Results: ${poll.question}`), emoji: true },
   });
 
   if (settings.description) {

@@ -5,8 +5,12 @@ export function registerDMHandler(app: App): void {
     // Only handle DMs (im channel type)
     if (event.channel_type !== 'im') return;
 
-    // Ignore bot messages and message subtypes (edits, deletes, etc.)
+    // Ignore message subtypes (edits, deletes, etc.)
     if (event.subtype) return;
+
+    // Ignore bot messages — bot-token posts arrive with bot_id set and no
+    // subtype, so without this guard the bot would reply to itself forever
+    if ('bot_id' in event && event.bot_id) return;
 
     const text = ('text' in event ? event.text?.toLowerCase().trim() : '') || '';
 

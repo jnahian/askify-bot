@@ -1,7 +1,16 @@
 import { WebClient } from '@slack/web-api';
-import { getExpiredPolls, getScheduledPolls, closePoll, activatePoll, getPoll, updatePollMessageTs } from '../services/pollService';
+import {
+  getExpiredPolls,
+  getScheduledPolls,
+  getStrandedActivePolls,
+  claimPollClose,
+  claimScheduledPoll,
+  getPoll,
+  updatePollMessageTs,
+} from '../services/pollService';
+import type { PollWithOptions } from '../services/pollService';
 import { getSettings } from '../types/pollSettings';
-import { getVotersByOption } from '../services/voteService';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
@@ -12,11 +21,8 @@ import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
  */
 export async function runStartupRecovery(client: WebClient): Promise<void> {
   try {
-    // 1. Post any overdue scheduled polls
-    const scheduledPolls = await getScheduledPolls();
-    for (const poll of scheduledPolls) {
-      await activatePoll(poll.id);
-
+    // Helper: post a poll's message and notify the creator
+    const postPoll = async (poll: PollWithOptions): Promise<void> => {
       const settings = getSettings(poll);
 
       const message = buildPollMessage(poll, settings);
@@ -32,54 +38,95 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
 
         const dm = buildCreatorNotifyDM(poll, { isScheduled: true, isRecovery: true });
         await client.chat.postMessage({ channel: poll.creatorId, ...dm });
-
-        console.log(`[Recovery] Posted overdue scheduled poll ${poll.id}: "${poll.question}"`);
       } catch (err) {
         if (isNotInChannelError(err)) {
           await client.chat.postMessage({
             channel: poll.creatorId,
             text: notInChannelText(poll.channelId),
           });
-          console.warn(`[Recovery] Scheduled poll ${poll.id}: bot not in channel ${poll.channelId}`);
+          console.warn(`[Recovery] Poll ${poll.id}: bot not in channel ${poll.channelId}`);
         } else {
           throw err;
         }
       }
+    };
+
+    // Snapshot stranded polls before processing scheduled ones, so polls we
+    // post (or fail to post) below aren't immediately retried in step 2
+    const strandedPolls = await getStrandedActivePolls();
+
+    // 1. Post any overdue scheduled polls
+    const scheduledPolls = await getScheduledPolls();
+    for (const rawPoll of scheduledPolls) {
+      const poll = rawPoll as unknown as PollWithOptions;
+      try {
+        const claimed = await claimScheduledPoll(poll.id);
+        if (!claimed) continue;
+
+        // Re-fetch after claiming: the claim may have waited on an edit
+        // transaction, leaving the pre-claim snapshot stale
+        const freshPoll = await getPoll(poll.id);
+        if (!freshPoll) continue;
+
+        await postPoll(freshPoll);
+        console.log(`[Recovery] Posted overdue scheduled poll ${freshPoll.id}: "${freshPoll.question}"`);
+      } catch (error) {
+        console.error(`[Recovery] Error posting scheduled poll ${poll.id}:`, error);
+      }
     }
 
-    // 2. Close any overdue active polls
+    // 2. Re-post polls that were claimed (active) but never reached Slack —
+    // e.g. the bot crashed between claiming and chat.postMessage
+    for (const rawPoll of strandedPolls) {
+      const poll = rawPoll as unknown as PollWithOptions;
+      try {
+        await postPoll(poll);
+        console.log(`[Recovery] Posted stranded active poll ${poll.id}: "${poll.question}"`);
+      } catch (error) {
+        console.error(`[Recovery] Error posting stranded poll ${poll.id}:`, error);
+      }
+    }
+
+    // 3. Close any overdue active polls
     const expiredPolls = await getExpiredPolls();
     for (const poll of expiredPolls) {
-      await closePoll(poll.id);
+      try {
+        const claimed = await claimPollClose(poll.id);
+        if (!claimed) continue;
 
-      const closedPoll = await getPoll(poll.id);
-      if (!closedPoll || !closedPoll.messageTs) continue;
+        const closedPoll = await getPoll(poll.id);
+        if (!closedPoll || !closedPoll.messageTs) continue;
 
-      const settings = getSettings(closedPoll);
+        const settings = getSettings(closedPoll);
 
-      let voterNames: Map<string, string[]> | undefined;
-      if (!settings.anonymous) {
-        voterNames = await getVotersByOption(poll.id);
+        let voterNames: Map<string, string[]> | undefined;
+        if (!settings.anonymous) {
+          voterNames = await getVotersByOption(poll.id);
+        }
+
+        const uniqueVoters = await getUniqueVoterCount(closedPoll);
+
+        const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames, uniqueVoters);
+        await client.chat.update({
+          channel: closedPoll.channelId,
+          ts: closedPoll.messageTs,
+          ...message,
+        });
+
+        const dm = buildResultsDMBlocks(closedPoll, settings, voterNames, uniqueVoters);
+        await client.chat.postMessage({
+          channel: closedPoll.creatorId,
+          ...dm,
+        });
+
+        console.log(`[Recovery] Auto-closed overdue poll ${poll.id}: "${poll.question}"`);
+      } catch (error) {
+        console.error(`[Recovery] Error closing expired poll ${poll.id}:`, error);
       }
-
-      const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames);
-      await client.chat.update({
-        channel: closedPoll.channelId,
-        ts: closedPoll.messageTs,
-        ...message,
-      });
-
-      const dm = buildResultsDMBlocks(closedPoll, settings, voterNames);
-      await client.chat.postMessage({
-        channel: closedPoll.creatorId,
-        ...dm,
-      });
-
-      console.log(`[Recovery] Auto-closed overdue poll ${poll.id}: "${poll.question}"`);
     }
 
-    if (scheduledPolls.length > 0 || expiredPolls.length > 0) {
-      console.log(`[Recovery] Processed ${scheduledPolls.length} scheduled, ${expiredPolls.length} expired polls`);
+    if (scheduledPolls.length > 0 || strandedPolls.length > 0 || expiredPolls.length > 0) {
+      console.log(`[Recovery] Processed ${scheduledPolls.length} scheduled, ${strandedPolls.length} stranded, ${expiredPolls.length} expired polls`);
     }
   } catch (error) {
     console.error('[Recovery] Startup recovery error:', error);

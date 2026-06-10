@@ -28,6 +28,7 @@ export interface ModalOptions {
     allowAddingOptions?: boolean;
     reminders?: boolean;
     includeMaybe?: boolean;
+    duration?: string;
     closesAt?: Date;
     scheduledAt?: Date;
   };
@@ -294,6 +295,7 @@ export function buildPollCreationModal(opts: ModalOptions = {}): View {
         type: 'plain_text_input',
         action_id: 'duration_input',
         placeholder: { type: 'plain_text', text: 'e.g. 24' },
+        ...(prefill?.duration ? { initial_value: prefill.duration } : {}),
       },
     });
   }

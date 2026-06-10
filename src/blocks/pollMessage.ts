@@ -4,22 +4,26 @@ import { POLL_TYPE_LABELS } from "../constants";
 import type { PollSettings } from "../types/pollSettings";
 import { renderBar } from "../utils/barChart";
 import { getOptionEmoji } from "../utils/emojiPrefix";
+import { truncate } from "../utils/truncate";
 
 export function buildPollMessage(
   poll: PollWithOptions,
   settings: PollSettings,
   voterNames?: Map<string, string[]>,
+  uniqueVoters?: number,
 ) {
   const isClosed = poll.status === "closed";
   const showResults = settings.liveResults || isClosed;
-  const totalVoters = countUniqueVoters(poll);
+  // For multi_select polls callers should pass the real unique-voter count
+  // (poll._count.votes counts vote rows, not voters)
+  const totalVoters = uniqueVoters ?? poll._count.votes;
 
   const blocks: KnownBlock[] = [];
 
   // Header
   blocks.push({
     type: "header",
-    text: { type: "plain_text", text: poll.question, emoji: true },
+    text: { type: "plain_text", text: truncate(poll.question), emoji: true },
   });
 
   // Description (optional)
@@ -137,11 +141,4 @@ export function buildPollMessage(
   }
 
   return { blocks, text: poll.question };
-}
-
-function countUniqueVoters(poll: PollWithOptions): number {
-  // Total voters = sum of all option votes for single/yes_no/rating (each voter votes once)
-  // For multi_select, _count.votes on the poll gives total vote rows, but we need unique voters
-  // We use the poll-level _count as an approximation; exact count comes from the vote service
-  return poll._count.votes;
 }

@@ -59,6 +59,12 @@ export async function closePoll(pollId: string) {
   });
 }
 
+export async function deletePoll(pollId: string) {
+  return prisma.poll.delete({
+    where: { id: pollId },
+  });
+}
+
 export async function updatePollMessageTs(pollId: string, messageTs: string) {
   return prisma.poll.update({
     where: { id: pollId },
@@ -90,6 +96,51 @@ export async function activatePoll(pollId: string) {
   return prisma.poll.update({
     where: { id: pollId },
     data: { status: 'active' },
+  });
+}
+
+/**
+ * Atomically claim a scheduled poll for posting. Returns true only if this
+ * caller flipped it scheduled → active; concurrent claimers get false.
+ */
+export async function claimScheduledPoll(pollId: string): Promise<boolean> {
+  const result = await prisma.poll.updateMany({
+    where: { id: pollId, status: 'scheduled' },
+    data: { status: 'active' },
+  });
+  return result.count === 1;
+}
+
+/**
+ * Atomically claim a poll for closing. Returns true only if this caller
+ * flipped it active → closed; concurrent claimers get false.
+ */
+export async function claimPollClose(pollId: string): Promise<boolean> {
+  const result = await prisma.poll.updateMany({
+    where: { id: pollId, status: 'active' },
+    data: { status: 'closed' },
+  });
+  return result.count === 1;
+}
+
+/**
+ * Find active polls that were claimed for posting but never made it to Slack
+ * (e.g. the bot crashed between claiming and chat.postMessage).
+ */
+export async function getStrandedActivePolls() {
+  return prisma.poll.findMany({
+    where: {
+      status: 'active',
+      messageTs: null,
+      scheduledAt: { not: null },
+    },
+    include: {
+      options: {
+        orderBy: { position: 'asc' },
+        include: { _count: { select: { votes: true } } },
+      },
+      _count: { select: { votes: true } },
+    },
   });
 }
 
@@ -128,8 +179,25 @@ interface UpdatePollInput {
   status: 'active' | 'scheduled';
 }
 
+/** Thrown when an edit targets a poll the scheduler has already posted. */
+export class PollNotEditableError extends Error {
+  constructor(pollId: string) {
+    super(`Poll ${pollId} is no longer scheduled and cannot be edited`);
+    this.name = 'PollNotEditableError';
+  }
+}
+
 export async function updatePoll(pollId: string, input: UpdatePollInput): Promise<PollWithOptions> {
   return prisma.$transaction(async (tx) => {
+    // Conditionally lock in the edit: bail if the cron already posted this poll
+    const claimed = await tx.poll.updateMany({
+      where: { id: pollId, status: 'scheduled' },
+      data: { status: 'scheduled' },
+    });
+    if (claimed.count !== 1) {
+      throw new PollNotEditableError(pollId);
+    }
+
     // Delete existing options (cascade deletes votes too)
     await tx.pollOption.deleteMany({ where: { pollId } });
 
@@ -188,11 +256,16 @@ export async function repostPoll(sourcePollId: string, creatorId: string, opts: 
   });
 }
 
-export async function cancelScheduledPoll(pollId: string) {
-  return prisma.poll.update({
-    where: { id: pollId },
+/**
+ * Cancel a scheduled poll. Conditional on it still being scheduled — returns
+ * false if the cron already posted it (or it was cancelled elsewhere).
+ */
+export async function cancelScheduledPoll(pollId: string): Promise<boolean> {
+  const result = await prisma.poll.updateMany({
+    where: { id: pollId, status: 'scheduled' },
     data: { status: 'closed' },
   });
+  return result.count === 1;
 }
 
 export async function getPollsNeedingReminders(): Promise<PollWithOptions[]> {
@@ -224,9 +297,14 @@ export async function getPollsNeedingReminders(): Promise<PollWithOptions[]> {
   });
 }
 
-export async function markReminderSent(pollId: string) {
-  return prisma.poll.update({
-    where: { id: pollId },
+/**
+ * Atomically claim the reminder send for a poll. Returns true only if this
+ * caller marked it; concurrent claimers (or repeat ticks) get false.
+ */
+export async function claimReminderSend(pollId: string): Promise<boolean> {
+  const result = await prisma.poll.updateMany({
+    where: { id: pollId, reminderSentAt: null },
     data: { reminderSentAt: new Date() },
   });
+  return result.count === 1;
 }

@@ -1,7 +1,7 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
 import { getSettings } from '../types/pollSettings';
-import { getVotersByOption } from '../services/voteService';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 
@@ -70,8 +70,10 @@ export function registerShareResultsSubmission(app: App): void {
       voterNames = await getVotersByOption(pollId);
     }
 
+    const uniqueVoters = await getUniqueVoterCount(poll);
+
     // Build results but without the "Share Results" button
-    const dm = buildResultsDMBlocks(poll, settings, voterNames);
+    const dm = buildResultsDMBlocks(poll, settings, voterNames, uniqueVoters);
     // Remove the last actions block (the share button) for the channel post
     const shareBlocks = dm.blocks.filter((b) => {
       if (b.type === 'actions') {

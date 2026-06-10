@@ -16,8 +16,7 @@
     "web:preview": "cd web && npm run preview",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "release": "bash scripts/release.sh"
+    "prisma:studio": "prisma studio"
   },
   "keywords": [
     "slack",

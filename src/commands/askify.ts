@@ -514,7 +514,12 @@ export function registerAskifyCommand(app: App): void {
         posted = true;
 
         if (result.ts) {
-          await updatePollMessageTs(poll.id, result.ts);
+          // The poll is live at this point; a failed ts save shouldn't surface as a creation failure
+          try {
+            await updatePollMessageTs(poll.id, result.ts);
+          } catch (tsErr) {
+            console.error('Failed to save message ts for poll', poll.id, tsErr);
+          }
         }
       } catch (err) {
         // Clean up the orphaned poll row if posting failed after creation

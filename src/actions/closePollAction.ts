@@ -1,5 +1,5 @@
 import { App } from '@slack/bolt';
-import { getPoll, closePoll } from '../services/pollService';
+import { getPoll, claimPollClose } from '../services/pollService';
 import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
@@ -26,10 +26,10 @@ export function registerClosePollAction(app: App): void {
       return;
     }
 
-    if (poll.status === 'closed') return;
-
-    // Close the poll
-    await closePoll(pollId);
+    // Atomically claim the close so a concurrent closer (auto-close cron,
+    // list action) can't double-send results
+    const claimed = await claimPollClose(pollId);
+    if (!claimed) return;
 
     // Refresh and update message
     const closedPoll = await getPoll(pollId);

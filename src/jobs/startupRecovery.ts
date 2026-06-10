@@ -66,8 +66,13 @@ export async function runStartupRecovery(client: WebClient): Promise<void> {
         const claimed = await claimScheduledPoll(poll.id);
         if (!claimed) continue;
 
-        await postPoll(poll);
-        console.log(`[Recovery] Posted overdue scheduled poll ${poll.id}: "${poll.question}"`);
+        // Re-fetch after claiming: the claim may have waited on an edit
+        // transaction, leaving the pre-claim snapshot stale
+        const freshPoll = await getPoll(poll.id);
+        if (!freshPoll) continue;
+
+        await postPoll(freshPoll);
+        console.log(`[Recovery] Posted overdue scheduled poll ${freshPoll.id}: "${freshPoll.question}"`);
       } catch (error) {
         console.error(`[Recovery] Error posting scheduled poll ${poll.id}:`, error);
       }

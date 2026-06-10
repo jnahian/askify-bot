@@ -4,7 +4,7 @@ import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import {
   cancelScheduledPoll,
-  closePoll,
+  claimPollClose,
   getPoll,
 } from "../services/pollService";
 import { getVotersByOption, getUniqueVoterCount } from "../services/voteService";
@@ -16,7 +16,18 @@ export function registerListActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
-    await closePoll(pollId);
+
+    // Atomically claim the close — only the claimer sends the results
+    // side-effects, so a race with auto-close can't double-send DMs
+    const claimed = await claimPollClose(pollId);
+    if (!claimed) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || '',
+        user: body.user.id,
+        text: ':information_source: This poll is already closed.',
+      });
+      return;
+    }
 
     const closedPoll = await getPoll(pollId);
     if (!closedPoll) return;

@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { WebClient } from '@slack/web-api';
-import { getScheduledPolls, claimScheduledPoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
+import { getScheduledPolls, claimScheduledPoll, getPoll, updatePollMessageTs, type PollWithOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
@@ -23,37 +23,42 @@ export function startScheduledPollJob(client: WebClient): void {
           const claimed = await claimScheduledPoll(poll.id);
           if (!claimed) continue;
 
-          const settings = poll.settings as {
+          // Re-fetch after claiming: the claim may have waited on an edit
+          // transaction, leaving the pre-claim snapshot stale
+          const freshPoll = await getPoll(poll.id);
+          if (!freshPoll) continue;
+
+          const settings = freshPoll.settings as {
             anonymous?: boolean;
             allowVoteChange?: boolean;
             liveResults?: boolean;
           };
 
           // Post to channel
-          const message = buildPollMessage(poll, settings);
+          const message = buildPollMessage(freshPoll, settings);
           try {
             const result = await client.chat.postMessage({
-              channel: poll.channelId,
+              channel: freshPoll.channelId,
               ...message,
             });
 
             // Store message_ts
             if (result.ts) {
-              await updatePollMessageTs(poll.id, result.ts);
+              await updatePollMessageTs(freshPoll.id, result.ts);
             }
 
             // Notify creator with action buttons
-            const dm = buildCreatorNotifyDM(poll, { isScheduled: true });
-            await client.chat.postMessage({ channel: poll.creatorId, ...dm });
+            const dm = buildCreatorNotifyDM(freshPoll, { isScheduled: true });
+            await client.chat.postMessage({ channel: freshPoll.creatorId, ...dm });
 
-            console.log(`Posted scheduled poll ${poll.id}: "${poll.question}"`);
+            console.log(`Posted scheduled poll ${freshPoll.id}: "${freshPoll.question}"`);
           } catch (err) {
             if (isNotInChannelError(err)) {
               await client.chat.postMessage({
-                channel: poll.creatorId,
-                text: notInChannelText(poll.channelId),
+                channel: freshPoll.creatorId,
+                text: notInChannelText(freshPoll.channelId),
               });
-              console.warn(`Scheduled poll ${poll.id}: bot not in channel ${poll.channelId}`);
+              console.warn(`Scheduled poll ${freshPoll.id}: bot not in channel ${freshPoll.channelId}`);
             } else {
               throw err;
             }

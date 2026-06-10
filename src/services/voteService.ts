@@ -47,8 +47,9 @@ export async function handleSingleVote(
       if (!allowVoteChange) return { action: 'rejected', message: 'Vote changes are not allowed.' };
 
       if (existingVote.optionId === optionId) {
-        // Retract vote — conditional delete in case it was removed concurrently
-        await tx.vote.deleteMany({ where: { id: existingVote.id } });
+        // Retract vote — delete by (pollId, voterId) to uphold the single-vote
+        // invariant and self-heal any legacy double-vote rows
+        await tx.vote.deleteMany({ where: { pollId, voterId } });
         return { action: 'retracted' };
       }
 

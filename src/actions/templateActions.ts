@@ -108,12 +108,17 @@ export function registerSaveTemplateSubmission(app: App): void {
       return;
     }
 
-    const { description, ...settings } = getSettings(poll);
+    const settings = getSettings(poll);
     const config: TemplateConfig = {
       pollType: poll.pollType,
       options: poll.options.map((o) => o.label),
-      ...(description ? { description } : {}),
-      settings: settings as TemplateConfig['settings'],
+      ...(settings.description ? { description: settings.description } : {}),
+      settings: {
+        anonymous: settings.anonymous ?? false,
+        allowVoteChange: settings.allowVoteChange ?? true,
+        liveResults: settings.liveResults ?? true,
+        ...(settings.ratingScale !== undefined ? { ratingScale: settings.ratingScale } : {}),
+      },
       closeMethod: 'manual',
     };
 

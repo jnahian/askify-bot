@@ -2,6 +2,7 @@ import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
 import { saveTemplate, getTemplate, deleteTemplate, type TemplateConfig } from '../services/templateService';
 import { buildPollCreationModal } from '../views/pollCreationModal';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export const SAVE_TEMPLATE_MODAL_ID = 'save_template_modal';
 
@@ -45,8 +46,15 @@ export function registerTemplateActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const templateId = action.value!;
-    const template = await getTemplate(templateId);
-    if (!template) return;
+    const template = await getTemplate(templateId, body.user.id);
+    if (!template) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Could not find this template.',
+      });
+      return;
+    }
 
     const config = template.config;
 
@@ -121,7 +129,7 @@ export function registerSaveTemplateSubmission(app: App): void {
 
     await client.chat.postMessage({
       channel: body.user.id,
-      text: `:white_check_mark: Template *"${templateName}"* saved! Use \`/askify templates\` to manage your templates.`,
+      text: `:white_check_mark: Template *"${escapeMrkdwn(templateName)}"* saved! Use \`/askify templates\` to manage your templates.`,
     });
   });
 }

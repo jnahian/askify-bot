@@ -8,6 +8,7 @@ import {
   getPoll,
 } from "../services/pollService";
 import { getVotersByOption, getUniqueVoterCount } from "../services/voteService";
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export function registerListActions(app: App): void {
   // Close poll from /askify list
@@ -16,13 +17,25 @@ export function registerListActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
+    const poll = await getPoll(pollId);
+    if (!poll) return;
+
+    // Only creator can close the poll
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || poll.channelId,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
 
     // Atomically claim the close — only the claimer sends the results
     // side-effects, so a race with auto-close can't double-send DMs
     const claimed = await claimPollClose(pollId);
     if (!claimed) {
       await client.chat.postEphemeral({
-        channel: body.channel?.id || '',
+        channel: body.channel?.id || poll.channelId,
         user: body.user.id,
         text: ':information_source: This poll is already closed.',
       });
@@ -66,7 +79,7 @@ export function registerListActions(app: App): void {
     await client.chat.postEphemeral({
       channel: body.channel?.id || closedPoll.channelId,
       user: body.user.id,
-      text: `:white_check_mark: Poll *"${closedPoll.question}"* has been closed.`,
+      text: `:white_check_mark: Poll *"${escapeMrkdwn(closedPoll.question)}"* has been closed.`,
     });
   });
 
@@ -76,14 +89,25 @@ export function registerListActions(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
+    const poll = await getPoll(pollId);
+    if (!poll) return;
+
+    // Only creator can cancel the poll
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
+
     // Conditional cancel — only succeeds if the poll is still scheduled
     const cancelled = await cancelScheduledPoll(pollId);
-
-    const poll = await getPoll(pollId);
-    const question = poll?.question || 'Unknown poll';
+    const question = escapeMrkdwn(poll.question);
 
     await client.chat.postEphemeral({
-      channel: body.channel?.id || '',
+      channel: body.channel?.id || body.user.id,
       user: body.user.id,
       text: cancelled
         ? `:white_check_mark: Scheduled poll *"${question}"* has been cancelled.`
@@ -99,6 +123,16 @@ export function registerListActions(app: App): void {
     const pollId = action.value!;
     const poll = await getPoll(pollId);
     if (!poll) return;
+
+    // Only creator can view results from the list
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || poll.channelId,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
 
     const settings = poll.settings as {
       anonymous?: boolean;

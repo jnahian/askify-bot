@@ -65,6 +65,13 @@ export function registerAddOptionSubmission(app: App): void {
       return;
     }
 
+    // Re-check that this poll allows voter-added options
+    const pollSettings = poll.settings as { allowAddingOptions?: boolean };
+    if (!pollSettings.allowAddingOptions) {
+      await ack({ response_action: 'errors', errors: { new_option_block: 'This poll does not allow adding options.' } });
+      return;
+    }
+
     if (poll.options.length >= MAX_OPTIONS) {
       await ack({ response_action: 'errors', errors: { new_option_block: `This poll already has the maximum of ${MAX_OPTIONS} options.` } });
       return;

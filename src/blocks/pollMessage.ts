@@ -2,6 +2,7 @@ import type { Button, KnownBlock } from "@slack/types";
 import type { PollWithOptions } from "../services/pollService";
 import { renderBar } from "../utils/barChart";
 import { getButtonEmoji, getOptionEmoji } from "../utils/emojiPrefix";
+import { escapeMrkdwn } from "../utils/escapeMrkdwn";
 import { formatMentions } from "../utils/mentions";
 import { truncate } from "../utils/truncate";
 
@@ -45,7 +46,7 @@ export function buildPollMessage(
   if (settings.description) {
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: settings.description },
+      text: { type: "mrkdwn", text: escapeMrkdwn(settings.description) },
     });
   }
 
@@ -71,7 +72,7 @@ export function buildPollMessage(
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
     const btnEmoji = getButtonEmoji(poll.pollType, idx, option.label);
-    const labelWithEmoji = `${emoji} ${option.label}`;
+    const labelWithEmoji = `${emoji} ${escapeMrkdwn(option.label)}`;
 
     if (showResults) {
       // Show bar chart with color coding by position
@@ -156,7 +157,7 @@ export function buildPollMessage(
     }
   }
 
-  return { blocks, text: poll.question };
+  return { blocks, text: escapeMrkdwn(poll.question) };
 }
 
 export function buildResultsDM(
@@ -166,9 +167,9 @@ export function buildResultsDM(
   uniqueVoters?: number,
 ): string {
   const totalVoters = uniqueVoters ?? poll._count.votes;
-  let text = `:bar_chart: *Poll Results: ${poll.question}*\n`;
+  let text = `:bar_chart: *Poll Results: ${escapeMrkdwn(poll.question)}*\n`;
   if (settings.description) {
-    text += `${settings.description}\n`;
+    text += `${escapeMrkdwn(settings.description)}\n`;
   }
   text += "\n";
 
@@ -176,7 +177,7 @@ export function buildResultsDM(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    text += `*${emoji} ${option.label}*\n\n${renderBar(voteCount, totalVoters, idx)}\n`;
+    text += `*${emoji} ${escapeMrkdwn(option.label)}*\n\n${renderBar(voteCount, totalVoters, idx)}\n`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;

@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import type { View, KnownBlock } from '@slack/types';
 import { getPoll, repostPoll } from '../services/pollService';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export const SCHEDULE_REPOST_MODAL_CALLBACK_ID = 'schedule_repost_modal';
 export const SCHEDULE_REPOST_CLOSE_METHOD_ACTION_ID = 'schedule_repost_close_method_select';
@@ -21,7 +22,7 @@ function buildScheduleRepostModal(opts: ScheduleRepostModalOptions): View {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `Schedule a repost of *"${pollQuestion}"* as a fresh poll with zero votes.`,
+      text: `Schedule a repost of *"${escapeMrkdwn(pollQuestion)}"* as a fresh poll with zero votes.`,
     },
   });
 
@@ -134,6 +135,16 @@ export function registerScheduleRepostAction(app: App): void {
       return;
     }
 
+    // Only creator can schedule a repost
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
+
     await client.views.open({
       trigger_id: body.trigger_id!,
       view: buildScheduleRepostModal({
@@ -151,7 +162,7 @@ export function registerScheduleRepostAction(app: App): void {
 
     const pollId = body.view!.private_metadata;
     const poll = await getPoll(pollId);
-    if (!poll) return;
+    if (!poll || poll.creatorId !== body.user.id) return;
 
     const closeMethod = action.selected_option?.value;
 
@@ -221,6 +232,16 @@ export function registerScheduleRepostSubmission(app: App): void {
       return;
     }
 
+    // Only creator can schedule a repost (private_metadata is the only binding)
+    const sourcePoll = await getPoll(sourcePollId);
+    if (!sourcePoll || sourcePoll.creatorId !== creatorId) {
+      await ack({
+        response_action: 'errors',
+        errors: { schedule_repost_channel_block: 'Only the poll creator can do this.' },
+      });
+      return;
+    }
+
     await ack();
 
     const scheduledAt = new Date(scheduledTimestamp! * 1000);
@@ -234,13 +255,13 @@ export function registerScheduleRepostSubmission(app: App): void {
     const scheduleTs = Math.floor(scheduledAt.getTime() / 1000);
     await client.chat.postMessage({
       channel: creatorId,
-      text: `:clock3: Poll *"${newPoll.question}"* has been scheduled for repost.\n*<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+      text: `:clock3: Poll *"${escapeMrkdwn(newPoll.question)}"* has been scheduled for repost.\n*<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
       blocks: [
         {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `:clock3: Poll *"${newPoll.question}"* has been scheduled for repost.\n*<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+            text: `:clock3: Poll *"${escapeMrkdwn(newPoll.question)}"* has been scheduled for repost.\n*<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
           },
         },
         {

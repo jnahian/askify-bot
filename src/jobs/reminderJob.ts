@@ -3,6 +3,7 @@ import { WebClient } from '@slack/web-api';
 import { getPollsNeedingReminders, claimReminderSend } from '../services/pollService';
 import prisma from '../lib/prisma';
 import { withRetry } from '../utils/slackRetry';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export function startReminderJob(client: WebClient): ScheduledTask {
   let isRunning = false;
@@ -83,7 +84,7 @@ export function startReminderJob(client: WebClient): ScheduledTask {
             try {
               await withRetry(() => client.chat.postMessage({
                 channel: userId,
-                text: `:bell: Reminder: The poll *"${poll.question}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
+                text: `:bell: Reminder: The poll *"${escapeMrkdwn(poll.question)}"* in <#${poll.channelId}> closes in ${timeLabel}.\n<${messageLink}|Vote now>`,
               }));
             } catch {
               // User may have DMs disabled — skip

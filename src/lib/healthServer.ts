@@ -28,7 +28,6 @@ export function startHealthServer(slackClient: WebClient): void {
       res.status(503).json({
         status: "error",
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });

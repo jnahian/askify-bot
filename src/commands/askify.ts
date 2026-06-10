@@ -1,10 +1,15 @@
 import { App } from '@slack/bolt';
 import type { KnownBlock, Button } from '@slack/types';
 import { buildPollCreationModal } from '../views/pollCreationModal';
-import { createPoll, updatePollMessageTs, getUserPolls, type GetUserPollsOptions } from '../services/pollService';
+import { createPoll, deletePoll, updatePollMessageTs, getUserPolls, type GetUserPollsOptions } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { getTemplates } from '../services/templateService';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { POLL_TYPE_LABELS } from '../constants';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
+import { truncate } from '../utils/truncate';
+
+const MAX_QUESTION_LENGTH = 150;
 
 interface InlinePollArgs {
   question: string;
@@ -29,6 +34,10 @@ function parseInlinePoll(text: string): InlinePollArgs | { error: string } {
 
   const question = quoted[0];
   const options = quoted.slice(1);
+
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return { error: `Your question is ${question.length} characters — the maximum is ${MAX_QUESTION_LENGTH}. Please shorten it and try again.` };
+  }
 
   const flags = withoutQuoted.toLowerCase().trim();
   let pollType: InlinePollArgs['pollType'] = 'single_choice';
@@ -217,13 +226,6 @@ export function registerAskifyCommand(app: App): void {
         return;
       }
 
-      const POLL_TYPE_LABELS: Record<string, string> = {
-        single_choice: 'Single Choice',
-        multi_select: 'Multi-Select',
-        yes_no: 'Yes / No / Maybe',
-        rating: 'Rating Scale',
-      };
-
       const STATUS_META: Record<string, { emoji: string; label: string }> = {
         active: { emoji: ':large_green_circle:', label: 'Active' },
         scheduled: { emoji: ':clock3:', label: 'Scheduled' },
@@ -237,7 +239,7 @@ export function registerAskifyCommand(app: App): void {
       const blocks: KnownBlock[] = [
         {
           type: 'header',
-          text: { type: 'plain_text', text: headerText },
+          text: { type: 'plain_text', text: truncate(headerText) },
         },
         {
           type: 'context',
@@ -252,7 +254,7 @@ export function registerAskifyCommand(app: App): void {
         const createdTs = Math.floor(poll.createdAt.getTime() / 1000);
 
         // Build enriched body
-        let body = `${meta.emoji} *${poll.question}*\n`;
+        let body = `${meta.emoji} *${escapeMrkdwn(poll.question)}*\n`;
         body += `${meta.label} · ${POLL_TYPE_LABELS[poll.pollType] || poll.pollType} · ${optionCount} options · ${voteCount} vote${voteCount !== 1 ? 's' : ''}\n`;
         body += `<#${poll.channelId}> · Created <!date^${createdTs}^{date_short} at {time}|${poll.createdAt.toISOString()}>`;
 
@@ -267,7 +269,7 @@ export function registerAskifyCommand(app: App): void {
         }
 
         // Option preview (first 3 options)
-        const preview = poll.options.slice(0, 3).map(o => o.label).join(', ');
+        const preview = poll.options.slice(0, 3).map(o => escapeMrkdwn(o.label)).join(', ');
         const moreCount = poll.options.length - 3;
         body += `\n_Options: ${preview}${moreCount > 0 ? `, +${moreCount} more` : ''}_`;
 
@@ -374,6 +376,9 @@ export function registerAskifyCommand(app: App): void {
         return;
       }
 
+      const MAX_TEMPLATES_SHOWN = 15;
+      const shownTemplates = templates.slice(0, MAX_TEMPLATES_SHOWN);
+
       const blocks: KnownBlock[] = [
         {
           type: 'header',
@@ -381,22 +386,16 @@ export function registerAskifyCommand(app: App): void {
         },
       ];
 
-      for (const template of templates) {
+      for (const template of shownTemplates) {
         const config = template.config;
-        const pollTypeLabel: Record<string, string> = {
-          single_choice: 'Single Choice',
-          multi_select: 'Multi-Select',
-          yes_no: 'Yes / No / Maybe',
-          rating: 'Rating Scale',
-        };
 
         blocks.push({ type: 'divider' });
         blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*${template.name}*\nType: ${pollTypeLabel[config.pollType] || config.pollType}` +
-              (config.options.length > 0 ? `\nOptions: ${config.options.join(', ')}` : ''),
+            text: `*${escapeMrkdwn(template.name)}*\nType: ${POLL_TYPE_LABELS[config.pollType] || config.pollType}` +
+              (config.options.length > 0 ? `\nOptions: ${config.options.map(escapeMrkdwn).join(', ')}` : ''),
           },
         });
 
@@ -423,6 +422,14 @@ export function registerAskifyCommand(app: App): void {
               },
             } as Button,
           ],
+        });
+      }
+
+      if (templates.length > MAX_TEMPLATES_SHOWN) {
+        blocks.push({ type: 'divider' });
+        blocks.push({
+          type: 'context',
+          elements: [{ type: 'mrkdwn', text: `Showing ${MAX_TEMPLATES_SHOWN} of ${templates.length} templates` }],
         });
       }
 
@@ -485,6 +492,8 @@ export function registerAskifyCommand(app: App): void {
         ? new Date(Date.now() + parsed.closeDuration * 60 * 60 * 1000)
         : null;
 
+      let pollId: string | null = null;
+      let posted = false;
       try {
         const poll = await createPoll({
           creatorId: command.user_id,
@@ -495,20 +504,44 @@ export function registerAskifyCommand(app: App): void {
           settings: JSON.parse(JSON.stringify(settings)),
           closesAt,
         });
+        pollId = poll.id;
 
         const message = buildPollMessage(poll, settings);
         const result = await client.chat.postMessage({
           channel: command.channel_id,
           ...message,
         });
+        posted = true;
 
         if (result.ts) {
-          await updatePollMessageTs(poll.id, result.ts);
+          // The poll is live at this point; a failed ts save shouldn't surface as a creation failure
+          try {
+            await updatePollMessageTs(poll.id, result.ts);
+          } catch (tsErr) {
+            console.error('Failed to save message ts for poll', poll.id, tsErr);
+          }
         }
       } catch (err) {
-        const errorText = isNotInChannelError(err)
-          ? notInChannelText(command.channel_id)
-          : `:warning: Failed to create poll: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        // Clean up the orphaned poll row only when Slack definitively rejected the post;
+        // on ambiguous network/timeout errors the message may exist, so keep the row
+        const slackError = (err as { data?: { error?: string } })?.data?.error;
+        if (pollId && !posted && slackError) {
+          try {
+            await deletePoll(pollId);
+          } catch (cleanupErr) {
+            console.error('Failed to clean up orphaned poll', pollId, cleanupErr);
+          }
+        } else if (pollId && !posted) {
+          console.error('Poll post failed with non-Slack error; keeping poll row', pollId, err);
+        }
+        // Generic user-facing message — don't leak raw error details
+        let errorText: string;
+        if (isNotInChannelError(err)) {
+          errorText = notInChannelText(command.channel_id);
+        } else {
+          console.error('Inline poll creation error:', err);
+          errorText = ':warning: Failed to create poll. Please try again.';
+        }
         await client.chat.postMessage({
           channel: command.user_id,
           text: errorText,

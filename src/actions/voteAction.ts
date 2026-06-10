@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
-import { handleSingleVote, handleMultiVote, getVotersByOption } from '../services/voteService';
+import { getSettings } from '../types/pollSettings';
+import { handleSingleVote, handleMultiVote, getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { withRetry } from '../utils/slackRetry';
 import { debouncedUpdate } from '../utils/debounce';
@@ -19,20 +20,26 @@ export function registerVoteAction(app: App): void {
       const poll = await getPoll(pollId);
       if (!poll) return;
 
-      if (poll.status === 'closed') {
+      if (poll.status !== 'active') {
         await client.chat.postEphemeral({
           channel: poll.channelId,
           user: voterId,
-          text: ':no_entry_sign: This poll is closed.',
+          text: ':no_entry_sign: This poll is not accepting votes.',
         });
         return;
       }
 
-      const settings = poll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-      };
+      // Validate the option belongs to this poll
+      if (!poll.options.some((o) => o.id === optionId)) {
+        await client.chat.postEphemeral({
+          channel: poll.channelId,
+          user: voterId,
+          text: ':x: That option does not belong to this poll.',
+        });
+        return;
+      }
+
+      const settings = getSettings(poll);
       const allowVoteChange = settings.allowVoteChange !== false;
 
       // Handle vote based on poll type
@@ -73,7 +80,8 @@ export function registerVoteAction(app: App): void {
           freshVoterNames = await getVotersByOption(pollId);
         }
 
-        const freshMessage = buildPollMessage(freshPoll, settings, freshVoterNames);
+        const uniqueVoters = await getUniqueVoterCount(freshPoll);
+        const freshMessage = buildPollMessage(freshPoll, settings, freshVoterNames, uniqueVoters);
         await withRetry(() =>
           client.chat.update({
             channel: freshPoll.channelId,

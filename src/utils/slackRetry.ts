@@ -1,3 +1,5 @@
+import { ErrorCode } from '@slack/web-api';
+
 /**
  * Retry a Slack API call with exponential backoff on rate limit errors.
  */
@@ -9,7 +11,7 @@ export async function withRetry<T>(
     try {
       return await fn();
     } catch (error: any) {
-      const isRateLimit = error?.data?.error === 'ratelimited' || error?.code === 'slack_webapi_rate_limited';
+      const isRateLimit = error?.data?.error === 'ratelimited' || error?.code === ErrorCode.RateLimitedError;
       const retryAfter = error?.data?.response_metadata?.retry_after || error?.retryAfter;
 
       if (isRateLimit && attempt < maxRetries) {

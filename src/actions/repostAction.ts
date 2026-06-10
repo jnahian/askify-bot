@@ -1,7 +1,9 @@
 import { App } from '@slack/bolt';
 import { getPoll, repostPoll, updatePollMessageTs } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 export const REPOST_MODAL_CALLBACK_ID = 'repost_poll_modal';
 
@@ -14,6 +16,16 @@ export function registerRepostAction(app: App): void {
     const pollId = action.value!;
     const poll = await getPoll(pollId);
     if (!poll) return;
+
+    // Only creator can repost the poll
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
 
     await client.views.open({
       trigger_id: body.trigger_id!,
@@ -29,7 +41,7 @@ export function registerRepostAction(app: App): void {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `Repost *"${poll.question}"* as a fresh poll with zero votes.`,
+              text: `Repost *"${escapeMrkdwn(poll.question)}"* as a fresh poll with zero votes.`,
             },
           },
           {
@@ -60,20 +72,21 @@ export function registerRepostSubmission(app: App): void {
       return;
     }
 
-    await ack();
-
     const creatorId = body.user.id;
+
+    // Only creator can repost the poll (private_metadata is the only binding)
+    const sourcePoll = await getPoll(sourcePollId);
+    if (!sourcePoll || sourcePoll.creatorId !== creatorId) {
+      await ack({ response_action: 'errors', errors: { repost_channel_block: 'Only the poll creator can do this.' } });
+      return;
+    }
+
+    await ack();
 
     try {
       const newPoll = await repostPoll(sourcePollId, creatorId, { channelId });
 
-      const settings = newPoll.settings as {
-        anonymous?: boolean;
-        allowVoteChange?: boolean;
-        liveResults?: boolean;
-        allowAddingOptions?: boolean;
-        description?: string;
-      };
+      const settings = getSettings(newPoll);
 
       const message = buildPollMessage(newPoll, settings);
       const result = await client.chat.postMessage({
@@ -87,7 +100,7 @@ export function registerRepostSubmission(app: App): void {
 
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:recycle: Poll *"${newPoll.question}"* has been reposted to <#${channelId}>.`,
+        text: `:recycle: Poll *"${escapeMrkdwn(newPoll.question)}"* has been reposted to <#${channelId}>.`,
       });
     } catch (err) {
       if (isNotInChannelError(err)) {

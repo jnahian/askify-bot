@@ -1,8 +1,10 @@
 import { App } from '@slack/bolt';
 import { getPoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import { getSettings } from '../types/pollSettings';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
 
 const SHARE_RESULTS_MODAL_ID = 'share_results_modal';
 
@@ -13,6 +15,18 @@ export function registerShareResultsAction(app: App): void {
     if (action.type !== 'button' || body.type !== 'block_actions') return;
 
     const pollId = action.value!;
+
+    // Only creator can share results
+    const poll = await getPoll(pollId);
+    if (!poll) return;
+    if (poll.creatorId !== body.user.id) {
+      await client.chat.postEphemeral({
+        channel: body.channel?.id || body.user.id,
+        user: body.user.id,
+        text: ':x: Only the poll creator can do this.',
+      });
+      return;
+    }
 
     await client.views.open({
       trigger_id: body.trigger_id!,
@@ -51,30 +65,31 @@ export function registerShareResultsSubmission(app: App): void {
       return;
     }
 
-    await ack();
-
     const poll = await getPoll(pollId);
     if (!poll) {
-      await client.chat.postMessage({
-        channel: body.user.id,
-        text: ':x: Could not find the poll.',
-      });
+      await ack({ response_action: 'errors', errors: { share_channel_block: 'Could not find the poll.' } });
       return;
     }
 
-    const settings = poll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    // Only creator can share results (private_metadata is the only binding)
+    if (poll.creatorId !== body.user.id) {
+      await ack({ response_action: 'errors', errors: { share_channel_block: 'Only the poll creator can do this.' } });
+      return;
+    }
+
+    await ack();
+
+    const settings = getSettings(poll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {
       voterNames = await getVotersByOption(pollId);
     }
 
+    const uniqueVoters = await getUniqueVoterCount(poll);
+
     // Build results but without the "Share Results" button
-    const dm = buildResultsDMBlocks(poll, settings, voterNames);
+    const dm = buildResultsDMBlocks(poll, settings, voterNames, uniqueVoters);
     // Remove the last actions block (the share button) for the channel post
     const shareBlocks = dm.blocks.filter((b) => {
       if (b.type === 'actions') {
@@ -103,7 +118,7 @@ export function registerShareResultsSubmission(app: App): void {
 
     await client.chat.postMessage({
       channel: body.user.id,
-      text: `:white_check_mark: Results for *"${poll.question}"* have been shared to <#${channelId}>.`,
+      text: `:white_check_mark: Results for *"${escapeMrkdwn(poll.question)}"* have been shared to <#${channelId}>.`,
     });
   });
 }

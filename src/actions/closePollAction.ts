@@ -1,6 +1,7 @@
 import { App } from '@slack/bolt';
-import { getPoll, closePoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import { getPoll, claimPollClose } from '../services/pollService';
+import { getSettings } from '../types/pollSettings';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { buildResultsDMBlocks } from '../blocks/resultsDM';
 
@@ -26,28 +27,26 @@ export function registerClosePollAction(app: App): void {
       return;
     }
 
-    if (poll.status === 'closed') return;
-
-    // Close the poll
-    await closePoll(pollId);
+    // Atomically claim the close so a concurrent closer (auto-close cron,
+    // list action) can't double-send results
+    const claimed = await claimPollClose(pollId);
+    if (!claimed) return;
 
     // Refresh and update message
     const closedPoll = await getPoll(pollId);
     if (!closedPoll || !closedPoll.messageTs) return;
 
-    const settings = closedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-    };
+    const settings = getSettings(closedPoll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {
       voterNames = await getVotersByOption(pollId);
     }
 
+    const uniqueVoters = await getUniqueVoterCount(closedPoll);
+
     // Update channel message with final results
-    const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames);
+    const message = buildPollMessage(closedPoll, { ...settings, liveResults: true }, voterNames, uniqueVoters);
     await client.chat.update({
       channel: closedPoll.channelId,
       ts: closedPoll.messageTs,
@@ -55,7 +54,7 @@ export function registerClosePollAction(app: App): void {
     });
 
     // DM results to creator with "Share Results" button
-    const dm = buildResultsDMBlocks(closedPoll, settings, voterNames);
+    const dm = buildResultsDMBlocks(closedPoll, settings, voterNames, uniqueVoters);
     await client.chat.postMessage({
       channel: closedPoll.creatorId,
       ...dm,

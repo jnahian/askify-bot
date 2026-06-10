@@ -1,24 +1,17 @@
 import type { App } from '@slack/bolt';
 import { EDIT_MODAL_CALLBACK_ID } from './pollCreationModal';
-import { getPoll, updatePoll, updatePollMessageTs } from '../services/pollService';
+import { getPoll, updatePoll, updatePollMessageTs, PollNotEditableError } from '../services/pollService';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
-
-interface PollSettings {
-  anonymous: boolean;
-  allowVoteChange: boolean;
-  liveResults: boolean;
-  ratingScale?: number;
-  allowAddingOptions?: boolean;
-  reminders?: boolean;
-  description?: string;
-  includeMaybe?: boolean;
-}
+import type { PollSettings } from '../types/pollSettings';
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
+import { parseModalMetadata } from '../actions/modalActions';
 
 export function registerPollEditSubmission(app: App): void {
   app.view(EDIT_MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {
-    const pollId = view.private_metadata;
+    // Metadata may be the plain pollId (initial open) or JSON after a modal rebuild
+    const pollId = parseModalMetadata(view.private_metadata).pollId ?? '';
     const values = view.state.values;
     const creatorId = body.user.id;
 
@@ -28,6 +21,15 @@ export function registerPollEditSubmission(app: App): void {
       await ack({
         response_action: 'errors',
         errors: { question_block: 'This poll has already been posted and can no longer be edited.' },
+      });
+      return;
+    }
+
+    // Only creator can edit the poll (private_metadata is the only binding)
+    if (existingPoll.creatorId !== creatorId) {
+      await ack({
+        response_action: 'errors',
+        errors: { question_block: 'Only the poll creator can do this.' },
       });
       return;
     }
@@ -149,17 +151,30 @@ export function registerPollEditSubmission(app: App): void {
     // Calculate status based on schedule method
     const status: 'active' | 'scheduled' = isScheduled ? 'scheduled' : 'active';
 
-    // Update poll
-    const updatedPoll = await updatePoll(pollId, {
-      question: question!,
-      pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
-      channelId: channelId!,
-      options: pollOptions,
-      settings: JSON.parse(JSON.stringify(settings)),
-      closesAt,
-      scheduledAt: isScheduled ? scheduledAt : null,
-      status,
-    });
+    // Update poll — conditional on it still being scheduled, so an edit
+    // can't clobber a poll the cron just posted
+    let updatedPoll;
+    try {
+      updatedPoll = await updatePoll(pollId, {
+        question: question!,
+        pollType: pollType as 'single_choice' | 'multi_select' | 'yes_no' | 'rating',
+        channelId: channelId!,
+        options: pollOptions,
+        settings: JSON.parse(JSON.stringify(settings)),
+        closesAt,
+        scheduledAt: isScheduled ? scheduledAt : null,
+        status,
+      });
+    } catch (err) {
+      if (err instanceof PollNotEditableError) {
+        await client.chat.postMessage({
+          channel: creatorId,
+          text: `:warning: Your edits to *"${question}"* could not be saved — the poll was already posted while you were editing.`,
+        });
+        return;
+      }
+      throw err;
+    }
 
     // If poll was changed to "Post Immediately", post it now
     if (status === 'active') {
@@ -196,13 +211,13 @@ export function registerPollEditSubmission(app: App): void {
       const scheduleTs = Math.floor(scheduledAt.getTime() / 1000);
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+        text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
         blocks: [
           {
             type: 'section',
             text: {
               type: 'mrkdwn',
-              text: `:pencil2: Your poll *"${question}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
+              text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.\nScheduled for *<!date^${scheduleTs}^{date_short} at {time}|${scheduledAt.toISOString()}>* in <#${channelId}>.`,
             },
           },
           {
@@ -234,7 +249,7 @@ export function registerPollEditSubmission(app: App): void {
     } else {
       await client.chat.postMessage({
         channel: creatorId,
-        text: `:pencil2: Your poll *"${question}"* has been updated.`,
+        text: `:pencil2: Your poll *"${escapeMrkdwn(question!)}"* has been updated.`,
       });
     }
   });

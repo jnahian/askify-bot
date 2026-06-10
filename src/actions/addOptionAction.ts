@@ -1,10 +1,14 @@
 import { App } from '@slack/bolt';
 import prisma from '../lib/prisma';
 import { getPoll } from '../services/pollService';
-import { getVotersByOption } from '../services/voteService';
+import { getSettings } from '../types/pollSettings';
+import { getVotersByOption, getUniqueVoterCount } from '../services/voteService';
 import { buildPollMessage } from '../blocks/pollMessage';
 
 const ADD_OPTION_MODAL_ID = 'add_option_modal';
+
+// Matches the creation modal's option cap; keeps messages under Slack's 50-block limit
+const MAX_OPTIONS = 10;
 
 export function registerAddOptionAction(app: App): void {
   // "Add Option" button clicked on poll message
@@ -62,6 +66,18 @@ export function registerAddOptionSubmission(app: App): void {
       return;
     }
 
+    // Re-check that this poll allows voter-added options
+    const pollSettings = poll.settings as { allowAddingOptions?: boolean };
+    if (!pollSettings.allowAddingOptions) {
+      await ack({ response_action: 'errors', errors: { new_option_block: 'This poll does not allow adding options.' } });
+      return;
+    }
+
+    if (poll.options.length >= MAX_OPTIONS) {
+      await ack({ response_action: 'errors', errors: { new_option_block: `This poll already has the maximum of ${MAX_OPTIONS} options.` } });
+      return;
+    }
+
     // Check for duplicate
     const isDuplicate = poll.options.some(
       (o) => o.label.toLowerCase() === newOptionText.toLowerCase(),
@@ -88,19 +104,15 @@ export function registerAddOptionSubmission(app: App): void {
     const updatedPoll = await getPoll(pollId);
     if (!updatedPoll || !updatedPoll.messageTs) return;
 
-    const settings = updatedPoll.settings as {
-      anonymous?: boolean;
-      allowVoteChange?: boolean;
-      liveResults?: boolean;
-      allowAddingOptions?: boolean;
-    };
+    const settings = getSettings(updatedPoll);
 
     let voterNames: Map<string, string[]> | undefined;
     if (!settings.anonymous) {
       voterNames = await getVotersByOption(pollId);
     }
 
-    const message = buildPollMessage(updatedPoll, settings, voterNames);
+    const uniqueVoters = await getUniqueVoterCount(updatedPoll);
+    const message = buildPollMessage(updatedPoll, settings, voterNames, uniqueVoters);
     await client.chat.update({
       channel: updatedPoll.channelId,
       ts: updatedPoll.messageTs,

@@ -1,22 +1,12 @@
 import type { App, ViewSubmitAction, AllMiddlewareArgs, SlackViewMiddlewareArgs } from '@slack/bolt';
 import { MODAL_CALLBACK_ID } from './pollCreationModal';
-import { createPoll } from '../services/pollService';
+import { createPoll, updatePollMessageTs } from '../services/pollService';
+import type { PollSettings } from '../types/pollSettings';
 import { buildPollMessage } from '../blocks/pollMessage';
 import { isNotInChannelError, notInChannelText } from '../utils/channelError';
 import { buildCreatorNotifyDM } from '../blocks/creatorNotifyDM';
 
 type ViewSubmissionArgs = SlackViewMiddlewareArgs<ViewSubmitAction> & AllMiddlewareArgs;
-
-interface PollSettings {
-  anonymous: boolean;
-  allowVoteChange: boolean;
-  liveResults: boolean;
-  ratingScale?: number;
-  allowAddingOptions?: boolean;
-  reminders?: boolean;
-  description?: string;
-  includeMaybe?: boolean;
-}
 
 export function registerPollCreationSubmission(app: App): void {
   app.view(MODAL_CALLBACK_ID, async ({ ack, view, client, body }) => {
@@ -213,7 +203,6 @@ export function registerPollCreationSubmission(app: App): void {
 
         // Store message_ts for future updates
         if (result.ts) {
-          const { updatePollMessageTs } = await import('../services/pollService');
           await updatePollMessageTs(poll.id, result.ts);
         }
       } catch (err) {

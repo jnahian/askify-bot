@@ -45,9 +45,9 @@ export async function getTemplates(userId: string): Promise<PollTemplate[]> {
   return templates as unknown as PollTemplate[];
 }
 
-export async function getTemplate(templateId: string): Promise<PollTemplate | null> {
-  const template = await prisma.pollTemplate.findUnique({
-    where: { id: templateId },
+export async function getTemplate(templateId: string, userId: string): Promise<PollTemplate | null> {
+  const template = await prisma.pollTemplate.findFirst({
+    where: { id: templateId, userId },
   });
   return template as unknown as PollTemplate | null;
 }

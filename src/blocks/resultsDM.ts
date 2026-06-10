@@ -1,15 +1,11 @@
 import type { KnownBlock, Button } from '@slack/types';
 import type { PollWithOptions } from '../services/pollService';
+import type { PollSettings } from '../types/pollSettings';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
-
-interface PollSettings {
-  anonymous?: boolean;
-  allowVoteChange?: boolean;
-  liveResults?: boolean;
-  ratingScale?: number;
-  description?: string;
-}
+import { escapeMrkdwn } from '../utils/escapeMrkdwn';
+import { formatMentions } from '../utils/mentions';
+import { truncate } from '../utils/truncate';
 
 /**
  * Build DM blocks for poll results with a "Share Results" button.
@@ -18,19 +14,22 @@ export function buildResultsDMBlocks(
   poll: PollWithOptions,
   settings: PollSettings,
   voterNames?: Map<string, string[]>,
+  uniqueVoters?: number,
 ) {
-  const totalVoters = poll._count.votes;
+  // For multi_select polls callers should pass the real unique-voter count
+  // (poll._count.votes counts vote rows, not voters)
+  const totalVoters = uniqueVoters ?? poll._count.votes;
   const blocks: KnownBlock[] = [];
 
   blocks.push({
     type: 'header',
-    text: { type: 'plain_text', text: `Poll Results: ${poll.question}`, emoji: true },
+    text: { type: 'plain_text', text: truncate(`Poll Results: ${poll.question}`), emoji: true },
   });
 
   if (settings.description) {
     blocks.push({
       type: 'section',
-      text: { type: 'mrkdwn', text: settings.description },
+      text: { type: 'mrkdwn', text: escapeMrkdwn(settings.description) },
     });
   }
 
@@ -45,12 +44,12 @@ export function buildResultsDMBlocks(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    let text = `*${emoji} ${option.label}*\n${renderBar(voteCount, totalVoters, idx)}`;
+    let text = `*${emoji} ${escapeMrkdwn(option.label)}*\n${renderBar(voteCount, totalVoters, idx)}`;
 
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;
       if (names.length > 0) {
-        text += `\nVoters: ${names.map((n) => `<@${n}>`).join(', ')}`;
+        text += `\nVoters: ${formatMentions(names)}`;
       }
     }
 
@@ -101,6 +100,6 @@ export function buildResultsDMBlocks(
 
   return {
     blocks,
-    text: `Poll Results: ${poll.question}`,
+    text: `Poll Results: ${escapeMrkdwn(poll.question)}`,
   };
 }

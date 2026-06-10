@@ -42,13 +42,3 @@ export function getOptionEmoji(pollType: string, index: number, label: string): 
   }
   return getNumberEmoji(index);
 }
-
-/**
- * Get the button text for a poll option.
- * - Yes/No/Maybe polls: emoji only (✅, ❌, 🤷)
- * - Rating polls: star emojis
- * - All other polls: number emoji only
- */
-export function getButtonEmoji(pollType: string, index: number, label: string): string {
-  return getOptionEmoji(pollType, index, label);
-}

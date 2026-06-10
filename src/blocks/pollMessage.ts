@@ -1,46 +1,38 @@
 import type { Button, KnownBlock } from "@slack/types";
 import type { PollWithOptions } from "../services/pollService";
+import { POLL_TYPE_LABELS } from "../constants";
+import type { PollSettings } from "../types/pollSettings";
 import { renderBar } from "../utils/barChart";
-import { getButtonEmoji, getOptionEmoji } from "../utils/emojiPrefix";
-
-interface PollSettings {
-  anonymous?: boolean;
-  allowVoteChange?: boolean;
-  liveResults?: boolean;
-  ratingScale?: number;
-  allowAddingOptions?: boolean;
-  description?: string;
-}
-
-const POLL_TYPE_LABELS: Record<string, string> = {
-  single_choice: "Single Choice",
-  multi_select: "Multi-Select",
-  yes_no: "Yes / No / Maybe",
-  rating: "Rating Scale",
-};
+import { getOptionEmoji } from "../utils/emojiPrefix";
+import { escapeMrkdwn } from "../utils/escapeMrkdwn";
+import { formatMentions } from "../utils/mentions";
+import { truncate } from "../utils/truncate";
 
 export function buildPollMessage(
   poll: PollWithOptions,
   settings: PollSettings,
   voterNames?: Map<string, string[]>,
+  uniqueVoters?: number,
 ) {
   const isClosed = poll.status === "closed";
   const showResults = settings.liveResults || isClosed;
-  const totalVoters = countUniqueVoters(poll);
+  // For multi_select polls callers should pass the real unique-voter count
+  // (poll._count.votes counts vote rows, not voters)
+  const totalVoters = uniqueVoters ?? poll._count.votes;
 
   const blocks: KnownBlock[] = [];
 
   // Header
   blocks.push({
     type: "header",
-    text: { type: "plain_text", text: poll.question, emoji: true },
+    text: { type: "plain_text", text: truncate(poll.question), emoji: true },
   });
 
   // Description (optional)
   if (settings.description) {
     blocks.push({
       type: "section",
-      text: { type: "mrkdwn", text: settings.description },
+      text: { type: "mrkdwn", text: escapeMrkdwn(settings.description) },
     });
   }
 
@@ -65,8 +57,7 @@ export function buildPollMessage(
     const option = poll.options[idx];
     const voteCount = option._count.votes;
     const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    const btnEmoji = getButtonEmoji(poll.pollType, idx, option.label);
-    const labelWithEmoji = `${emoji} ${option.label}`;
+    const labelWithEmoji = `${emoji} ${escapeMrkdwn(option.label)}`;
 
     if (showResults) {
       // Show bar chart with color coding by position
@@ -76,7 +67,7 @@ export function buildPollMessage(
       if (!settings.anonymous && voterNames?.has(option.id)) {
         const names = voterNames.get(option.id)!;
         if (names.length > 0) {
-          text += `\n${names.map((n) => `<@${n}>`).join(", ")}`;
+          text += `\n${formatMentions(names)}`;
         }
       }
 
@@ -88,7 +79,7 @@ export function buildPollMessage(
         : {
             accessory: {
               type: "button",
-              text: { type: "plain_text", text: btnEmoji, emoji: true },
+              text: { type: "plain_text", text: emoji, emoji: true },
               action_id: `vote_${option.id}`,
               value: `${poll.id}:${option.id}`,
             } as Button,
@@ -101,7 +92,7 @@ export function buildPollMessage(
         text: { type: "mrkdwn", text: `*${labelWithEmoji}*` },
         accessory: {
           type: "button",
-          text: { type: "plain_text", text: btnEmoji, emoji: true },
+          text: { type: "plain_text", text: emoji, emoji: true },
           action_id: `vote_${option.id}`,
           value: `${poll.id}:${option.id}`,
         } as Button,
@@ -151,51 +142,5 @@ export function buildPollMessage(
     }
   }
 
-  return { blocks, text: poll.question };
-}
-
-function countUniqueVoters(poll: PollWithOptions): number {
-  // Total voters = sum of all option votes for single/yes_no/rating (each voter votes once)
-  // For multi_select, _count.votes on the poll gives total vote rows, but we need unique voters
-  // We use the poll-level _count as an approximation; exact count comes from the vote service
-  return poll._count.votes;
-}
-
-export function buildResultsDM(
-  poll: PollWithOptions,
-  settings: PollSettings,
-  voterNames?: Map<string, string[]>,
-): string {
-  const totalVoters = poll._count.votes;
-  let text = `:bar_chart: *Poll Results: ${poll.question}*\n`;
-  if (settings.description) {
-    text += `${settings.description}\n`;
-  }
-  text += "\n";
-
-  for (let idx = 0; idx < poll.options.length; idx++) {
-    const option = poll.options[idx];
-    const voteCount = option._count.votes;
-    const emoji = getOptionEmoji(poll.pollType, idx, option.label);
-    text += `*${emoji} ${option.label}*\n\n${renderBar(voteCount, totalVoters, idx)}\n`;
-
-    if (!settings.anonymous && voterNames?.has(option.id)) {
-      const names = voterNames.get(option.id)!;
-      if (names.length > 0) {
-        text += `Voters: ${names.map((n) => `<@${n}>`).join(", ")}\n`;
-      }
-    }
-    text += "\n";
-  }
-
-  if (poll.pollType === "rating" && totalVoters > 0) {
-    const weightedSum = poll.options.reduce(
-      (sum, opt) => sum + parseInt(opt.label, 10) * opt._count.votes,
-      0,
-    );
-    text += `:star: *Average Rating: ${(weightedSum / totalVoters).toFixed(1)}*\n`;
-  }
-
-  text += `\n_Total votes: ${totalVoters}_`;
-  return text;
+  return { blocks, text: escapeMrkdwn(poll.question) };
 }

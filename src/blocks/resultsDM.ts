@@ -3,6 +3,7 @@ import type { PollWithOptions } from '../services/pollService';
 import { renderBar } from '../utils/barChart';
 import { getOptionEmoji } from '../utils/emojiPrefix';
 import { escapeMrkdwn } from '../utils/escapeMrkdwn';
+import { formatMentions } from '../utils/mentions';
 import { truncate } from '../utils/truncate';
 
 interface PollSettings {
@@ -55,7 +56,7 @@ export function buildResultsDMBlocks(
     if (!settings.anonymous && voterNames?.has(option.id)) {
       const names = voterNames.get(option.id)!;
       if (names.length > 0) {
-        text += `\nVoters: ${names.map((n) => `<@${n}>`).join(', ')}`;
+        text += `\nVoters: ${formatMentions(names)}`;
       }
     }
 

@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* Use the .dark class (always set on <html>) instead of prefers-color-scheme,
+   so the site stays dark regardless of the device theme */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Design Tokens - From TRD 5.2 */
 :root {
   /* Brand Colors */
@@ -37,6 +41,7 @@
 
 /* Dark Mode Tokens */
 .dark {
+  color-scheme: dark;
   --bg: #0b1118;
   --bg-muted: #16212c;
   --text-primary: #ffffff;
